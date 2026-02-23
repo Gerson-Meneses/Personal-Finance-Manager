@@ -110,6 +110,8 @@ export class TransactionService {
             throw new ConflictError("Logica para transacciones recurrentes aun no implementada")
         }
 
+        transaction.amount = transaction.amount * 100
+
         switch (transaction.type) {
             case TypeTransaction.INCOME:
                 if (account.type === TypeAccount.CREDIT) throw new ConflictError("No se pueden hacer ingresos a cuentas de tipo credito")

@@ -1,6 +1,7 @@
 import { AppDataSourceProd } from "../database/dataBaseDev";
 import { User } from "../entities/User.entity";
-import { NotFoundError } from "../helpers/errors/domain.errors";
+import { ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
+import { UuidSchema } from "../schemas/uuid.schema";
 
 export class UserService {
     private userRepo = AppDataSourceProd.getRepository(User);
@@ -11,4 +12,13 @@ export class UserService {
         if (!user) throw new NotFoundError("User not found");
         return user;
     }
+
+    getAllUsers = async (): Promise<User[]> => {
+        return await this.userRepo.find()
+    }
+
+    deleteUser = async (id: UuidSchema): Promise<void> =>{
+       throw new ConflictError("Not Implemented yet")
+    }
+
 }
