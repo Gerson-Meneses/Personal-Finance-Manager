@@ -4,7 +4,7 @@ import { TypeAccount, TypeTransaction } from "../utils/Enums";
 export const baseTransaction = {
     name: z.string().min(3).max(99),
     type: z.enum(TypeTransaction),
-    amount: z.number().positive().min(10, { message: "La cantidad minima son 10 centavos." }),
+    amount: z.number().positive().min(0.1, { message: "La cantidad minima son 10 centavos." }),
     date: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Invalid date format" }), 
     time: z.string().optional(),
     description: z.string().optional(),
