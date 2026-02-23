@@ -1,23 +1,23 @@
 import { ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
 import { UserWithCredentials } from "../schemas/user.schema";
 import { User } from "../entities/User.entity";
-import { AppDataSource } from "../database/dataSource";
+import { AppDataSourceProd } from "../database/dataBaseDev";
 import { Credential } from "../entities/Credential.entity";
 import { sign } from 'hono/jwt'
 import { CredentialSchema } from "../schemas/credential.schema";
-import { JWT_SECRET } from "../../.env";
+import 'dotenv/config'
 import { Account } from "../entities/Account.entity";
 import { TypeAccount } from "../utils/Enums";
 import { categoriesBase } from "../utils/categoriesBase";
 
 export class AuthService {
-  private userRepo = AppDataSource.getRepository(User);
-  private credentialRepo = AppDataSource.getRepository(Credential);
-  private accountRepo = AppDataSource.getRepository(Account);
+  private userRepo = AppDataSourceProd.getRepository(User);
+  private credentialRepo = AppDataSourceProd.getRepository(Credential);
+  private accountRepo = AppDataSourceProd.getRepository(Account);
 
 
   async createUser(userData: UserWithCredentials) {
-    const queryRunner = AppDataSource.createQueryRunner();
+    const queryRunner = AppDataSourceProd.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
@@ -92,6 +92,10 @@ export class AuthService {
       exp: Math.floor(Date.now() / 1000) + 60 * 15000 // 15 min
     }
 
+    const JWT_SECRET = process.env.JWT_SECRET
+    if (!JWT_SECRET) {
+      throw new NotFoundError("JWR_SECRET es requerido")
+    }
     const token = await sign(payload, JWT_SECRET)
 
     return { payload, token };

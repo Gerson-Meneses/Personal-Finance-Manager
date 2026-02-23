@@ -1,4 +1,4 @@
-import { AppDataSource } from "../database/dataSource";
+import { AppDataSourceProd } from "../database/dataBaseDev";
 import { Category } from "../entities/Category.entity";
 import { User } from "../entities/User.entity";
 import { BadRequestError, ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
@@ -7,8 +7,8 @@ import { UuidSchema, uuidSchema } from "../schemas/uuid.schema";
 
 export class CategoryService {
 
-    private categoryRepo = AppDataSource.getRepository(Category)
-    private userRepo = AppDataSource.getRepository(User)
+    private categoryRepo = AppDataSourceProd.getRepository(Category)
+    private userRepo = AppDataSourceProd.getRepository(User)
 
     async getCategoriesByUser(userId: string): Promise<Category[]> {
         return await this.categoryRepo.find({ where: { user: { id: userId } } })

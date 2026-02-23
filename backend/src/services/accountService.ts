@@ -1,4 +1,4 @@
-import { AppDataSource } from "../database/dataSource";
+import { AppDataSourceProd } from "../database/dataBaseDev";
 import { Account } from "../entities/Account.entity";
 import { User } from "../entities/User.entity";
 import { BadRequestError, ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
@@ -6,8 +6,8 @@ import { AccountSchema, UpdateAccountSchema } from "../schemas/account.schema";
 import { TypeAccount } from "../utils/Enums";
 
 export class AccountService {
-    private accountRepo = AppDataSource.getRepository(Account);
-    private userRepo = AppDataSource.getRepository(User);
+    private accountRepo = AppDataSourceProd.getRepository(Account);
+    private userRepo = AppDataSourceProd.getRepository(User);
 
     async getAllAccountsByUser(userId: string) {
         let accounts: Account[] = await this.accountRepo.find({ where: { user: { id: userId } } })

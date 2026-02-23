@@ -1,4 +1,4 @@
-import { AppDataSource } from "../database/dataSource";
+import { AppDataSourceProd } from "../database/dataBaseDev";
 import { Account } from "../entities/Account.entity";
 import { Category } from "../entities/Category.entity";
 import { ReccurentTransaction } from "../entities/ReccurentTransaction.entity";
@@ -15,11 +15,11 @@ import { PaginatedResult } from "../responsesDto.ts/transactionDto";
 
 
 export class TransactionService {
-    private transactionRepo = AppDataSource.getRepository(Transaction);
-    private categoryRepo = AppDataSource.getRepository(Category);
-    private userRepo = AppDataSource.getRepository(User);
-    private accountRepo = AppDataSource.getRepository(Account);
-    private reccurentTransactionsRepo = AppDataSource.getRepository(ReccurentTransaction);
+    private transactionRepo = AppDataSourceProd.getRepository(Transaction);
+    private categoryRepo = AppDataSourceProd.getRepository(Category);
+    private userRepo = AppDataSourceProd.getRepository(User);
+    private accountRepo = AppDataSourceProd.getRepository(Account);
+    private reccurentTransactionsRepo = AppDataSourceProd.getRepository(ReccurentTransaction);
 
     async getTransactions(
         filters: TransactionFilters

@@ -1,9 +1,13 @@
 import type { Context, Next } from "hono"
 import { verify } from "hono/jwt"
-import { JWT_SECRET } from "../../.env"
+import 'dotenv/config'
 
 export const authMiddleware = async (c: Context, next: Next) => {
     const authHeader = c.req.header('Authorization')
+    const JWT_SECRET = process.env.JWT_SECRET
+    if(!JWT_SECRET) {
+         return c.json({ error: 'JWT_SECRET requerido' }, 401)
+    }
 
     if (!authHeader) {
         return c.json({ error: 'Token requerido' }, 401)

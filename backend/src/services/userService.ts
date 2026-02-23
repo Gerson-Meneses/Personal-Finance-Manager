@@ -1,9 +1,9 @@
-import { AppDataSource } from "../database/dataSource";
+import { AppDataSourceProd } from "../database/dataBaseDev";
 import { User } from "../entities/User.entity";
 import { NotFoundError } from "../helpers/errors/domain.errors";
 
 export class UserService {
-    private userRepo = AppDataSource.getRepository(User);
+    private userRepo = AppDataSourceProd.getRepository(User);
 
 
     getUserById = async (userId: string): Promise<User> => {
