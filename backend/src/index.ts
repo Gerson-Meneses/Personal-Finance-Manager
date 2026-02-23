@@ -3,9 +3,10 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import router from './routes/indexRouter'
 import { errorHandler } from './helpers/errorHandler'
-import { AppDataSourceProd } from './database/dataBaseDev'
 import { AppDataSource } from './database/dataSource';
+import { AppDataSourceProd } from './database/dataBaseDev'
 import { AppEnv } from './types'
+import 'dotenv/config'
 
 const app = new Hono<AppEnv>();
 
