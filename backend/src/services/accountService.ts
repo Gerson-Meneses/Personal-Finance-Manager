@@ -17,7 +17,10 @@ export class AccountService {
     async createAccount(userId: string, account: AccountSchema) {
         let newAccount: {}
 
-        const { name, type, balance } = account
+        const { name, type } = account
+        let { balance } = account
+
+        balance = balance ? balance * 100 : 0
 
         const user: User | null = await this.userRepo.findOneBy({ id: userId });
         if (!user) throw new NotFoundError("Usuario no encontrado para asignar la cuenta.")
@@ -29,14 +32,16 @@ export class AccountService {
 
 
         if (type === TypeAccount.CREDIT) {
-            const { creditLimit, billingCloseDay, paymentDueDay, overdraft } = account
+            const { billingCloseDay, paymentDueDay, overdraft } = account
+            let { creditLimit } = account
+            creditLimit = creditLimit * 100
             if (!creditLimit || !billingCloseDay || !paymentDueDay) {
                 throw new BadRequestError("Required creditLimit,  billingCLoseDay, paymentDueDay for Type Account Credit")
             }
             newAccount = this.accountRepo.create({
                 name,
                 type,
-                balance: balance ? balance : creditLimit * ((overdraft || 0) + 1),
+                balance: balance ? balance : Math.floor(creditLimit * ((overdraft ? overdraft / 100 : 0) + 1)),
                 creditLimit,
                 billingCloseDay,
                 paymentDueDay,

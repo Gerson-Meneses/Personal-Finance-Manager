@@ -108,7 +108,7 @@ export function TransactionsPage() {
                     <option value="">Selecciona cuenta</option>
                     {dataAccounts?.accounts.map((acc: Account) => (
                         <option key={acc.id} value={acc.id}>
-                            {acc.name} - {acc.balance} - {acc.type}
+                            {acc.name} - {acc.balance/100} - {acc.type}
                         </option>
                     ))}
                 </select>
@@ -137,7 +137,7 @@ export function TransactionsPage() {
                 <h2>Historial</h2>
                 {dataTransactions?.transactions.data?.map((t: any) => (
                     <li key={t.id}>
-                        {t.name} - S/ {t.amount} ({t.type})
+                        {t.name} - S/ {t.amount/100} ({t.type})
                     </li>
                 ))}
             </ul>
