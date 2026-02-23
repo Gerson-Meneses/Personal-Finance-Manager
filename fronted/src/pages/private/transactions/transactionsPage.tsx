@@ -76,8 +76,8 @@ export function TransactionsPage() {
                         setType(e.target.value as "INCOME" | "EXPENSE")
                     }
                 >
-                    <option value="EXPENSE">Gasto</option>
-                    <option value="INCOME">Ingreso</option>
+                    <option value="EXPENSE">EXPENSE</option>
+                    <option value="INCOME">INCOME</option>
                 </select>
 
                 {/* Monto */}
@@ -108,7 +108,7 @@ export function TransactionsPage() {
                     <option value="">Selecciona cuenta</option>
                     {dataAccounts?.accounts.map((acc: Account) => (
                         <option key={acc.id} value={acc.id}>
-                            {acc.name}
+                            {acc.name} - {acc.balance}
                         </option>
                     ))}
                 </select>
@@ -123,7 +123,7 @@ export function TransactionsPage() {
                     <option value="">Selecciona categoría</option>
                     {dataCategories?.categories.map((cat: Category) => (
                         <option key={cat.id} value={cat.id}>
-                            {cat.name}
+                            {cat.name} - {cat.type}
                         </option>
                     ))}
                 </select>

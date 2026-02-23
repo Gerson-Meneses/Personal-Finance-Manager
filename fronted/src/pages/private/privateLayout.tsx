@@ -7,7 +7,7 @@ export function PrivateLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <header>
-        <h2>Finance App - {user?.user.name}</h2>
+        <h2>Finance App - {user?.name}</h2>
         <button className="cursorPointer" onClick={logout}>Logout</button>
       </header>
 

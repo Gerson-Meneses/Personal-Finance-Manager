@@ -22,6 +22,7 @@ export async function apiFetch<T>(
     }
 
     const error = await response.json();
+    console.log(error)
     throw new Error(error.message || "API Error");
   }
 
