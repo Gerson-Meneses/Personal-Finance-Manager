@@ -1,4 +1,4 @@
-export enum TypeTransaction { INCOME = "INCOME", EXPENSE = "EXPENSE", LOAN = "LOAN" }
+export enum TypeTransaction { INCOME = "INCOME", EXPENSE = "EXPENSE", CREDIT_PAYMENT = "CREDIT_PAYMENT", TRANSFER = "TRANSFER" }
 export enum TypeAccount { DEBIT = "DEBIT", CREDIT = "CREDIT", CASH = "CASH" }
-export enum TypeLoan { RECEIVED, GIVEN }
-export enum StatusLoan { PENDING, PAID }
+export enum TypeLoan { RECEIVED = "RECEIVED", GIVEN = "GIVEN" }
+export enum StatusLoan { PENDING = "PENDING", PAID = "PAID" }

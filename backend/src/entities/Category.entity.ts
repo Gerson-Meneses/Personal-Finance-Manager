@@ -27,6 +27,12 @@ export class Category {
     @Column({ type: "varchar", length: 500, nullable: true })
     icon: string;
 
+    @Column({ default: false })
+    isBase: boolean
+
+    @Column({ default: true })
+    visible: boolean
+
     @ManyToOne("User", "categories", { nullable: false })
     user: User;
 

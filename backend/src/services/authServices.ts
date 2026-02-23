@@ -6,10 +6,15 @@ import { Credential } from "../entities/Credential.entity";
 import { sign } from 'hono/jwt'
 import { CredentialSchema } from "../schemas/credential.schema";
 import { JWT_SECRET } from "../../.env";
+import { Account } from "../entities/Account.entity";
+import { TypeAccount } from "../utils/Enums";
+import { categoriesBase } from "../utils/categoriesBase";
 
-export class UserService {
+export class AuthService {
   private userRepo = AppDataSource.getRepository(User);
   private credentialRepo = AppDataSource.getRepository(Credential);
+  private accountRepo = AppDataSource.getRepository(Account);
+
 
   async createUser(userData: UserWithCredentials) {
     const queryRunner = AppDataSource.createQueryRunner();
@@ -27,22 +32,43 @@ export class UserService {
       }
 
       const credential: Credential = this.credentialRepo.create({ email: userData.email, password: await Bun.password.hash(userData.password) });
-
       await queryRunner.manager.save(credential);
+
       const user: User = this.userRepo.create({
         ...userData,
         credential: credential
       });
+      await queryRunner.manager.save(user);
+
       credential.user = user;
       await queryRunner.manager.save(credential);
-      await queryRunner.manager.save(user);
+
+      const accountCash: Account = this.accountRepo.create({
+        name: "EFECTIVO",
+        type: TypeAccount.CASH,
+        balance: 0,
+        user: user
+      })
+      await queryRunner.manager.save(accountCash);
+
+      categoriesBase.forEach(async (category) => {
+        const newCategory = queryRunner.manager.create('Category', {
+          ...category,
+          isBase: true,
+          user: user
+        });
+        await queryRunner.manager.save(newCategory);
+      });
+
       await queryRunner.commitTransaction();
-      return user;
+
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
+      const data = await this.logingUser({ email: userData.email, password: userData.password });
       await queryRunner.release();
+      return data;
     }
   }
 
@@ -63,11 +89,10 @@ export class UserService {
       sub: credential.user.id,
       email: credential.email,
       role: credential.user.isAdmin ? 'admin' : 'user',
-      exp: Math.floor(Date.now() / 1000) + 60 * 15 // 15 min
+      exp: Math.floor(Date.now() / 1000) + 60 * 15000 // 15 min
     }
 
     const token = await sign(payload, JWT_SECRET)
-    console.log({ token, payload });
 
     return { payload, token };
   }

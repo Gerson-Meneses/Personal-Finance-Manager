@@ -1,0 +1,35 @@
+main {
+    flex: 1;
+    margin: 15rem 0 2.5vh 0;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    background-color: #3a3a3a;
+    color: #ededed;
+    width: 100%;
+    text-align: center;
+    color: black;
+    max-height: 8rem;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-around;
+    padding: .5rem;
+    align-items: center;
+}
+
+header h2 {
+    color: white;
+}
+
+footer {
+    bottom: 0;
+    position: fixed;
+    background-color: #3e3e3e;
+    width: 100%;
+    text-align: center;
+    color: white;
+    padding: 1vh;
+    box-sizing: border-box;
+}

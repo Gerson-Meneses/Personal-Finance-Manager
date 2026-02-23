@@ -3,49 +3,64 @@ import { z } from "zod"
 import { Context } from "hono"
 import { DomainError } from "./errors/domain.errors"
 
-export const errorHandler = (err: unknown, c: Context) => {
-    // 🧩 ZOD
-    if (err instanceof ZodError) {
-        const tree: any = z.treeifyError(err)
+const formatZodError = (error: ZodError) => {
+  const details: Record<string, string[]> = {}
 
-        return c.json(
-            {
-                success: false,
-                error: {
-                    type: "VALIDATION_ERROR",
-                    message: "Datos inválidos",
-                    details: tree.properties,
-                },
-            },
-            400
-        )
+  error.issues.forEach(issue => {
+    const path = issue.path.join(".") || "body"
+
+    if (!details[path]) {
+      details[path] = []
     }
 
-    // 🧠 ERRORES DE DOMINIO
-    if (err instanceof DomainError) {
-        return c.json(
-            {
-                success: false,
-                error: {
-                    type: err.type,
-                    message: err.message,
-                },
-            },
-            err.statusCode
-        )
-    }
+    details[path].push(issue.message)
+  })
 
-    // 💥 ERROR DESCONOCIDO
-    console.error("Unhandled error:", err)
-
-    return c.json(
-        {
-            success: false,
-            error: {
-                type: "INTERNAL_ERROR",
-                message: "Error interno del servidor",
-            },
-        },
-        500
-    )
+  return details
 }
+
+
+export const errorHandler = (err: unknown, c: Context) => {
+  // 🧩 ZOD
+  if (err instanceof ZodError) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          type: "VALIDATION_ERROR",
+          message: "Errores de validación",
+          details: formatZodError(err),
+        },
+      },
+      400
+    )
+  }
+
+  // 🧠 DOMINIO
+  if (err instanceof DomainError) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          type: err.type,
+          message: err.message,
+        },
+      },
+      err.statusCode
+    )
+  }
+
+  console.error("Unhandled error:", err)
+
+  return c.json(
+    {
+      success: false,
+      error: {
+        type: "INTERNAL_ERROR",
+        message: "Error interno del servidor",
+      },
+    },
+    500
+  )
+}
+

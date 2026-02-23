@@ -20,13 +20,35 @@ export class Account {
     })
     type: TypeAccount;
 
-    @Column()
+    @Column({
+        type: "integer",
+        comment: "Balance en centavos"
+    })
     balance: number;
 
     @Column({
-        nullable: true
+        default: "#FFFFFF"
+    })
+    color: string;
+
+    @Column({
+        nullable: true,
+    })
+    icon: string;
+
+    @Column({
+        nullable: true,
+        type: "integer",
+        comment: "Credito Limite en centavos"
     })
     creditLimit: number;
+
+    @Column({
+        type: "integer",
+        nullable: true,
+        comment: "Porcentaje del 0 al 100"
+    })
+    overdraft: number;
 
     @Column({
         nullable: true,

@@ -1,0 +1,69 @@
+.formLogin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: blue;
+    gap: 10px;
+    padding: 20px;
+    border-radius: 5px;
+    font-size: 20px;
+    color: #d0d0d0
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    font-weight: bold;
+}
+
+.flecha::before {
+    content: "";
+    width: 0px;
+    height: 0px;
+    color: red;
+    border-left: .38rem solid transparent;
+    border-right: .38rem solid transparent;
+    border-bottom: .6rem solid red;
+    position: absolute;
+    top: -.5rem; 
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+input {
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    width: 200px;
+}
+
+button{
+    margin-top: .8rem;
+    transition: all ease-in-out .1s;
+}
+
+button:hover{
+    color: #d0d0d0;
+    background-color: #050505;
+    transition: all ease-in-out .1s;
+}
+
+.errorMessage {
+    font-weight: lighter;
+    padding-bottom: 1rem;
+    color: rgb(216, 25, 25);
+    font-size: 14px;
+    position: relative;
+    width: 100%;
+    text-align: center;
+}
+
+.hidden {
+    display: none;
+    transition: all 0.3s ease;
+}

@@ -13,7 +13,7 @@ export class Transaction {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: "varchar", length: 100})
+    @Column({ type: "varchar", length: 100 })
     name: string;
 
     @Column({
@@ -28,6 +28,9 @@ export class Transaction {
     @Column({ type: 'date' })
     date: Date;
 
+    @Column({ type: "date", nullable: true })
+    postedAt: Date;
+
     @Column({
         type: 'time',
         default: () => "'00:00:00'",
@@ -35,13 +38,13 @@ export class Transaction {
     })
     time: string;
 
-    @Column({type: 'text', nullable: true})
+    @Column({ type: 'text', nullable: true })
     description: string;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
 
-    @UpdateDateColumn({ type: 'timestamp' })    
+    @UpdateDateColumn({ type: 'timestamp' })
     updatedAt: Date;
 
     @Column({
@@ -53,7 +56,10 @@ export class Transaction {
     @ManyToOne("Account", "transactions", { nullable: false })
     account: Account;
 
-    @ManyToOne("Category", "transactions", { nullable: false })
+    @ManyToOne("Account", "transactions", { nullable: true })
+    relatedAccount?: Account;
+
+    @ManyToOne("Category", "transactions", { nullable: true })
     category: Category;
 
     @ManyToOne("User", "transactions", { nullable: false })
