@@ -3,27 +3,32 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import router from './routes/indexRouter'
 import { errorHandler } from './helpers/errorHandler'
-import { AppDataSource } from './database/dataSource';
 import { AppDataSourceProd } from './database/dataBaseDev'
 import { AppEnv } from './types'
 import 'dotenv/config'
 
-const app = new Hono<AppEnv>();
-
-AppDataSourceProd.initialize()
-    .then(() => {
-        console.log("Data Source has been initialized!");
-    })
-    .catch((err) => {
-        console.error("Error during Data Source initialization:", err);
-    });
-
-app.onError(errorHandler)
-
+const app = new Hono<AppEnv>()
 
 app.use(cors())
 app.use(logger())
-app.route('/', router);
+app.onError(errorHandler)
+app.route('/', router)
 
+async function bootstrap() {
+  try {
+    await AppDataSourceProd.initialize()
+    console.log('✅ Database connected')
 
-export default app
+    Bun.serve({
+      fetch: app.fetch,
+      port: Number(process.env.PORT) || 3000,
+    })
+
+    console.log('🚀 Server running')
+  } catch (error) {
+    console.error('❌ Error starting server:', error)
+    process.exit(1)
+  }
+}
+
+bootstrap()
