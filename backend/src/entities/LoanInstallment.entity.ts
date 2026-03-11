@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, OneToMany, JoinColumn } from 'typeorm';
 import type { Loan } from './Loan.entity';
+import { LoanPayment } from './LoanPayment.entity';
 
 @Entity('loan_installments')
 export class LoanInstallment {
@@ -15,17 +16,18 @@ export class LoanInstallment {
   @Column({ type: 'date' })
   dueDate: Date;
 
-  @Column('decimal')
+  @Column({ type: 'integer' })
   totalAmount: number;
 
-  @Column('decimal')
+  @Column({ type: 'integer' })
   principalAmount: number;
 
-  @Column('decimal')
+  @Column('integer')
   interestAmount: number;
 
-  @Column('decimal', { default: 0 })
-  paidAmount: number;
+  @OneToMany(() => LoanPayment, payment => payment.loan,{nullable: true})
+  @JoinColumn()
+  payments: LoanPayment[];
 
   @Column({ type: 'enum', enum: ['PENDING', 'PAID', 'PARTIAL'], default: 'PENDING' })
   status: 'PENDING' | 'PAID' | 'PARTIAL';

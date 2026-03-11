@@ -61,14 +61,13 @@ export class AuthService {
       });
 
       await queryRunner.commitTransaction();
-
+      const data = await this.logingUser({ email: userData.email, password: userData.password });
+      return data
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
-      const data = await this.logingUser({ email: userData.email, password: userData.password });
       await queryRunner.release();
-      return data;
     }
   }
 

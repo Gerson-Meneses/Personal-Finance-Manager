@@ -14,11 +14,11 @@ export class UserService {
     }
 
     getAllUsers = async (): Promise<User[]> => {
-        return await this.userRepo.find()
+        return await this.userRepo.find({relations:["credential"]})
     }
 
     deleteUser = async (id: UuidSchema): Promise<void> =>{
-       throw new ConflictError("Not Implemented yet")
+       throw new NotFoundError("Not Implemented yet")
     }
 
 }

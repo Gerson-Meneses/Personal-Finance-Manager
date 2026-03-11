@@ -4,7 +4,7 @@ import { TypeAccount } from '../utils/Enums';
 
 const baseAccount = {
   name: z.string().min(2).max(99).toUpperCase(),
-  balance: z.number().nonnegative().optional(),
+  balance: z.number().nonnegative().transform(n => n * 100).optional(),
 };
 
 const debitAccountSchema = z.object({
@@ -15,7 +15,7 @@ const debitAccountSchema = z.object({
 const creditAccountSchema = z.object({
   ...baseAccount,
   type: z.literal(TypeAccount.CREDIT),
-  creditLimit: z.number().positive(),
+  creditLimit: z.number().positive().transform(n => n * 100),
   billingCloseDay: z.number().int().min(1).max(31),
   paymentDueDay: z.number().int().min(1).max(31),
   overdraft: z.number().positive().max(100).optional(),

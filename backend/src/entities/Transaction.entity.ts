@@ -1,15 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, OneToMany } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, OneToMany, OneToOne } from "typeorm";
 import type { Account } from "./Account.entity";
 import type { Category } from "./Category.entity";
 import { TypeTransaction } from "../utils/Enums";
 import type { User } from "./User.entity";
 import type { ReccurentTransaction } from "./ReccurentTransaction.entity";
+import type { Loan } from "./Loan.entity";
+import { LoanPayment } from "./LoanPayment.entity";
 
 @Entity({
     name: 'transactions'
 })
-
 export class Transaction {
+
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
@@ -22,7 +24,7 @@ export class Transaction {
     })
     type: TypeTransaction;
 
-    @Column()
+    @Column({ type: "integer" }) // centavos
     amount: number;
 
     @Column({ type: 'date' })
@@ -39,7 +41,7 @@ export class Transaction {
     time: string;
 
     @Column({ type: 'text', nullable: true })
-    description: string;
+    description?: string;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
@@ -67,4 +69,10 @@ export class Transaction {
 
     @OneToMany("ReccurentTransaction", "transactions", { nullable: true })
     reccurentTransactions: ReccurentTransaction[];
+
+    @OneToOne("loans", "transactions", { nullable: true })
+    loan?: Loan;
+
+    @OneToOne(() => LoanPayment, { nullable: true })
+    loanPayment?: LoanPayment;
 }

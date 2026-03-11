@@ -6,6 +6,7 @@ import { transactionRouter } from './transactionRouter'
 import { creditCardRouter } from './creditCardRouter'
 import { userRouter } from './userRouter'
 import { authMiddleware } from '../middlewares/authMiddleware'
+import { loanRouter } from './loansRouter'
 
 const router = new Hono()
 
@@ -17,5 +18,6 @@ router.route('/accounts', accountRouter)
 router.route('/category', categoryRouter)
 router.route('/transaction', transactionRouter)
 router.route('/credit-card', creditCardRouter)
+router.route('/loan', loanRouter)
 
 export default router

@@ -7,11 +7,11 @@ import { User } from "../entities/User.entity";
 import { BadRequestError, ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
 import { PaymentCreditCardSchema } from "../schemas/paymentCreditCard.schema";
 import { TransactionSchema, UpdateTransactionSchema } from "../schemas/transaction.schema";
-import { transferSchema, TransferSchema } from "../schemas/transfers.schema";
+import { TransferSchema } from "../schemas/transfers.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
-import { TransactionFilters } from "../types";
 import { TypeAccount, TypeTransaction } from "../utils/Enums";
-import { PaginatedResult } from "../responsesDto.ts/transactionDto";
+import { PaginatedResult } from "../types";
+import { TransactionQuerySchema } from "../schemas/querysTransaction.schema";
 
 
 export class TransactionService {
@@ -22,7 +22,8 @@ export class TransactionService {
     private reccurentTransactionsRepo = AppDataSourceProd.getRepository(ReccurentTransaction);
 
     async getTransactions(
-        filters: TransactionFilters
+        userId: UuidSchema,
+        filters: TransactionQuerySchema
     ): Promise<PaginatedResult<Transaction>> {
 
         const page = filters.page && filters.page > 0 ? filters.page : 1;
@@ -31,7 +32,7 @@ export class TransactionService {
 
         const qb = this.transactionRepo
             .createQueryBuilder('t')
-            .where('t.userId = :userId', { userId: filters.userId });
+            .where('t.userId = :userId', { userId: userId });
 
         if (filters.type) {
             qb.andWhere('t.type = :type', { type: filters.type });
@@ -76,10 +77,12 @@ export class TransactionService {
             .skip((page - 1) * limit)
             .take(limit);
 
-        const [data, total] = await qb.getManyAndCount();
+        let [transactions, total] = await qb.getManyAndCount();
+
+        transactions = transactions.map(transaction => ({ ...transaction, amount: transaction.amount / 100 }))
 
         return {
-            data,
+            items: transactions,
             total,
             page,
             limit,
@@ -91,26 +94,26 @@ export class TransactionService {
     async getTransactionById(id: UuidSchema, userId: UuidSchema): Promise<Transaction> {
         const transaction = await this.transactionRepo.findOne({ where: { id, user: { id: userId } }, relations: ['account', 'relatedAccount', 'category'] })
         if (!transaction) throw new NotFoundError("Transacción no encontrada para el usuario")
-        return transaction
+        return { ...transaction, amount: transaction.amount / 100 }
     }
 
     async createTransaction(transaction: TransactionSchema, userId: UuidSchema): Promise<Transaction> {
         const user = await this.userRepo.findOne({ where: { id: userId } })
         if (!user) throw new NotFoundError("Usuario no encontrado para asginar la creación de la transacción")
 
-        const category = await this.categoryRepo.findOne({ where: {id: transaction.categoryId, user: { id: userId } } })
+        console.log(transaction)
+
+        const category = await this.categoryRepo.findOne({ where: { id: transaction.categoryId, user: { id: userId } } })
         if (!category) throw new NotFoundError("Categoria no encontrada o no pertence al usuario")
         if (category.type !== transaction.type) throw new ConflictError("Los tipos entre categoria y transacción no coinciden.")
 
         const account = await this.accountRepo.findOne({ where: { id: transaction.accountId, user: { id: userId } } })
-        if (!account) throw new NotFoundError("Cuenta no encontrada o no pertenece al usuario, o tipo no coincide.")
+        if (!account) throw new NotFoundError("Cuenta no encontrada o no pertenece al usuario.")
 
         if (transaction.isRecurrent) {
             // Logica para transacciones recurrentes aun no implementada
             throw new ConflictError("Logica para transacciones recurrentes aun no implementada")
         }
-
-        transaction.amount = transaction.amount * 100
 
         switch (transaction.type) {
             case TypeTransaction.INCOME:
@@ -133,7 +136,7 @@ export class TransactionService {
             account,
             category
         })
-        return newTransaction
+        return { ...newTransaction, amount: newTransaction.amount / 100 }
     }
 
     async createTransfer(transaction: TransferSchema, userId: string): Promise<Transaction> {
@@ -169,7 +172,7 @@ export class TransactionService {
         await this.accountRepo.save(fromAccountEntity)
         await this.accountRepo.save(toAccountEntity)
 
-        return newTransaction
+        return { ...newTransaction, amount: newTransaction.amount / 100 }
     }
 
     async makePayment(userId: string, creditCardId: string, payment: PaymentCreditCardSchema) {
@@ -181,7 +184,7 @@ export class TransactionService {
 
         if (relatedAccount.type !== TypeAccount.CREDIT) throw new ConflictError("Solo se pueden hacer pagos a cuentas de tipo credito")
 
-        const account = await this.accountRepo.findOne({ where: { name: payment.account, user: { id: userId }, type: TypeAccount.DEBIT || TypeAccount.CASH } })
+        const account = await this.accountRepo.findOne({ where: { name: payment.accountId, user: { id: userId }, type: TypeAccount.DEBIT || TypeAccount.CASH } })
         if (!account) throw new NotFoundError("Cuenta para pagar no encontrada o no pertenece al usuario o no es de tipo debito/cash")
 
         let withOverDraft = relatedAccount.creditLimit * ((relatedAccount.overdraft || 0) + 1)
@@ -204,7 +207,7 @@ export class TransactionService {
             account,
             relatedAccount
         })
-        return newTransaction
+        return { ...newTransaction, amount: newTransaction.amount / 100 }
     }
 
     async updateTransaction(id: UuidSchema, userId: UuidSchema, updateTransaction: UpdateTransactionSchema): Promise<Transaction> {
@@ -238,18 +241,14 @@ export class TransactionService {
         await this.accountRepo.save(transaction.account)
         await this.transactionRepo.save(transaction)
 
-        return transaction
+        return { ...transaction, amount: transaction.amount / 100 }
     }
 
 
-    async deleteTransaction(id: UuidSchema, userId: UuidSchema): Promise<any> {
-        const data: any = {}
+    async deleteTransaction(id: UuidSchema, userId: UuidSchema): Promise<void> {
         const transaction = await this.transactionRepo.findOne({ where: { id, user: { id: userId } }, relations: ['account', 'relatedAccount'] })
         if (!transaction) throw new NotFoundError("Transacción no encontrada para el usuario")
-        data.transactionDeleted = transaction
 
-
-        // Revertir el impacto de la transacción en las cuentas involucradas
         switch (transaction.type) {
             case TypeTransaction.INCOME:
                 transaction.account.balance -= transaction.amount
@@ -266,15 +265,14 @@ export class TransactionService {
                 if (transaction.relatedAccount) transaction.relatedAccount.balance -= transaction.amount
                 break
         }
-        data.accountUpdated = transaction.account
+
         await this.accountRepo.save(transaction.account)
         if (transaction.relatedAccount) {
-            data.relatedAccountUpdated = transaction.relatedAccount
             await this.accountRepo.save(transaction.relatedAccount)
         }
 
         await this.transactionRepo.delete({ id, user: { id: userId } })
-        return data
+        return
     }
 
 }

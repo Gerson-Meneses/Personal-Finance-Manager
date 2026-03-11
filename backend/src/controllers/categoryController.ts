@@ -2,12 +2,16 @@ import { Context } from "hono";
 import { CategoryService } from "../services/categoryService";
 import { CategorySchema, UpdateCategorySchema } from "../schemas/category.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
+import { PaginationQuerySchema } from "../schemas/queryPagination.schema";
+import { ApiPaginated } from "../typesResponseHttp/apiResponses";
+import { Category } from "../entities/Category.entity";
+import { paginated } from "../helpers/responses";
 
 const categoryService = new CategoryService();
 
-export const getAllCategoriesByUser = async (c: Context, user: string) => {
-    const categories = await categoryService.getCategoriesByUser(user);
-    return c.json({ message: 'Categories get succesfull', categories })
+export const getAllCategoriesByUser = async (c: Context, user: UuidSchema, filters: PaginationQuerySchema) => {
+    const result = await categoryService.getCategoriesByUser(user, filters);
+    return c.json<ApiPaginated<Category>>(paginated(result.items, result.total, result.page, result.limit), 200)
 }
 
 export const getCategoryById = async (c: Context, userId: UuidSchema, categoryId: UuidSchema) => {
@@ -17,7 +21,7 @@ export const getCategoryById = async (c: Context, userId: UuidSchema, categoryId
 
 export const createCategory = async (c: Context, userId: UuidSchema, account: CategorySchema) => {
     const newAccount = await categoryService.createCategory(account, userId)
-    return c.json({ message: "Category created succesfull", account, status:201 })
+    return c.json(newAccount, 201)
 }
 
 export const updateCategory = async (c: Context, userId: UuidSchema, categoryId: UuidSchema, categoryUpdate: UpdateCategorySchema) => {
@@ -27,5 +31,5 @@ export const updateCategory = async (c: Context, userId: UuidSchema, categoryId:
 
 export const deleteCategory = async (c: Context, userId: UuidSchema, categoryId: UuidSchema) => {
     const deletedCategory = await categoryService.deleteCategory(userId, categoryId)
-    return c.json({ message: "Category deleted succesfull", category: deletedCategory })
+    return c.json(204)
 }

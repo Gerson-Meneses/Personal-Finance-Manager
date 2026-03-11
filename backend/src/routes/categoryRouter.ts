@@ -6,14 +6,22 @@ import { ZodError } from "zod";
 import { zodErrorResponse } from "../helpers/zodErrorResponse";
 import { createCategory, deleteCategory, getAllCategoriesByUser, getCategoryById, updateCategory } from "../controllers/categoryController";
 import { uuidParamSchema, UuidSchema } from "../schemas/uuid.schema";
+import { PaginationQuerySchema, paginationQuerySchema } from "../schemas/queryPagination.schema";
 
 export const categoryRouter = new Hono<AppEnv>();
 
 
 categoryRouter.get("/",
     async (c: Context) => {
+        const parsed = paginationQuerySchema.safeParse(c.req.query());
+        if (!parsed.success) {
+            return zodErrorResponse(parsed.error, c)
+        }
+        const filters: PaginationQuerySchema = {
+            ...parsed.data,
+        };
         const user = c.get('user')
-        return await getAllCategoriesByUser(c, user.sub)
+        return await getAllCategoriesByUser(c, user.sub, filters)
     }
 )
 

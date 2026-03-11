@@ -3,6 +3,7 @@ import { TypeAccount } from "../utils/Enums";
 import type { User } from "./User.entity";
 import { Transaction } from "./Transaction.entity";
 import { ReccurentTransaction } from "./ReccurentTransaction.entity";
+import { Loan } from "./Loan.entity";
 
 @Entity({
     name: "accounts"

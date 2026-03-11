@@ -1,7 +1,9 @@
-import { PrimaryGeneratedColumn, Column, Entity, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from "typeorm";
+import { PrimaryGeneratedColumn, Column, Entity, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, OneToOne, JoinColumn } from "typeorm";
 import type { User } from "./User.entity";
 import { StatusLoan, TypeLoan } from "../utils/Enums";
 import { LoanInstallment } from "./LoanInstallment.entity";
+import { LoanPayment } from "./LoanPayment.entity";
+import { Transaction } from "./Transaction.entity";
 
 @Entity({
     name: "loans"
@@ -20,74 +22,40 @@ export class Loan {
     lender: string;
 
     @Column({
-        type: 'decimal',
-        precision: 10,
-        scale: 2
+        type: 'integer',
     })
     principalAmount: number;
 
     @Column({
-        type: 'decimal',
-        precision: 10,
-        scale: 2,
+        type: 'integer',
         nullable: true
     })
-    disbursementAmount: number;
+    disbursementAmount?: number;
 
     @Column({
-        type: 'decimal',
-        precision: 10,
-        scale: 2,
+        type: 'integer',
         nullable: true
     })
-    extraCost: number;       
+    extraCost?: number;
 
     @Column({
-        type: 'decimal',
-        precision: 5,
-        scale: 2,
+        type: 'integer',
         nullable: true
     })
-    tea: number;
+    tea?: number;
 
     @Column({
-        type: 'decimal',
-        precision: 10,
-        scale: 2,
+        type: 'integer',
         nullable: true
     })
-    montlhyRate: number;
+    termInMonths?: number;
 
     @Column({
-        type: 'int',
+        type: 'integer',
         nullable: true
     })
-    termInMonths: number;
-    
-    @Column({
-        type: 'decimal',
-        precision: 10,
-        scale: 2,
-        nullable: true
-    })
-    installmentAmount: number;
+    installmentAmount?: number;
 
-    @Column({
-        type: 'decimal',
-        precision: 10,
-        scale: 2,
-        nullable: true
-    })
-    remainingPrincipal: number;
-
-    @Column({
-        type: 'decimal',
-        precision: 10,
-        scale: 2,
-        nullable: true
-    })
-    remainingInterest: number;
-    
     @Column({
         type: 'enum',
         enum: StatusLoan,
@@ -105,8 +73,17 @@ export class Loan {
     updatedAt: Date;
 
     @ManyToOne("User", "loans")
-    user: User; 
+    user: User;
 
     @OneToMany(() => LoanInstallment, loanInstallment => loanInstallment.loan)
     installments: LoanInstallment[];
+
+    @OneToMany(() => LoanPayment, loanPayment => loanPayment.loan)
+    @JoinColumn()
+    payments: LoanPayment[];
+
+    @OneToOne(() => Transaction, transaction => transaction.loan)
+    @JoinColumn()
+    transactionReference: Transaction;
+
 }

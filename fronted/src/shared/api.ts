@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const BASE_URL = import.meta.env.VITE_API_URL2 || "http://localhost:3000";
 
 export async function apiFetch<T>(
   endpoint: string,
@@ -23,7 +23,7 @@ export async function apiFetch<T>(
 
     const error = await response.json();
     console.log(error)
-    throw new Error(error.message || "API Error");
+    throw error
   }
 
   return response.json();

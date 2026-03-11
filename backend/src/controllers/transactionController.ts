@@ -3,20 +3,23 @@ import { TransactionService } from "../services/transactionService";
 import { TransactionSchema } from "../schemas/transaction.schema";
 import { TransferSchema } from "../schemas/transfers.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
-import { TransactionFilters } from "../types";
+import { ApiPaginated } from "../typesResponseHttp/apiResponses";
+import { Transaction } from "../entities/Transaction.entity";
+import { paginated } from "../helpers/responses";
+import { TransactionQuerySchema } from "../schemas/querysTransaction.schema";
 
 const categoryService = new TransactionService();
 
-export const getAllTransactionsByUser = async (c: Context, filters:TransactionFilters ) => {
-    const transactions = await categoryService.getTransactions(filters);
-    return c.json({ message: 'Transactions get succesfull', transactions})
+export const getAllTransactionsByUser = async (c: Context,userId: UuidSchema, filters: TransactionQuerySchema) => {
+    const result = await categoryService.getTransactions(userId,filters);
+    return c.json<ApiPaginated<Transaction>>(paginated(result.items, result.total, result.page, result.limit), 200)
 }
 
-export const 
-getTransactionById = async (c: Context, userId: string, transactionId: UuidSchema) => {
-    const transaction = await categoryService.getTransactionById(transactionId, userId)
-    return c.json({ message: "Transaction get succesfull", transaction })
-}
+export const
+    getTransactionById = async (c: Context, userId: string, transactionId: UuidSchema) => {
+        const transaction = await categoryService.getTransactionById(transactionId, userId)
+        return c.json({ message: "Transaction get succesfull", transaction })
+    }
 
 export const createTransaction = async (c: Context, userId: UuidSchema, transaction: TransactionSchema) => {
     const newTransaction = await categoryService.createTransaction(transaction, userId)

@@ -6,6 +6,8 @@ import { uuid, ZodError } from "zod";
 import { zodErrorResponse } from "../helpers/zodErrorResponse";
 import { AppEnv } from "../types";
 import { uuidParamSchema } from "../schemas/uuid.schema";
+import { TransactionQuerySchema, transactionQuerySchema } from "../schemas/querysTransaction.schema";
+import { PaginationQuerySchema, paginationQuerySchema } from "../schemas/queryPagination.schema";
 
 
 
@@ -14,8 +16,15 @@ export const accountRouter = new Hono<AppEnv>();
 
 accountRouter.get("/",
     async (c: Context) => {
+        const parsed = paginationQuerySchema.safeParse(c.req.query());
+        if (!parsed.success) {
+            return zodErrorResponse(parsed.error, c)
+        }
+        const filters: PaginationQuerySchema = {
+            ...parsed.data,
+        };
         const user = c.get('user')
-        return await getAllAccountsByUser(c, user.sub)
+        return await getAllAccountsByUser(c, user.sub, filters)
     }
 )
 

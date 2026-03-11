@@ -54,6 +54,18 @@ export const categoriesBase = [
         icon: "ellipsis",
         color: "#94A3B8"
     },
+    {
+        name: "DEVOLUCION DE PRESTAMO",
+        type: "EXPENSE",
+        icon: "plus-circle",
+        color: "#4aafde"
+    }, 
+    {
+        name: "PRESTAMO",
+        type: "EXPENSE",
+        icon: "plus-circle",
+        color: "#9c1297"
+    },
     // INGRESOS:
     {
         name: "SUELDO",
@@ -72,6 +84,18 @@ export const categoriesBase = [
         type: "INCOME",
         icon: "plus-circle",
         color: "#4ADE80"
+    }, 
+    {
+        name: "DEVOLUCION DE PRESTAMO",
+        type: "INCOME",
+        icon: "plus-circle",
+        color: "#f121cf"
+    }, 
+    {
+        name: "PRESTAMO",
+        type: "INCOME",
+        icon: "plus-circle",
+        color: "#00d4d4"
     },
     {
         name: "OTROS INGRESOS",

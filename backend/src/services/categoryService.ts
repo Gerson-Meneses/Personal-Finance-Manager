@@ -3,15 +3,36 @@ import { Category } from "../entities/Category.entity";
 import { User } from "../entities/User.entity";
 import { BadRequestError, ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
 import { CategorySchema, UpdateCategorySchema } from "../schemas/category.schema";
+import { PaginationQuerySchema } from "../schemas/queryPagination.schema";
 import { UuidSchema, uuidSchema } from "../schemas/uuid.schema";
+import { PaginatedResult } from "../types";
 
 export class CategoryService {
 
     private categoryRepo = AppDataSourceProd.getRepository(Category)
     private userRepo = AppDataSourceProd.getRepository(User)
 
-    async getCategoriesByUser(userId: string): Promise<Category[]> {
-        return await this.categoryRepo.find({ where: { user: { id: userId } } })
+    async getCategoriesByUser(userId: UuidSchema, filters: PaginationQuerySchema): Promise<PaginatedResult<Category>> {
+      const page = filters.page && filters.page > 0 ? filters.page : 1;
+        const limit = filters.limit && filters.limit > 0 ? filters.limit : 20;
+        const order = filters.order ?? 'DESC';
+
+        const qb = this.categoryRepo
+            .createQueryBuilder('t')
+            .where('t.userId = :userId', { userId: userId });
+
+        qb.orderBy('t.name', order)
+            .skip((page - 1) * limit)
+            .take(limit);
+
+       const [categories, total] = await qb.getManyAndCount();
+
+        return {
+            items: categories,
+            total,
+            page,
+            limit,
+        };
     }
 
     async getCategoryById(categoryId: UuidSchema, userId: UuidSchema): Promise<Category> {
@@ -22,6 +43,7 @@ export class CategoryService {
 
     async createCategory(category: CategorySchema, userId: string): Promise<Category> {
         const user = await this.userRepo.findOneBy({ id: userId })
+        console.log(userId)
         if (!user) throw new BadRequestError("User not found")
         const categoryExist = await this.categoryRepo.findOneBy({ name: category.name, user: { id: userId }, type: category.type })
         if (categoryExist) throw new ConflictError("Usuario ya tiene categoria con este nombre y tipo")

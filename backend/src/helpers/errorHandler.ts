@@ -1,5 +1,4 @@
 import { ZodError } from "zod"
-import { z } from "zod"
 import { Context } from "hono"
 import { DomainError } from "./errors/domain.errors"
 
@@ -25,7 +24,6 @@ export const errorHandler = (err: unknown, c: Context) => {
   if (err instanceof ZodError) {
     return c.json(
       {
-        success: false,
         error: {
           type: "VALIDATION_ERROR",
           message: "Errores de validación",
@@ -40,7 +38,6 @@ export const errorHandler = (err: unknown, c: Context) => {
   if (err instanceof DomainError) {
     return c.json(
       {
-        success: false,
         error: {
           type: err.type,
           message: err.message,
@@ -54,7 +51,6 @@ export const errorHandler = (err: unknown, c: Context) => {
 
   return c.json(
     {
-      success: false,
       error: {
         type: "INTERNAL_ERROR",
         message: "Error interno del servidor",
