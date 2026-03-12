@@ -1,8 +1,9 @@
 import { apiFetch } from "../../shared/api";
-import type { DataTransaction, Transaction } from "./types";
+import type { Data } from "../../shared/dataApiInterface";
+import type { Transaction } from "./types";
 
 export const getTransactions = () =>
-  apiFetch<DataTransaction>("/transaction");
+  apiFetch<Data<Transaction>>("/transaction");
 
 export const createTransaction = (data: Omit<Transaction, "id">) =>
   apiFetch<Transaction>("/transaction", {

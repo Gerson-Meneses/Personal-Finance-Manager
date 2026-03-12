@@ -6,8 +6,3 @@ export interface Account {
     color: string,
     icon: string,
 }
-
-export interface DataAccount {
-    message: string,
-    accounts: Account[]
-}

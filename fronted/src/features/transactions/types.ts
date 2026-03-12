@@ -8,12 +8,4 @@ export interface Transaction {
   date: string;
 }
 
-export interface DataTransaction {
-  message: string,
-  transactions: {
-    data: Transaction[],
-    total: number,
-    page: number,
-    limit: number
-  }
-}
+

@@ -1,3 +1,5 @@
+import "./publicLayout.css"
+
 export function PublicLayout({ children }: { children: React.ReactNode }) {
-  return <div>{children}</div>;
+  return <div className="container">{children}</div>;
 }

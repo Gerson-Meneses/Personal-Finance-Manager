@@ -4,16 +4,13 @@ import {
     useCreateTransaction,
 } from "../../../features/transactions/hooks";
 import { useAccounts } from "../../../features/accounts/hooks";
-import { useCategories } from "../../../features/categories/hooks";
-import type { Category } from "../../../features/categories/types";
 import type { Account } from "../../../features/accounts/types";
 import "./trasactionPage.css"
+import SelectCategory from "../../../features/categories/components/selectCategory";
 
 export function TransactionsPage() {
     const { data: dataTransactions, isLoading, error } = useTransactions();
     const { data: dataAccounts } = useAccounts();
-    const { data: dataCategories } = useCategories();
-
     const createMutation = useCreateTransaction();
 
     const [name, setName] = useState("");
@@ -106,7 +103,7 @@ export function TransactionsPage() {
                     required
                 >
                     <option value="">Selecciona cuenta</option>
-                    {dataAccounts?.accounts.map((acc: Account) => (
+                    {dataAccounts?.data.map((acc: Account) => (
                         <option key={acc.id} value={acc.id}>
                             {acc.name} - {acc.balance/100} - {acc.type}
                         </option>
@@ -114,19 +111,13 @@ export function TransactionsPage() {
                 </select>
 
                 {/* Categoría */}
-                <select
-                    className="cursorPointer"
+               <SelectCategory
                     value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    required
-                >
-                    <option value="">Selecciona categoría</option>
-                    {dataCategories?.categories.map((cat: Category) => (
-                        <option key={cat.id} value={cat.id}>
-                            {cat.name} - {cat.type}
-                        </option>
-                    ))}
-                </select>
+                    onChange={setCategoryId}
+                    type={type}
+                    noLoan={true}
+                    visible={true}
+                />
 
                 <button type="submit" className="cursorPointer" disabled={createMutation.isPending}>
                     {createMutation.isPending ? "Guardando..." : "Agregar"}
@@ -135,9 +126,9 @@ export function TransactionsPage() {
 
             <ul> 
                 <h2>Historial</h2>
-                {dataTransactions?.transactions.data?.map((t: any) => (
+                {dataTransactions?.data?.map((t: any) => (
                     <li key={t.id}>
-                        {t.name} - S/ {t.amount/100} ({t.type})
+                        {t.name} - S/ {t.amount} ({t.type})
                     </li>
                 ))}
             </ul>

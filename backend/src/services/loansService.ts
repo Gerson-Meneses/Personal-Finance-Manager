@@ -29,6 +29,7 @@ export class LoansService {
 
         const qb = this.loanRepo
             .createQueryBuilder('t')
+            .leftJoinAndSelect('t.payments', 'payments')
             .where('t.userId = :userId', { userId: userId });
 
         qb.orderBy('t.startDate', order)
@@ -37,7 +38,7 @@ export class LoansService {
 
         let [loans, total] = await qb.getManyAndCount();
 
-        loans = loans.map(loan => ({ ...loan, principalAmount: loan.principalAmount / 100 }))
+        loans = loans.map(loan => ({ ...loan, principalAmount: loan.principalAmount / 100, payments: loan.payments.map(payment => ({ ...payment, amount: payment.amount / 100 })) }))
 
         return {
             items: loans,

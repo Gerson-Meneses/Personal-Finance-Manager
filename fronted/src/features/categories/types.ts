@@ -8,7 +8,9 @@ export interface Category {
     isBase: boolean
 }
 
-export interface DataCategory {
-    message:string,
-    categories: Category[]
+export interface CreateCategoryDTO {
+  name: string
+  type: "INCOME" | "EXPENSE"
+  color?: string
+  icon?: string
 }

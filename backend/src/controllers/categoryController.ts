@@ -16,7 +16,7 @@ export const getAllCategoriesByUser = async (c: Context, user: UuidSchema, filte
 
 export const getCategoryById = async (c: Context, userId: UuidSchema, categoryId: UuidSchema) => {
     const category = await categoryService.getCategoryById(categoryId, userId)
-    return c.json({ message: "Category found succesfull", category, structuredClone: true })
+    return c.json(category, 200)
 }
 
 export const createCategory = async (c: Context, userId: UuidSchema, account: CategorySchema) => {
@@ -26,7 +26,7 @@ export const createCategory = async (c: Context, userId: UuidSchema, account: Ca
 
 export const updateCategory = async (c: Context, userId: UuidSchema, categoryId: UuidSchema, categoryUpdate: UpdateCategorySchema) => {
     const updatedCategory = await categoryService.updateCategory(userId, categoryId, categoryUpdate)
-    return c.json({ message: "Category updated succesfull", category: updatedCategory })
+    return c.json(updatedCategory, 200)
 }
 
 export const deleteCategory = async (c: Context, userId: UuidSchema, categoryId: UuidSchema) => {

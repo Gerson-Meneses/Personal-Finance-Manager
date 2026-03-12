@@ -1,10 +1,9 @@
 main {
-    flex: 1;
-    margin: 15rem 0 2.5vh 0;
+    min-height: 84vh;
 }
 
 header {
-    position: fixed;
+    position: sticky;
     top: 0;
     background-color: #3a3a3a;
     color: #ededed;
@@ -25,7 +24,7 @@ header h2 {
 
 footer {
     bottom: 0;
-    position: fixed;
+    position: sticky;
     background-color: #3e3e3e;
     width: 100%;
     text-align: center;
