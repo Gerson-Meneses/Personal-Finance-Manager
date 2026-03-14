@@ -106,7 +106,7 @@ export function TransactionsPage() {
                     <option value="">Selecciona cuenta</option>
                     {accounts?.data.map((acc: Account) => (
                         <option key={acc.id} value={acc.id}>
-                            {acc.name} - {acc.balance / 100} - {acc.type}
+                            {acc.name} - {acc.balance} - {acc.type}
                         </option>
                     ))}
                 </select>
