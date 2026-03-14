@@ -1,0 +1,39 @@
+.loan-card {
+  border: 1px solid #ddd;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.loan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.loan-type {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.loan-info {
+  margin-top: 10px;
+}
+
+.loan-progress {
+  margin-top: 12px;
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.loan-progress-bar {
+  height: 100%;
+  background: #4caf50;
+  transition: width 0.3s ease;
+}
+
+.loan-actions {
+  margin-top: 10px;
+}

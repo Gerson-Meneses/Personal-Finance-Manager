@@ -1,21 +1,65 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAccounts, createAccount } from "./services";
+import * as service from "./services"
+import type { Account, CreateAccountDTO } from "./types";
+import type { Data } from "../../shared/dataApiInterface";
 
+export const useAccounts = () => {
 
-export function useAccounts() {
-  return useQuery({
+  const queryClient = useQueryClient()
+
+  const accountsQuery = useQuery({
     queryKey: ["accounts"],
-    queryFn: getAccounts,
-  });
-}
+    queryFn: service.getAccounts
+  })
 
-export function useCreateAccount() {
-  const queryClient = useQueryClient();
+  const createMutation = useMutation({
+    mutationFn: (data: CreateAccountDTO) =>
+      service.createAccount(data),
 
-  return useMutation({
-    mutationFn: createAccount,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
-    },
-  });
+      queryClient.invalidateQueries({
+        queryKey: ["accounts"]
+      })
+    }
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      service.deleteAccount(id),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["accounts"]
+      })
+    }
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      data
+    }: {
+      id: string
+      data: Partial<CreateAccountDTO>
+    }) => service.updateAccount(id, data),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["accounts"]
+      })
+    }
+  })
+
+  return {
+
+    accounts: accountsQuery.data ?? {} as Data<Account>,
+    loading: accountsQuery.isLoading,
+
+    createAccount: createMutation.mutateAsync,
+    deleteAccount: deleteMutation.mutateAsync,
+
+    updateAccount: updateMutation.mutateAsync,
+
+    refetch: accountsQuery.refetch
+  }
 }

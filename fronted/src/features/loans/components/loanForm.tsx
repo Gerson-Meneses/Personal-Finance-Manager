@@ -13,6 +13,7 @@ interface Props {
     }) => Promise<Loan>
 }
 
+
 export default function LoanForm({ onSubmit }: Props) {
 
     const [lender, setLender] = useState("")
@@ -21,7 +22,7 @@ export default function LoanForm({ onSubmit }: Props) {
     const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0])
     const [accountId, setAccountId] = useState("")
 
-    const { data: dataAccounts } = useAccounts();
+    const { accounts } = useAccounts();
 
     const handleSubmit = async (e: React.FormEvent) => {
 
@@ -45,25 +46,9 @@ export default function LoanForm({ onSubmit }: Props) {
 
         <form onSubmit={handleSubmit}>
 
-            <input
-                placeholder="Persona"
-                value={lender}
-                onChange={(e) =>
-                    setLender(e.target.value)
-                }
-            />
-
-            <input
-                type="number"
-                placeholder="Monto"
-                value={principalAmount}
-                onChange={(e) =>
-                    setPrincipalAmount(Number(e.target.value))
-                }
-            />
-
             <select
                 value={type}
+                id="type"
                 onChange={(e) =>
                     setType(e.target.value as LoanType)
                 }
@@ -79,10 +64,33 @@ export default function LoanForm({ onSubmit }: Props) {
 
             </select>
 
+            <input
+                type="text"
+                id="lender"
+                placeholder="Persona"
+                value={lender}
+                onChange={(e) =>
+                    setLender(e.target.value)
+                }
+            />
+
+            <input
+                type="number"
+                id="principalAmount"
+                placeholder="Monto"
+                value={principalAmount}
+                onChange={(e) =>
+                    setPrincipalAmount(Number(e.target.value))
+                }
+            />
+
+
+
             {/* Fecha */}
             <input
                 className="cursorPointer"
                 type="date"
+                id="startDate"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
@@ -92,12 +100,13 @@ export default function LoanForm({ onSubmit }: Props) {
             {/* Cuenta */}
             <select
                 className="cursorPointer"
+                id="accountId"
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
                 required
             >
                 <option value="">Selecciona cuenta</option>
-                {dataAccounts?.data.map((acc: Account) => (
+                {accounts?.data.map((acc: Account) => (
                     <option key={acc.id} value={acc.id}>
                         {acc.name} - {acc.balance} - {acc.type}
                     </option>

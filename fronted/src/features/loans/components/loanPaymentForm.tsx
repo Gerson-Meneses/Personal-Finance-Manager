@@ -1,30 +1,30 @@
 import { useState } from "react"
 import type { Account } from "../../accounts/types"
 import { useAccounts } from "../../accounts/hooks"
-import type { LoanPayment } from "../types"
+import { useLoans } from "../hooks"
 
 interface Props {
-    onSubmit: (amount: number, date: string, accountId: string) => Promise<LoanPayment>
+    loanId: string
 }
 
-export default function LoanPaymentForm({ onSubmit }: Props) {
+export default function LoanPaymentForm({
+    loanId
+}: Props) {
+
     const [amount, setAmount] = useState(0)
     const [date, setDate] = useState(new Date().toISOString().split("T")[0])
     const [accountId, setAccountId] = useState("")
+    const { payLoan } = useLoans()
 
-    const { data: dataAccounts } = useAccounts();
+    const { accounts } = useAccounts();
 
-    const handleSubmit = async (
-        e: React.FormEvent
-    ) => {
-
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-
         if (!amount) return
-
-        await onSubmit(amount, date, accountId)
-
+        await payLoan({id: loanId, amount, date, accountId})
         setAmount(0)
+        setDate(new Date().toISOString().split("T")[0])
+        setAccountId("")
     }
 
     return (
@@ -55,7 +55,7 @@ export default function LoanPaymentForm({ onSubmit }: Props) {
                 required
             >
                 <option value="">Selecciona cuenta</option>
-                {dataAccounts?.data.map((acc: Account) => (
+                {accounts?.data.map((acc: Account) => (
                     <option key={acc.id} value={acc.id}>
                         {acc.name} - {acc.balance} - {acc.type}
                     </option>

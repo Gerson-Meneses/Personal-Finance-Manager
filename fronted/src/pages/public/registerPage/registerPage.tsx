@@ -162,7 +162,7 @@ export const RegisterPage = () => {
                     {submitting ? "Registrando..." : "Registrarse"}
                 </button>
 
-            <span className="cursorPointer" onClick={(e) => navigate("/login")} >¿Ya tienes cuenta?; Incia Sesion</span>
+            <span className="cursorPointer" onClick={() => navigate("/login")} >¿Ya tienes cuenta?; Incia Sesion</span>
             </form>
         </>
     )

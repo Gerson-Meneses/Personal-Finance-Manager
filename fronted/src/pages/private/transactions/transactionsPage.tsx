@@ -4,13 +4,14 @@ import {
     useCreateTransaction,
 } from "../../../features/transactions/hooks";
 import { useAccounts } from "../../../features/accounts/hooks";
-import type { Account } from "../../../features/accounts/types";
+import type { Account, CreateAccountDTO } from "../../../features/accounts/types";
 import "./trasactionPage.css"
 import SelectCategory from "../../../features/categories/components/selectCategory";
+import AccountForm from "../../../features/accounts/components/accountForm/accountForm";
 
 export function TransactionsPage() {
     const { data: dataTransactions, isLoading, error } = useTransactions();
-    const { data: dataAccounts } = useAccounts();
+    const { accounts, createAccount } = useAccounts();
     const createMutation = useCreateTransaction();
 
     const [name, setName] = useState("");
@@ -103,15 +104,15 @@ export function TransactionsPage() {
                     required
                 >
                     <option value="">Selecciona cuenta</option>
-                    {dataAccounts?.data.map((acc: Account) => (
+                    {accounts?.data.map((acc: Account) => (
                         <option key={acc.id} value={acc.id}>
-                            {acc.name} - {acc.balance/100} - {acc.type}
+                            {acc.name} - {acc.balance / 100} - {acc.type}
                         </option>
                     ))}
                 </select>
 
                 {/* Categoría */}
-               <SelectCategory
+                <SelectCategory
                     value={categoryId}
                     onChange={setCategoryId}
                     type={type}
@@ -124,7 +125,9 @@ export function TransactionsPage() {
                 </button>
             </form>
 
-            <ul> 
+            <AccountForm onSubmit={(data) => createAccount(data as CreateAccountDTO)}  ></AccountForm>
+
+            <ul>
                 <h2>Historial</h2>
                 {dataTransactions?.data?.map((t: any) => (
                     <li key={t.id}>
