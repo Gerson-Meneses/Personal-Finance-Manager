@@ -3,6 +3,7 @@ import { useAuth } from "../../../features/auth/authContext"
 import { useNavigate } from "react-router-dom"
 import { generateYears, getDaysInMonth, months } from "./dateUtils"
 
+
 export const RegisterPage = () => {
 
     const [name, setName] = useState("")
@@ -14,8 +15,11 @@ export const RegisterPage = () => {
     const [isAdmin, setIsAdmin] = useState(false)
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [confirmPassword, setConfirmPassword] = useState("")
     const [error, setError] = useState<string | null>(null)
     const [submitting, setSubmitting] = useState(false)
+    const [show, setShow] = useState(false);
+    const [coinciden, setCoinciden] = useState(true)
     const { register } = useAuth()
     const navigate = useNavigate()
 
@@ -25,6 +29,17 @@ export const RegisterPage = () => {
     )
 
     const years = generateYears()
+
+    const detailsToText = (details: any) => {
+        let text = "";
+        for (const key in details) {
+            text += `${key}:\n`;
+            details[key].forEach((item: any) => {
+                text += `- ${item}\n`;
+            });
+        }
+        return text;
+    }
 
     useEffect(() => {
         const maxDays = getDaysInMonth(month, year)
@@ -48,11 +63,17 @@ export const RegisterPage = () => {
                 email,
                 password
             })
-            navigate("/transactions")
+            navigate("/")
 
         } catch (err: any) {
-            console.log(err)
-            setError(err.error.message || "Error al registrar usuario")
+            if (err?.error?.message === "Errores de validación") {
+                console.log(err?.error?.message === "Errores de validación")
+                const validationErrors = detailsToText(err.error.details)
+                setError(validationErrors)
+                return
+            } else {
+                setError(err.error.message?.toString() || "Error al enviar el formulario")
+            }
         } finally {
             setSubmitting(false)
         }
@@ -60,9 +81,11 @@ export const RegisterPage = () => {
 
     return (
         <>
-            <h1>Register</h1>
 
-            <form onSubmit={handleRegister}>
+            <form onSubmit={handleRegister}
+            style={{margin: "10vh"}}
+            >
+                <h1>Register</h1>
 
                 <label htmlFor="nameInput">Nombre:</label>
                 <input
@@ -112,7 +135,7 @@ export const RegisterPage = () => {
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="999999999"
+                    placeholder="+51 123 456 789"
                     required
                 />
 
@@ -131,19 +154,55 @@ export const RegisterPage = () => {
                     id="emailInput"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); setIsAdmin(false) }}
                     placeholder="correo@email.com"
                     required
                 />
 
                 <label htmlFor="passwordInput">Password:</label>
-                <input
-                    id="passwordInput"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
+
+                <div className="password-field">
+                    <input
+                        id="passwordInput"
+                        type={show ? "text" : "password"}
+                        placeholder="*********"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        onBlur={() => { setCoinciden(confirmPassword === password) }}
+                        required
+                    />
+
+                    <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={(e) => { e.preventDefault(); setShow(!show); }}
+                    >
+                        {show ? "🚫" : "👁️"}
+                    </button>
+                </div>
+
+                <label htmlFor="passwordInput">Reingrese su contraseña:</label>
+
+                <div className="password-field">
+                    <input
+                        id="passwordInput"
+                        type={show ? "text" : "password"}
+                        placeholder="*********"
+                        value={confirmPassword}
+                        onChange={(e) => { setConfirmPassword(e.target.value); }}
+                        onBlur={() => { setCoinciden(confirmPassword === password) }}
+                        required
+                    />
+
+                    <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={(e) => { e.preventDefault(); setShow(!show); }}
+                    >
+                        {show ? "🚫" : "👁️"}
+                    </button>
+                </div>
+                {!coinciden && <span className="error">Las contraseñas deben coincidir.</span>}
 
                 <label htmlFor="adminInput">
                     <input
@@ -151,18 +210,18 @@ export const RegisterPage = () => {
                         id="adminInput"
                         type="checkbox"
                         checked={isAdmin}
-                        onChange={(e) => setIsAdmin(e.target.checked)}
+                        onChange={(e) => { if (email === "gersonmeneses1612@gmail.com") { setIsAdmin(e.target.checked) } else { alert("Usuario no admitido para ser administrador, por favor contactarse con el administrador."); } }}
                     />
                     Es administrador
                 </label>
 
                 {error && <span className="error">{error}</span>}
 
-                <button className="cursorPointer" type="submit" disabled={submitting}>
+                <button className="cursorPointer" type="submit" disabled={submitting || !coinciden || !name || !day || !month || !year || !phone || !country || !email || !password || !confirmPassword}>
                     {submitting ? "Registrando..." : "Registrarse"}
                 </button>
 
-            <span className="cursorPointer" onClick={() => navigate("/login")} >¿Ya tienes cuenta?; Incia Sesion</span>
+                <span className="cursorPointer" onClick={() => navigate("/login")} >¿Ya tienes cuenta?; Incia Sesion</span>
             </form>
         </>
     )

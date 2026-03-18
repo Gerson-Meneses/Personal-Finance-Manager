@@ -17,6 +17,7 @@ export class LoanPayment {
   @Column({
     type: 'enum',
     enum: ExtraPaymentStrategy,
+    enumName: "extra_payment_strategy",
     nullable: true
   })
   strategy?: ExtraPaymentStrategy;

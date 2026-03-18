@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, OneToMany, OneToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, OneToMany, OneToOne, JoinColumn } from "typeorm";
 import type { Account } from "./Account.entity";
 import type { Category } from "./Category.entity";
 import { TypeTransaction } from "../utils/Enums";
@@ -71,8 +71,10 @@ export class Transaction {
     reccurentTransactions: ReccurentTransaction[];
 
     @OneToOne("loans", "transactions", { nullable: true })
-    loan?: Loan;
+    @JoinColumn()
+    loan: Loan;
 
     @OneToOne(() => LoanPayment, { nullable: true })
-    loanPayment?: LoanPayment;
+    @JoinColumn()
+    loanPayment: LoanPayment;
 }

@@ -9,17 +9,17 @@ export const transactionQuerySchema = z.object({
     categoryId: z.string().uuid().optional(),
 
     date: z
-        .date()
+        .string()
         .transform((v) => new Date(v))
         .optional(),
 
     from: z
-        .date()
+        .string()
         .transform((v) => new Date(v))
         .optional(),
 
     to: z
-        .date()
+        .string()
         .transform((v) => new Date(v))
         .optional(),
 

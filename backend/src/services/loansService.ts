@@ -19,6 +19,7 @@ export class LoansService {
     private loanRepo = AppDataSourceProd.getRepository(Loan)
     private loanInstallmenrRepo = AppDataSourceProd.getRepository(LoanInstallment)
     private loanPaymentRepo = AppDataSourceProd.getRepository(LoanPayment)
+    private transactionRepo = AppDataSourceProd.getRepository(Transaction)
     private userService = new UserService()
     private transactionService = new TransactionService()
 
@@ -59,7 +60,6 @@ export class LoansService {
         const user = await this.userService.getUserById(userId)
         const type = (loanData.type == TypeLoan.GIVEN) ? TypeTransaction.EXPENSE : TypeTransaction.INCOME;
         const category = user.categories.find(cat => (cat.name === "PRESTAMO" && cat.type === type))
-        console.log(loanData)
         if (!category) {
             throw new NotFoundError("Categoria de prestamos no encontrada")
         }
@@ -82,6 +82,11 @@ export class LoansService {
             })
 
             await this.loanRepo.save(loan)
+
+            transactionReference.loan = loan
+            transactionReference.amount = transactionReference.amount * 100
+
+            await this.transactionRepo.save(transactionReference)
 
             const response = {
                 ...loan,
@@ -106,7 +111,6 @@ export class LoansService {
             throw new ConflictError("El prestamo ya esta pagado")
         }
 
-        console.log(data, ((loan.principalAmount - amountPaid) * 100))
         if (data.amount > ((loan.principalAmount - amountPaid) * 100)) {
             throw new ConflictError("El monto del pago excede el monto restante del prestamo, monto restante: " + (loan.principalAmount - amountPaid))
         }
@@ -144,6 +148,10 @@ export class LoansService {
         loan.principalAmount = loan.principalAmount * 100
 
         await this.loanRepo.save(loan)
+
+        transaction.loanPayment = loanPayment
+        transaction.amount = transaction.amount * 100
+        await this.transactionRepo.save(transaction)
 
         amountPaid = loan.payments.reduce((total, payment) => total + payment.amount, 0);
         if (amountPaid >= loan.principalAmount) {

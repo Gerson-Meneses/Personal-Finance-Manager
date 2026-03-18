@@ -5,6 +5,8 @@ import { TypeAccount } from '../utils/Enums';
 const baseAccount = {
   name: z.string().min(2).max(99).toUpperCase(),
   balance: z.number().nonnegative().transform(n => n * 100).optional(),
+  icon: z.string().optional(),
+  color: z.string().optional()
 };
 
 const debitAccountSchema = z.object({

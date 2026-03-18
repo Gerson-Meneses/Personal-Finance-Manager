@@ -32,6 +32,11 @@ export class TransactionService {
 
         const qb = this.transactionRepo
             .createQueryBuilder('t')
+            .leftJoinAndSelect('t.account', 'account')
+            .leftJoinAndSelect('t.relatedAccount', 'relatedAccount')
+            .leftJoinAndSelect('t.category', 'category')
+            .leftJoinAndSelect('t.loan', 'loan')
+            .leftJoinAndSelect('t.loanPayment', 'loanPayment')
             .where('t.userId = :userId', { userId: userId });
 
         if (filters.type) {
@@ -79,7 +84,7 @@ export class TransactionService {
 
         let [transactions, total] = await qb.getManyAndCount();
 
-        transactions = transactions.map(transaction => ({ ...transaction, amount: transaction.amount / 100 }))
+        transactions = transactions.map(transaction => ({ ...transaction, amount: transaction.amount / 100, account: { ...transaction.account, balance: transaction.account.balance / 100 }, relatedAccount: transaction.relatedAccount ? { ...transaction.relatedAccount, balance: transaction.relatedAccount.balance / 100 } : undefined }))
 
         return {
             items: transactions,
@@ -100,8 +105,6 @@ export class TransactionService {
     async createTransaction(transaction: TransactionSchema, userId: UuidSchema): Promise<Transaction> {
         const user = await this.userRepo.findOne({ where: { id: userId } })
         if (!user) throw new NotFoundError("Usuario no encontrado para asginar la creación de la transacción")
-
-        console.log(transaction)
 
         const category = await this.categoryRepo.findOne({ where: { id: transaction.categoryId, user: { id: userId } } })
         if (!category) throw new NotFoundError("Categoria no encontrada o no pertence al usuario")

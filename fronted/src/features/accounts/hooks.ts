@@ -3,13 +3,19 @@ import * as service from "./services"
 import type { Account, CreateAccountDTO } from "./types";
 import type { Data } from "../../shared/dataApiInterface";
 
-export const useAccounts = () => {
+export const useAccounts = (id?: string) => {
 
   const queryClient = useQueryClient()
 
   const accountsQuery = useQuery({
     queryKey: ["accounts"],
     queryFn: service.getAccounts
+  })
+
+  const accountByIdQuery = useQuery({
+    queryKey: ["accounts", id],
+    queryFn: () => service.getAccountById(id!),
+    enabled: !!id
   })
 
   const createMutation = useMutation({
@@ -53,7 +59,8 @@ export const useAccounts = () => {
   return {
 
     accounts: accountsQuery.data ?? {} as Data<Account>,
-    loading: accountsQuery.isLoading,
+    account: accountByIdQuery.data as Account,
+    loading: accountsQuery.isLoading || accountByIdQuery.isLoading,
 
     createAccount: createMutation.mutateAsync,
     deleteAccount: deleteMutation.mutateAsync,

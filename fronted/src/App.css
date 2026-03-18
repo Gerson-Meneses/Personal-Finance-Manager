@@ -1,29 +1,22 @@
 body {
   padding: 0;
   margin: 0;
-  height: 100vh;
+  min-height: 100vh;
   background-color: #020120;
   color: #ededed;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Mejora la legibilidad */
 }
 
 #root {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  min-height: 100vh; /* Asegura que ocupe toda la pantalla */
+  width: 100%;      /* Evita que se encoja */
+}
 
-  margin: 0;
-  padding: 0;
+/* Ajuste para el main */
+main {
+  flex: 1; /* Esto hace que el main empuje al footer hacia abajo */
+  width: 100%;
   box-sizing: border-box;
-}
-
-
-button {
-  padding: 10px 12px;
-  border: solid 1px #000;
-  border-radius: .5rem;
-}
-
-.cursorPointer {
-  cursor: pointer;
 }

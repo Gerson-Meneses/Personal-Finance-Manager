@@ -1,21 +1,21 @@
 import { useQuery } from "@tanstack/react-query"
-import {apiFetch} from "../../shared/api"
-import type { Data } from "../../shared/dataApiInterface"
+import * as service from "./services"
+import type { DashboardResponse } from "./types"
 
 export const useDashboard = () => {
-
-  const query = useQuery({
+  // 1. Pasamos el tipo directamente al genérico de useQuery
+  const { data, isLoading, isError, error, refetch } = useQuery<DashboardResponse>({
     queryKey: ["dashboard"],
-    queryFn: async () => {
-
-      const { data } = await apiFetch<Data<{}>>("/dashboard")
-      return data
-    }
+    queryFn: service.getDashboardData,
+    // 2. Opcional: Evita peticiones constantes si los datos no cambian tan rápido
+    staleTime: 1000 * 60 * 5, // 5 minutos
   })
 
   return {
-    data: query.data,
-    loading: query.isLoading
+    dashboardData: data, // Ya viene tipado correctamente, sin necesidad de "as"
+    loading: isLoading,
+    isError,
+    error,
+    refresh: refetch // Útil si quieres un botón de "actualizar" en el UI
   }
-
 }

@@ -16,22 +16,25 @@ export default function LoanPaymentForm({
     const [accountId, setAccountId] = useState("")
     const { payLoan } = useLoans()
 
-    const { accounts } = useAccounts();
+    const { accounts, loading } = useAccounts();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (!amount) return
-        await payLoan({id: loanId, amount, date, accountId})
+        await payLoan({ id: loanId, amount, date, accountId })
         setAmount(0)
         setDate(new Date().toISOString().split("T")[0])
         setAccountId("")
     }
+
+    if (loading) return <span>Cargando...</span>
 
     return (
 
         <form onSubmit={handleSubmit}>
 
             <input
+                name=""
                 type="number"
                 placeholder="Pago"
                 value={amount}

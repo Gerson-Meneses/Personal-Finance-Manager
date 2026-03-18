@@ -3,7 +3,6 @@ export const getDaysInMonth = (month: string, year?: string) => {
         year = String(new Date().getFullYear())
     }
     if (!year || !month) return 31
-    console.log(year)
     return new Date(Number(year), Number(month), 0).getDate()
 }
 

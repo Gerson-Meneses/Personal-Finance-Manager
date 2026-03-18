@@ -41,7 +41,7 @@ export class AccountService {
     async createAccount(userId: string, account: AccountSchema): Promise<Account> {
         let newAccount: Account = {} as Account
 
-        const { name, type } = account
+        const { name, type, color, icon } = account
         let { balance } = account
 
         balance = balance ? balance * 100 : 0
@@ -58,14 +58,16 @@ export class AccountService {
         if (type === TypeAccount.CREDIT) {
             const { billingCloseDay, paymentDueDay, overdraft } = account
             let { creditLimit } = account
-            creditLimit = creditLimit * 100
+            creditLimit
             if (!creditLimit || !billingCloseDay || !paymentDueDay) {
                 throw new BadRequestError("Required creditLimit,  billingCLoseDay, paymentDueDay for Type Account Credit")
             }
             newAccount = this.accountRepo.create({
                 name,
                 type,
-                balance: balance ? balance : Math.floor(creditLimit * ((overdraft ? overdraft / 100 : 0) + 1)),
+                icon,
+                color,
+                balance: Math.floor(creditLimit * ((overdraft ? overdraft / 100 : 0) + 1)),
                 creditLimit,
                 billingCloseDay,
                 paymentDueDay,
@@ -81,7 +83,9 @@ export class AccountService {
                 name,
                 type,
                 balance: balance ? balance : 0,
-                user
+                user,
+                color,
+                icon
             })
             await this.accountRepo.save(newAccount)
         }
@@ -120,7 +124,6 @@ export class AccountService {
         if (!account) throw new NotFoundError("Cuenta no encontrada o no pertenece al usuario.")
         if (account.type === TypeAccount.CASH) throw new BadRequestError("No se puede eliminar la cuenta de EFECTIVO.")
         if (account.transactions && account.transactions.length > 0) throw new BadRequestError("No se puede eliminar una cuenta que tiene transacciones asociadas.")
-        if (account.balance && account.balance > 0) throw new BadRequestError("No se puede eliminar una cuenta que tiene saldo disponible.")
 
         await this.accountRepo.remove(account)
         return 

@@ -1,123 +1,179 @@
-import { useState } from "react"
-import type { Loan, LoanType } from "../types"
+import { useState, type ChangeEvent, type FormEvent } from "react";
+import type { Loan, LoanType } from "../types";
 import { useAccounts } from "../../accounts/hooks"
-import type { Account } from "../../accounts/types"
+import type { Account } from "../../accounts/types";
 
 interface Props {
-    onSubmit: (data: {
-        lender: string
-        principalAmount: number
-        type: LoanType
-        startDate: string
-        accountId: string
-    }) => Promise<Loan>
+  lenders?: Array<string>;
+  onSubmit: (data: {
+    lender: string;
+    principalAmount: number;
+    type: LoanType;
+    startDate: string;
+    accountId: string;
+  }) => Promise<Loan>;
 }
 
+// Obtenemos la fecha de hoy en formato YYYY-MM-DD
+const getTodayDate = () => new Date().toISOString().split("T")[0];
 
-export default function LoanForm({ onSubmit }: Props) {
+const initialState = {
+  lender: "",
+  principalAmount: "" as unknown as number,
+  type: "GIVEN" as LoanType,
+  startDate: getTodayDate(),
+  accountId: "",
+};
 
-    const [lender, setLender] = useState("")
-    const [principalAmount, setPrincipalAmount] = useState(0)
-    const [type, setType] = useState<LoanType>("GIVEN")
-    const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0])
-    const [accountId, setAccountId] = useState("")
+export default function LoanForm({ lenders = [], onSubmit }: Props) {
+  const [formData, setFormData] = useState(initialState);
+  const [isCustomLender, setIsCustomLender] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const { accounts } = useAccounts();
+  const { accounts, loading } = useAccounts();
 
-    const handleSubmit = async (e: React.FormEvent) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
+    setError(null); // Limpiar error al escribir
+    setFormData((prev) => ({
+      ...prev,
+      [id]: id === "principalAmount" ? Number(value) : value,
+    }));
+  };
 
-        e.preventDefault()
+  const handleLenderSelect = (e: ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setError(null);
+    if (value === "otro") {
+      setIsCustomLender(true);
+      setFormData((prev) => ({ ...prev, lender: "" }));
+    } else {
+      setIsCustomLender(false);
+      setFormData((prev) => ({ ...prev, lender: value }));
+    }
+  };
 
-        if (!lender || !principalAmount) return
-
-        await onSubmit({
-            lender,
-            principalAmount,
-            type,
-            startDate,
-            accountId
-        })
-
-        setLender("")
-        setPrincipalAmount(0)
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    
+    // VALIDACIÓN DE FECHA: No permitir fechas futuras
+    const today = getTodayDate();
+    if (formData.startDate > today) {
+      setError("La fecha no puede ser mayor a hoy");
+      return;
     }
 
-    return (
+    if (!formData.lender || !formData.principalAmount || !formData.accountId) {
+      setError("Por favor completa todos los campos obligatorios");
+      return;
+    }
 
-        <form onSubmit={handleSubmit}>
+    try {
+      setIsSubmitting(true);
+      await onSubmit(formData);
+      setFormData(initialState);
+      setIsCustomLender(false);
+      setError(null);
+    } catch (err) {
+      setError("Ocurrió un error al guardar el préstamo");
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-            <select
-                value={type}
-                id="type"
-                onChange={(e) =>
-                    setType(e.target.value as LoanType)
-                }
-            >
+  if (loading) return <span>Cargando cuentas...</span>;
 
-                <option value="GIVEN">
-                    Presté dinero
-                </option>
+  return (
+    <form onSubmit={handleSubmit} className="loan-form">
+      {/* Mensaje de error centralizado */}
+      {error && (
+        <div style={{ color: 'white', background: '#ff4d4d', padding: '10px', marginBottom: '15px', borderRadius: '4px' }}>
+          {error}
+        </div>
+      )}
 
-                <option value="RECEIVED">
-                    Me prestaron
-                </option>
+      <div>
+        <label htmlFor="type">Tipo de préstamo</label>
+        <select id="type" value={formData.type} onChange={handleChange}>
+          <option value="GIVEN">Presté dinero</option>
+          <option value="RECEIVED">Me prestaron</option>
+        </select>
+      </div>
 
-            </select>
-
+      <div>
+        <label htmlFor="lender">Persona / Prestamista</label>
+        {lenders.length > 0 && !isCustomLender ? (
+          <select id="lender-select" value={formData.lender} onChange={handleLenderSelect} required>
+            <option value="">Selecciona una persona</option>
+            {lenders.map((len) => (
+              <option key={len} value={len}>{len}</option>
+            ))}
+            <option value="otro">-- Otro (Escribir nombre) --</option>
+          </select>
+        ) : (
+          <div style={{ display: 'flex', gap: '5px' }}>
             <input
-                type="text"
-                id="lender"
-                placeholder="Persona"
-                value={lender}
-                onChange={(e) =>
-                    setLender(e.target.value)
-                }
+              type="text"
+              id="lender"
+              placeholder="Nombre de la persona"
+              value={formData.lender}
+              onChange={handleChange}
+              required
+              autoFocus={isCustomLender}
             />
+            {lenders.length > 0 && (
+              <button type="button" onClick={() => {setIsCustomLender(false); setError(null);}}>
+                Lista
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
-            <input
-                type="number"
-                id="principalAmount"
-                placeholder="Monto"
-                value={principalAmount}
-                onChange={(e) =>
-                    setPrincipalAmount(Number(e.target.value))
-                }
-            />
+      <div>
+        <label htmlFor="principalAmount">Monto</label>
+        <input
+          type="number"
+          id="principalAmount"
+          placeholder="0.00"
+          min="0.01"
+          step="any"
+          value={formData.principalAmount || ""}
+          onChange={handleChange}
+          required
+        />
+      </div>
 
+      <div>
+        <label htmlFor="startDate">Fecha</label>
+        <input
+          type="date"
+          id="startDate"
+          // Restricción visual en el calendario del navegador
+          max={getTodayDate()} 
+          value={formData.startDate}
+          onChange={handleChange}
+          required
+        />
+      </div>
 
+      <div>
+        <label htmlFor="accountId">Cuenta</label>
+        <select id="accountId" value={formData.accountId} onChange={handleChange} required>
+          <option value="">Selecciona una cuenta</option>
+          {accounts?.data.map((acc: Account) => (
+            <option key={acc.id} value={acc.id}>
+              {acc.name} (${acc.balance})
+            </option>
+          ))}
+        </select>
+      </div>
 
-            {/* Fecha */}
-            <input
-                className="cursorPointer"
-                type="date"
-                id="startDate"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-            />
-
-
-            {/* Cuenta */}
-            <select
-                className="cursorPointer"
-                id="accountId"
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-                required
-            >
-                <option value="">Selecciona cuenta</option>
-                {accounts?.data.map((acc: Account) => (
-                    <option key={acc.id} value={acc.id}>
-                        {acc.name} - {acc.balance} - {acc.type}
-                    </option>
-                ))}
-            </select>
-
-
-            <button>
-                Crear préstamo
-            </button>
-
-        </form>
-    )
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Guardando..." : "Crear préstamo"}
+      </button>
+    </form>
+  );
 }

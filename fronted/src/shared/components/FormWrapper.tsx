@@ -1,14 +1,25 @@
 import { useState } from "react"
 
 interface Props<T> {
-  onSubmit: (data: Partial<T>) => Promise<T|void>
+  onSubmit: (data: Partial<T>) => Promise<T | void>
   children: (
     props: {
       loading: boolean
       error: string | null
-      handleSubmit:  (data: T|Partial<T>) => Promise<T|void>
+      handleSubmit: (data: T | Partial<T>) => Promise<T | void>
     }
   ) => React.ReactNode
+}
+
+const detailsToText = (details: any) => {
+  let text = "";
+  for (const key in details) {
+    text += `${key}:\n`;
+    details[key].forEach((item: any) => {
+      text += `- ${item}\n`;
+    });
+  }
+  return text;
 }
 
 export default function FormWrapper<T>({
@@ -30,7 +41,15 @@ export default function FormWrapper<T>({
 
     } catch (err: any) {
 
-      setError(err?.error.message ?? "Error")
+      if (err?.error?.message === "Errores de validación") {
+        console.log(err?.error?.message === "Errores de validación")
+        const messages = detailsToText(err.error.details)
+        setError(messages)
+        return
+      } else {
+        setError(err.error.message?.toString() || "Error al enviar el formulario")
+      }
+
 
     } finally {
 

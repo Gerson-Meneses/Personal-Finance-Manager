@@ -1,0 +1,96 @@
+/* --- BalanceCards Component Styles --- */
+
+.balance-cards-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px 0;
+  flex-wrap: wrap; /* Para que sea responsivo */
+}
+
+.balance-card {
+  flex: 1; /* Distribuye el espacio equitativamente */
+  min-width: 280px; /* Tamaño mínimo para no verse muy estrechas */
+  background-color: #1a1e36; /* Fondo de tarjeta sutilmente más claro */
+  border-radius: 12px;
+  padding: 24px;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative; /* Para el borde lateral */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra suave para profundidad */
+}
+
+/* Efecto hover profesional */
+.balance-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  background-color: #212644;
+}
+
+/* Borde lateral sutil para cada tarjeta */
+.balance-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  border-radius: 12px 0 0 12px;
+  transition: width 0.3s ease-in-out;
+}
+
+/* Colores específicos para los bordes */
+.card-debit::before { background-color: #27ae60; } /* Verde para débito */
+.card-credit::before { background-color: #2980b9; } /* Azul para crédito */
+.card-danger::before { background-color: #c0392b; } /* Rojo para deuda */
+
+/* Estilos de los elementos internos */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.card-icon {
+  color: #f1c40f; /* Color dorado/amarillo principal */
+}
+
+.card-label {
+  color: #bdc3c7; /* Texto de etiqueta sutil */
+  font-size: 0.9rem;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-amount {
+  color: #fff; /* Monto en blanco para máximo contraste */
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+}
+
+/* Estilo para el enlace de detalles, sutil por defecto */
+.card-details {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  align-self: flex-end; /* Alineado a la derecha */
+}
+
+/* El enlace destaca solo en el hover de la tarjeta completa */
+.balance-card:hover .card-details {
+  opacity: 1;
+  color: #f1c40f;
+}
+

@@ -2,16 +2,20 @@ import { apiFetch } from "../../shared/api";
 import type { Data } from "../../shared/dataApiInterface";
 import type { Account, CreateAccountDTO } from "./types";
 
-export const getAccounts = (): Promise<Data<Account>> =>
-  apiFetch<Data<Account>>("/accounts");
+export const getAccounts = async (): Promise<Data<Account>> => {
+  const accounts = await apiFetch<Data<Account>>("/accounts");
+  return accounts
+}
 
-export const createAccount = async (data: CreateAccountDTO): Promise<Account>  =>
-  await apiFetch<Account>("/accounts", {
+export const createAccount = async (data: CreateAccountDTO): Promise<Account> => {
+  console.log(data)
+  return await apiFetch<Account>("/accounts", {
     method: "POST",
     body: JSON.stringify(data),
   });
+}
 
-export const getAccountById = async (id: string): Promise<Account> =>{
+export const getAccountById = async (id: string): Promise<Account> => {
   return await apiFetch<Account>(`/accounts/${id}`);
 }
 export const deleteAccount = async (id: string): Promise<void> => {
@@ -22,7 +26,7 @@ export const deleteAccount = async (id: string): Promise<void> => {
 
 export const updateAccount = async (id: string, data: Partial<CreateAccountDTO>): Promise<Account> => {
   return await apiFetch<Account>(`/accounts/${id}`, {
-    method: "PATCH",  
+    method: "PATCH",
     body: JSON.stringify(data),
   })
 }

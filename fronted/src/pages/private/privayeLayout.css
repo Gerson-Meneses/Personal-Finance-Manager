@@ -1,34 +1,29 @@
-main {
-    min-height: 84vh;
-}
-
 header {
     position: sticky;
     top: 0;
-    background-color: #3a3a3a;
-    color: #ededed;
+    z-index: 100; /* Para que siempre esté por encima de las tarjetas */
+    background-color: #11112b; /* Azul muy oscuro acorde al body */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     width: 100%;
-    text-align: center;
-    color: black;
-    max-height: 8rem;
-    box-sizing: border-box;
     display: flex;
-    justify-content: space-around;
-    padding: .5rem;
+    justify-content: space-between; /* Header más ancho */
+    padding: 1rem 2rem;
     align-items: center;
+    box-sizing: border-box;
 }
 
 header h2 {
-    color: white;
+    margin: 0;
+    font-size: 1.2rem;
+    color: #f1c40f; /* Dorado para resaltar tu nombre */
 }
 
 footer {
-    bottom: 0;
-    position: sticky;
-    background-color: #3e3e3e;
+    background-color: #11112b;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     width: 100%;
     text-align: center;
-    color: white;
-    padding: 1vh;
+    color: #94a3b8;
+    padding: 1rem;
     box-sizing: border-box;
 }

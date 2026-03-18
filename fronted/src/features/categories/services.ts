@@ -2,8 +2,8 @@ import { apiFetch } from "../../shared/api";
 import type { Data } from "../../shared/dataApiInterface";
 import type { Category, CreateCategoryDTO } from "./types";
 
-export const getCategories: () => Promise<Data<Category>> = () =>
-  apiFetch<Data<Category>>("/category");
+export const getCategories: () => Promise<Data<Category>> = async () =>
+  await apiFetch<Data<Category>>("/category");
 
 export const createCategory = async (data: CreateCategoryDTO): Promise<Category> =>
   await apiFetch<Category>("/category", {

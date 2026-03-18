@@ -27,14 +27,6 @@ export function TransactionsPage() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        console.log({
-            name,
-            type,
-            amount,
-            date,
-            accountId,
-            categoryId,
-        })
 
         createMutation.mutate({
             name,
@@ -129,11 +121,11 @@ export function TransactionsPage() {
 
             <ul>
                 <h2>Historial</h2>
-                {dataTransactions?.data?.map((t: any) => (
-                    <li key={t.id}>
-                        {t.name} - S/ {t.amount} ({t.type})
+               {dataTransactions?.data.map((tx) => (
+                    <li key={tx.id}>
+                        {tx.name} - {tx.amount} - {tx.type} - {tx.date}
                     </li>
-                ))}
+                )) ?? <p>No transactions found.</p>}
             </ul>
         </div>
     );
