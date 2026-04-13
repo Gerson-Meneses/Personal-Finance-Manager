@@ -1,11 +1,13 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../auth/authContext";
+
 import type { JSX } from "react";
+import { useAuthContext } from "../auth/authContext";
+import LoadingScreen from "../../shared/components/LoadingScreen/LoadingScreen";
 
 export function ProtectedRoute({ children }: { children: JSX.Element }) {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuthContext();
 
-  if (loading) return <p>Checking session...</p>;
+  if (loading) return <LoadingScreen></LoadingScreen>;
 
   if (!user) return <Navigate to="/login" />;
 
