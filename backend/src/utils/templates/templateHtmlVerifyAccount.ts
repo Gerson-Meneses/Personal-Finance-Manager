@@ -28,7 +28,7 @@ export const templateHtmlVerifyAccount = (name: string) => {
                 <table align="center" border="0" cellpadding="0" cellspacing="0">
                     <tr>
                         <td align="center" bgcolor="#38bdf8" style="border-radius: 6px;">
-                            <a href="http://localhost:5173/" target="_blank" style="display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: bold; color: #0f172a; text-decoration: none; border-radius: 6px;">
+                            <a href="https://personal-finance-manager-lilac.vercel.app/verify-email" target="_blank" style="display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: bold; color: #0f172a; text-decoration: none; border-radius: 6px;">
                                 Verificar mi cuenta
                             </a>
                         </td>
@@ -37,7 +37,7 @@ export const templateHtmlVerifyAccount = (name: string) => {
 
                 <p style="margin: 30px 0 0 0; font-size: 14px; color: #64748b; text-align: center;">
                     Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
-                    <a href="#" style="color: #38bdf8; text-decoration: none; word-break: break-all;">https://finnacemanager.com...</a>
+                    <a href="#" style="color: #38bdf8; text-decoration: none; word-break: break-all;">https://personal-finance-manager-lilac.vercel.app/verify-email</a>
                 </p>
             </td>
         </tr>

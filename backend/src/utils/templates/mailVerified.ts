@@ -25,7 +25,7 @@ export const mailVerifiedTemplate = (name: string) => {
                 <table align="center" border="0" cellpadding="0" cellspacing="0">
                     <tr>
                         <td align="center" bgcolor="#38bdf8" style="border-radius: 6px;">
-                            <a href="https://tupagina.com" target="_blank" style="display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: bold; color: #0f172a; text-decoration: none; border-radius: 6px;">
+                            <a href="https://personal-finance-manager-lilac.vercel.app/login" target="_blank" style="display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: bold; color: #0f172a; text-decoration: none; border-radius: 6px;">
                                 Ir a mi Dashboard
                             </a>
                         </td>
