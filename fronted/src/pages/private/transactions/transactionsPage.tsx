@@ -1,132 +1,108 @@
-import { useState } from "react";
-import {
-    useTransactions,
-    useCreateTransaction,
-} from "../../../features/transactions/hooks";
-import { useAccounts } from "../../../features/accounts/hooks";
-import type { Account, CreateAccountDTO } from "../../../features/accounts/types";
-import "./trasactionPage.css"
-import SelectCategory from "../../../features/categories/components/selectCategory";
-import AccountForm from "../../../features/accounts/components/accountForm/accountForm";
+import { useState } from "react"
+import { useTransactions } from "../../../features/transactions/hooks"
+import TransactionItem from "../../../features/transactions/components/TransactionItem"
+import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen"
+import type { Transaction } from "../../../features/transactions/types"
+import { format } from "date-fns"
+import "./TransactionsPage.css"
 
 export function TransactionsPage() {
-    const { data: dataTransactions, isLoading, error } = useTransactions();
-    const { accounts, createAccount } = useAccounts();
-    const createMutation = useCreateTransaction();
+    const { transactions, loading, error } = useTransactions()
+    const [filter, setFilter] = useState<"ALL" | "INCOME" | "EXPENSE">("ALL")
 
-    const [name, setName] = useState("");
-    const [type, setType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
-    const [amount, setAmount] = useState<number>(0);
-    const [date, setDate] = useState("");
-    const [accountId, setAccountId] = useState("");
-    const [categoryId, setCategoryId] = useState("");
+    if (loading) return <LoadingScreen message="Cargando transacciones..." />
+    if (error instanceof Error) return <p className="text-muted" style={{ padding: "2rem" }}>{error.message}</p>
 
-    if (isLoading) return <p>Loading...</p>;
+    const filtered = filter === "ALL"
+        ? transactions
+        : transactions.filter(tx => tx.type === filter)
+
+    const grouped = filtered.reduce((acc, tx) => {
+        const date = tx.date
+        if (!acc[date]) acc[date] = []
+        acc[date].push(tx)
+        return acc
+    }, {} as Record<string, Transaction[]>)
+
+    const sortedDates = Object.keys(grouped).sort(
+        (a, b) => new Date(b).getTime() - new Date(a).getTime()
+    )
+
+    return (
+        <div className="page-container transactions-page">
+
+            <header className="page-header">
+                <div>
+                    <h1>Transacciones</h1>
+                    <p className="text-muted">
+                        {transactions.length} movimiento{transactions.length !== 1 ? "s" : ""} registrado{transactions.length !== 1 ? "s" : ""}
+                    </p>
+                </div>
+            </header>
+
+            {/* Filtros */}
+            <div className="tx-filter-bar">
+                {(["ALL", "INCOME", "EXPENSE"] as const).map(f => (
+                    <button
+                        key={f}
+                        className={`tx-filter-btn ${filter === f ? "active " + f.toLowerCase() : ""}`}
+                        onClick={() => setFilter(f)}
+                    >
+                        {f === "ALL" ? "Todos" : f === "INCOME" ? "Ingresos" : "Gastos"}
+                    </button>
+                ))}
+            </div>
+
+            {/* Lista agrupada por fecha */}
+            {transactions.length === 0 ? (
+                <div className="dashboard-card" style={{ textAlign: "center", padding: "48px 20px" }}>
+                    <p className="text-muted">Sin transacciones registradas.</p>
+                </div>
+            ) : (
+                <div className="tx-grouped-list">
+                    {sortedDates.map(date => (
+                        <div key={date} className="tx-date-group">
+                            <div className="tx-date-header">
+                                <span>{format(new Date(date), "dd/MM/yyyy")}</span>
+                                <span className="tx-date-count">{grouped[date].length}</span>
+                            </div>
+                            {grouped[date].map(tx => (
+                                <TransactionItem key={tx.id} transaction={tx} />
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+
+
+
+
+
+/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+/* import RecentTransactions from "../../../features/dashboard/components/recentTransactions";
+import { useTransactions } from "../../../features/transactions/hooks";
+import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
+import "./trasactionPage.css"
+
+
+export function TransactionsPage() {
+    const { transactions, loading, error } = useTransactions();
+
+    if (loading) return <LoadingScreen message="Cargando transacciones..." />;
     if (error instanceof Error) return <p>{error.message}</p>;
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-
-        createMutation.mutate({
-            name,
-            type,
-            amount,
-            date,
-            accountId,
-            categoryId,
-        });
-
-        setName("");
-        setAmount(0);
-        setDate("");
-        setAccountId("");
-        setCategoryId("");
-    };
 
     return (
         <div style={{ padding: "2rem" }}>
             <h1>Transactions</h1>
-
-            <form onSubmit={handleSubmit}>
-                <h2>Crear Transacción:</h2>
-                {/* Nombre */}
-                <input
-                    placeholder="Nombre"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                />
-
-                {/* Tipo */}
-                <select
-                    className="cursorPointer"
-                    value={type}
-                    onChange={(e) =>
-                        setType(e.target.value as "INCOME" | "EXPENSE")
-                    }
-                >
-                    <option value="EXPENSE">EXPENSE</option>
-                    <option value="INCOME">INCOME</option>
-                </select>
-
-                {/* Monto */}
-                <input
-                    type="number"
-                    placeholder="Monto"
-                    value={amount}
-                    onChange={(e) => setAmount(Number(e.target.value))}
-                    required
-                />
-
-                {/* Fecha */}
-                <input
-                    className="cursorPointer"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    required
-                />
-
-                {/* Cuenta */}
-                <select
-                    className="cursorPointer"
-                    value={accountId}
-                    onChange={(e) => setAccountId(e.target.value)}
-                    required
-                >
-                    <option value="">Selecciona cuenta</option>
-                    {accounts?.data.map((acc: Account) => (
-                        <option key={acc.id} value={acc.id}>
-                            {acc.name} - {acc.balance} - {acc.type}
-                        </option>
-                    ))}
-                </select>
-
-                {/* Categoría */}
-                <SelectCategory
-                    value={categoryId}
-                    onChange={setCategoryId}
-                    type={type}
-                    noLoan={true}
-                    visible={true}
-                />
-
-                <button type="submit" className="cursorPointer" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? "Guardando..." : "Agregar"}
-                </button>
-            </form>
-
-            <AccountForm onSubmit={(data) => createAccount(data as CreateAccountDTO)}  ></AccountForm>
-
             <ul>
                 <h2>Historial</h2>
-               {dataTransactions?.data.map((tx) => (
-                    <li key={tx.id}>
-                        {tx.name} - {tx.amount} - {tx.type} - {tx.date}
-                    </li>
-                )) ?? <p>No transactions found.</p>}
+                <RecentTransactions transactions={transactions} messageEmpty="Sin transacciones registradas." ></RecentTransactions>
             </ul>
         </div>
     );
 }
+ */

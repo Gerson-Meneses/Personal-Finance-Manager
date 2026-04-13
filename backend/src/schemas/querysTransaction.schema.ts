@@ -5,22 +5,22 @@ export const transactionQuerySchema = z.object({
 
     type: z.enum(TypeTransaction).optional(),
 
-    accountId: z.string().uuid().optional(),
-    categoryId: z.string().uuid().optional(),
+    accountId: z.uuid().optional(),
+    categoryId: z.uuid().optional(),
 
     date: z
         .string()
-        .transform((v) => new Date(v))
+        .refine((date) => !isNaN(Date.parse(date)), { message: "Invalid date format" })
         .optional(),
 
     from: z
         .string()
-        .transform((v) => new Date(v))
+        .refine((date) => !isNaN(Date.parse(date)), { message: "Invalid date format" })
         .optional(),
 
     to: z
         .string()
-        .transform((v) => new Date(v))
+        .refine((date) => !isNaN(Date.parse(date)), { message: "Invalid date format" })
         .optional(),
 
     amount: z

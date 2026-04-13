@@ -1,223 +1,229 @@
-import { useState } from "react"
-import type { Account, AccountType } from "../../types"
-import FormWrapper from "../../../../shared/components/FormWrapper"
+import { useEffect, useState } from "react";
+import type { Account, AccountType, CreateAccountDTO, UpdateAccountDTO } from "../../types";
+import type { UseMutationResult } from "@tanstack/react-query";
+import type { DataError, DetailsError } from "../../../../shared/dataApiInterface";
+import { handleFieldChange } from "../../../../shared/utils/handleFieldChange";
+import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle";
+import { TextInput } from "../../../../shared/components/TextInput/TextInput";
+import { ColorPicker } from "../../../../shared/components/ColorPicker/ColorPicker";
+import { IconPicker } from "../../../../shared/components/IconPicker/IconPicker";
+import "./accountForm.css"
+import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
+import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
 
-interface Props {
-    onSubmit: (data: Partial<Account>) => Promise<Account | void>
-    noAllowed?: {
-        name?: boolean
-        balance?: boolean
-        type?: boolean
-        color?: boolean
-        icon?: boolean
-        creditLimit?: boolean
-        billingCloseDay?: boolean
-        paymentDueDay?: boolean
-        overdraft?: boolean
-    }
-    data?: { type: "CREDIT" | "DEBIT" }
+interface Fields {
+    name?: boolean
+    balance?: boolean
+    type?: boolean
+    color?: boolean
+    icon?: boolean
+    creditLimit?: boolean
+    billingCloseDay?: boolean
+    paymentDueDay?: boolean
+    overdraft?: boolean
 }
 
-export default function AccountForm({ onSubmit, noAllowed, data }: Props) {
-    const [name, setName] = useState("")
-    const [balance, setBalance] = useState(0)
-    const [type, setType] = useState<AccountType>(data?.type || "DEBIT")
-    const [color, setColor] = useState("#000000")
-    const [icon, setIcon] = useState("")
-    const [creditLimit, setCreditLimit] = useState(0)
-    const [billingCloseDay, setBillingCloseDay] = useState(0)
-    const [paymentDueDay, setPaymentDueDay] = useState(0)
-    const [overdraft, setOverdraft] = useState(0)
+interface PropsAccountForm {
+    mutation: UseMutationResult<Account, DataError<CreateAccountDTO>, CreateAccountDTO | UpdateAccountDTO>
+    account?: Account
+    fieldsHidden?: Fields
+    fieldsDisabled?: Fields
+    isEdit?: boolean
+    onSuccess?: () => void
+}
 
-    // Determinar si la cuenta actual es de crédito
-    const isCredit = (data?.type || type) === "CREDIT"
+/* function generarColorHex() {
+    const hex = Math.floor(Math.random() * 16777215).toString(16);
+    return "#" + hex.padStart(6, '0');
+} */
 
-    // Validación robusta: Deshabilita si falta algún campo requerido visible
-    const isFormInvalid = () => {
-        if (!noAllowed?.name && !name.trim()) return true
-        if (!noAllowed?.balance && (balance === undefined || isNaN(balance))) return true
+export default function AccountForm({ mutation, account, fieldsHidden, fieldsDisabled, isEdit, onSuccess }: PropsAccountForm) {
 
-        // Validaciones solo si es Crédito
-        if (isCredit) {
-            if (!noAllowed?.creditLimit && creditLimit <= 0) return true
-            if (!noAllowed?.billingCloseDay && billingCloseDay <= 0) return true
-            if (!noAllowed?.paymentDueDay && paymentDueDay <= 0) return true
-        }
+    const { mutate, isPending, error, reset, isSuccess } = mutation;
 
-        return false
+    const initialStateForm: CreateAccountDTO = {
+        type: "CREDIT",
+        name: "",
+        color: "",
+        icon: "Banknote",
+        creditLimit: 0,
+        billingCloseDay: 0,
+        paymentDueDay: 0,
+        overdraft: 0
     }
 
+    const [formData, setFormData] = useState<CreateAccountDTO>(initialStateForm);
+    const [errors, setErrors] = useState<DetailsError<CreateAccountDTO> | null>(null);
+
+    useEffect(() => {
+        if (isSuccess) {
+            if (!isEdit) setFormData(initialStateForm);
+            setErrors(null);
+            reset();
+            onSuccess && onSuccess();
+        }
+    }, [isSuccess]);
+
+    useEffect(() => {
+        if (isEdit && account) {
+            setFormData({
+                type: account.type,
+                name: account.name,
+                color: account.color,
+                icon: account.icon,
+                creditLimit: account.creditLimit,
+                billingCloseDay: account.billingCloseDay,
+                paymentDueDay: account.paymentDueDay,
+                overdraft: account.overdraft
+            });
+        }
+    }, [isEdit, account]);
+
+
+    useEffect(() => {
+        if (error?.details) {
+            setErrors(error.details as DetailsError<CreateAccountDTO>);
+        }
+    }, [error]);
+
+    useEffect(() => {
+        reset();
+        setErrors(null);
+    }, [])
+
+
+    const onChange = <K extends keyof CreateAccountDTO>(
+        field: K,
+        value: CreateAccountDTO[K]
+    ) => {
+        handleFieldChange(field, value, setFormData, setErrors);
+    };
+
+    const getErrorMessage = (field: keyof CreateAccountDTO) => {
+        return errors?.[field] ? errors[field][0] : null;
+    };
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setErrors(null);
+
+        if (isEdit && account) {
+            const updateData: UpdateAccountDTO = {
+                ...formData,
+                accountId: account.id
+            };
+            mutate(updateData);
+        } else {
+            mutate(formData);
+        }
+    };
+
     return (
-        <FormWrapper<Account> onSubmit={onSubmit}>
-            {({ loading, error, handleSubmit }) => (
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault()
-                        const payload: Partial<Account> = {
-                            name,
-                            balance,
-                            type: data?.type || type,
-                            color,
-                            icon,
-                        }
+        <form onSubmit={handleSubmit} className="form-default-container">
+            <h2>{isEdit ? "Editar cuenta" : "Crear nueva cuenta"}</h2>
 
-                        // Solo enviamos datos de crédito si aplica
-                        if (isCredit) {
-                            Object.assign(payload, {
-                                creditLimit,
-                                billingCloseDay,
-                                paymentDueDay,
-                                overdraft,
-                            })
-                        }
+            <div className="form-default-row">
+                {!fieldsHidden?.type && (
+                    <TypeToggle
+                        label="Tipo de cuenta"
+                        value={formData.type}
+                        onChange={(val) => {
+                            onChange("type", val as AccountType);
+                        }}
+                        disabled={fieldsDisabled?.type}
+                        error={getErrorMessage("type")}
+                        leftOption={{ label: "Débito", value: "DEBIT", color: "#59f" }}
+                        rightOption={{ label: "Credito", value: "CREDIT", color: "#f2f" }}
+                    />
+                )}
+            </div>
 
-                        handleSubmit(payload)
-                    }}
-                >
-                    {/* TIPO DE CUENTA */}
-                    {noAllowed?.type || (
-                        <div>
-                            <label htmlFor="type">Tipo de Cuenta</label>
-                            <select
-                                id="type"
-                                value={data?.type || type}
-                                onChange={(e) => setType(e.target.value as AccountType)}
-                                disabled={!!data?.type}
-                                required={!noAllowed?.type}
-                            >
-                                <option value="DEBIT">Débito</option>
-                                <option value="CREDIT">Crédito</option>
-                            </select>
-                        </div>
-                    )}
+            <div className="form-default-row">
+                {!fieldsHidden?.name && (
+                    <TextInput
+                        label="Nombre de la cuenta"
+                        value={formData.name}
+                        onChange={(val) => onChange("name", val)}
+                        error={getErrorMessage("name")}
+                    />)}
+            </div>
+            <div className="form-default-row">
+                {!fieldsHidden?.color && (
+                    <ColorPicker
+                        value={formData.color}
+                        onChange={(val) => onChange("color", val)}
+                    />)}
+                {!fieldsHidden?.icon && (
+                    <IconPicker
+                        label="Icono"
+                        value={formData.icon}
+                        onChange={(val) => onChange("icon", val)}
+                        error={getErrorMessage("icon")}
+                    />)}
+            </div>
 
-                    {/* NOMBRE */}
-                    {noAllowed?.name || (
-                        <div>
-                            <label htmlFor="name">Nombre de la Cuenta</label>
-                            <input
-                                id="name"
-                                type="text"
-                                placeholder="Ej. Visa Oro, Ahorros BBVA..."
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required={!noAllowed?.name}
+            {formData.type === "CREDIT" && (
+                <div className="form-credit-section">
+                    <div className="form-default-row">
+                        {!fieldsHidden?.creditLimit && (
+                            <NumericInput
+                                label="Límite de crédito"
+                                value={formData.creditLimit}
+                                placeholder="0"
+                                icon={"ArrowUpRightFromCircle"}
+                                onChange={(val) => onChange("creditLimit", val)}
+                                error={getErrorMessage("creditLimit")}
                             />
-                        </div>
-                    )}
+                        )}
 
-                    {/* BALANCE (Siempre visible) */}
-                    {!isCredit && (noAllowed?.balance || (
-                        <div>
-                            <label htmlFor="balance">
-                                {isCredit ? "Deuda Actual (Balance)" : "Balance Inicial"}
-                            </label>
-                            <input
-                                id="balance"
-                                type="number"
-                                value={balance}
-                                onChange={(e) => setBalance(Number(e.target.value))}
-                                required={!noAllowed?.balance}
+                        {!fieldsHidden?.overdraft && (
+                            <NumericInput
+                                label="Sobregiro permitido"
+                                value={formData.overdraft}
+                                placeholder="0"
+                                symbol="%"
+                                icon={"TrendingUp"}
+                                onChange={(val) => onChange("overdraft", val)}
+                                error={getErrorMessage("overdraft")}
                             />
-                        </div>
-                    ))}
-
-                    {/* CAMPOS CONDICIONALES DE CRÉDITO */}
-                    {isCredit && (
-                        <>
-                            {noAllowed?.creditLimit || (
-                                <div>
-                                    <label htmlFor="creditLimit">Límite de Crédito</label>
-                                    <input
-                                        id="creditLimit"
-                                        type="number"
-                                        value={creditLimit}
-                                        onChange={(e) => setCreditLimit(Number(e.target.value))}
-                                        required={!noAllowed?.creditLimit}
-                                    />
-                                </div>
-                            )}
-
-                            {noAllowed?.billingCloseDay || (
-                                <div>
-                                    <label htmlFor="billingCloseDay">Día de Cierre</label>
-                                    <input
-                                        id="billingCloseDay"
-                                        type="number"
-                                        max={29}
-                                        min={1}
-                                        value={billingCloseDay}
-                                        onChange={(e) => setBillingCloseDay(Number(e.target.value))}
-                                        required={!noAllowed?.billingCloseDay}
-                                    />
-                                </div>
-                            )}
-
-                            {noAllowed?.paymentDueDay || (
-                                <div>
-                                    <label htmlFor="paymentDueDay">Día de Pago</label>
-                                    <input
-                                        id="paymentDueDay"
-                                        type="number"
-                                        max={29}
-                                        min={1}
-                                        value={paymentDueDay}
-                                        onChange={(e) => setPaymentDueDay(Number(e.target.value))}
-                                        required={!noAllowed?.paymentDueDay}
-                                    />
-                                </div>
-                            )}
-
-                            {noAllowed?.overdraft || (
-                                <div>
-                                    <label htmlFor="overdraft">Sobregiro Permitido (%)</label>
-                                    <input
-                                        id="overdraft"
-                                        type="number"
-                                        value={overdraft}
-                                        onChange={(e) => setOverdraft(Number(e.target.value))}
-                                    />
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    {/* ESTÉTICA */}
-                    {noAllowed?.color || (
-                        <div>
-                            <label htmlFor="color">Color</label>
-                            <input
-                                id="color"
-                                type="color"
-                                value={color}
-                                onChange={(e) => {setColor(e.target.value); console.log(e.target.value)}}
+                        )}
+                    </div>
+                    <div className="form-default-row">
+                        {!fieldsHidden?.billingCloseDay && (
+                            <NumericInput
+                                label="Día de cierre"
+                                value={formData.billingCloseDay}
+                                placeholder="1-28"
+                                icon={"CalendarRange"}
+                                onChange={(val) => onChange("billingCloseDay", val)}
+                                error={getErrorMessage("billingCloseDay")}
                             />
-                        </div>
-                    )}
+                        )}
 
-                    {noAllowed?.icon || (
-                        <div>
-                            <label htmlFor="icon">Nombre del Icono</label>
-                            <input
-                                id="icon"
-                                type="text"
-                                placeholder="wallet"
-                                value={icon}
-                                onChange={(e) => setIcon(e.target.value)}
+                        {!fieldsHidden?.paymentDueDay && (
+                            <NumericInput
+                                label="Día de vencimiento"
+                                value={formData.paymentDueDay}
+                                placeholder="1-28"
+                                icon={"CalendarCheck"}
+                                onChange={(val) => onChange("paymentDueDay", val)}
+                                error={getErrorMessage("paymentDueDay")}
                             />
-                        </div>
-                    )}
-
-                    {error && <p style={{ color: "red" }}>{error}</p>}
-
-                    <button
-                        type="submit"
-                        disabled={loading || isFormInvalid()}
-                    >
-                        {loading ? "Guardando..." : "Crear cuenta"}
-                    </button>
-                </form>
+                        )}
+                    </div>
+                </div>
             )}
-        </FormWrapper>
+            {error && !error.details && (
+                <div className="error-banner">
+                    {error.message || "Ocurrió un error inesperado"}
+                </div>
+            )}
+            <SuccessToast isSucces={isSuccess} successText={"Cuenta " + (isEdit ? "actulizada" : "creada") + " con exito."}>
+                <button className="form-default-button" type="submit" disabled={isPending}>
+                    {isPending ? "Guardando..." : isEdit ? "Actualizar" : "Crear"}
+                </button>
+            </SuccessToast>
+        </form>
     )
+
 }

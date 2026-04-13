@@ -1,3 +1,6 @@
+import type { Account } from "../accounts/types"
+import type { Transaction } from "../transactions/types"
+
 export interface Loan {
   id: string
   type: "GIVEN" | "RECEIVED"
@@ -6,34 +9,8 @@ export interface Loan {
   status: string
   startDate: string
 }
-
-export interface Account {
-  id: string
-  name: string
-  type: string
-  balance: number
-  color: string
-}
-
 export interface Loan {
-  
-}
 
-export interface Category {
-  id: string
-  name: string
-  type: string
-  color: string
-  icon: string
-}
-
-export interface Transaction {
-  id: string
-  name: string
-  type: "EXPENSE" | "INCOME"
-  amount: number
-  date: string
-  category: Category
 }
 
 export interface DashboardResponse {
@@ -60,10 +37,7 @@ export interface DashboardResponse {
     net: number
   }
 
-  expensesByCategory: {
-    category: string
-    total: number
-  }[]
+  expensesByCategory: CategoryExpense[]
 
   accounts: Account[]
 
@@ -71,4 +45,15 @@ export interface DashboardResponse {
     transactions: Transaction[]
   }
 
+}
+
+export interface CategoryExpense {
+  category: {
+    id: string
+    name: string
+    color: string
+    icon: string
+  }
+  amount: number   
+  total: number    
 }

@@ -1,0 +1,154 @@
+/* .categories-page {} */
+
+.category-form-card { margin-bottom: 0; }
+
+.category-form { display: flex; flex-direction: column; gap: 16px; }
+
+.category-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+/* Color picker */
+.color-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 0.4rem 0.75rem;
+    transition: border-color 0.2s;
+}
+.color-input-wrapper:hover { border-color: #38bdf8; }
+
+.color-picker {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 6px;
+}
+.color-hex {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-family: monospace;
+}
+
+/* Toggle tipo */
+.type-toggle-simple {
+    display: flex;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.type-btn {
+    flex: 1;
+    padding: 0.55rem 1rem;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: 0.82rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.type-btn.expense.active { background: rgba(239,68,68,0.15); color: #ef4444; }
+.type-btn.income.active  { background: rgba(34,197,94,0.15);  color: #22c55e; }
+.type-btn:hover:not(.active) { background: rgba(255,255,255,0.05); color: #f8fafc; }
+
+/* Grid de listas */
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+/* Contador */
+.cat-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.07);
+    color: #64748b;
+    font-size: 0.7rem;
+    font-weight: 400;
+    border-radius: 20px;
+    padding: 1px 8px;
+    margin-left: 8px;
+}
+
+/* Items de categoría */
+.category-list { display: flex; flex-direction: column; gap: 4px; }
+
+.category-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    transition: background 0.15s;
+}
+.category-item:hover { background: rgba(255,255,255,0.04); }
+
+.category-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.category-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.category-icon-wrap {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.category-name {
+    font-size: 0.85rem;
+    color: #f8fafc;
+    font-weight: 400;
+}
+
+.cat-type-badge {
+    font-size: 0.65rem;
+    color: #475569;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    padding: 1px 6px;
+    text-transform: uppercase;
+}
+
+.category-delete-btn {
+    background: none;
+    border: none;
+    color: #475569;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+.category-delete-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+@media (max-width: 640px) {
+    .categories-grid { grid-template-columns: 1fr; }
+    .category-form-row { flex-direction: column; }
+}

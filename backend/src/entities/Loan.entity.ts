@@ -72,7 +72,11 @@ export class Loan {
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt: Date;
 
+    @Column()
+    userId: string; // Agrega esto
+
     @ManyToOne("User", "loans")
+    @JoinColumn({ name: "userId" })
     user: User;
 
     @OneToMany(() => LoanInstallment, loanInstallment => loanInstallment.loan)

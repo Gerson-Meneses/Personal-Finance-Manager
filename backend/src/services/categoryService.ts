@@ -7,13 +7,14 @@ import { PaginationQuerySchema } from "../schemas/queryPagination.schema";
 import { UuidSchema, uuidSchema } from "../schemas/uuid.schema";
 import { PaginatedResult } from "../types";
 
+
 export class CategoryService {
 
     private categoryRepo = AppDataSourceProd.getRepository(Category)
     private userRepo = AppDataSourceProd.getRepository(User)
 
     async getCategoriesByUser(userId: UuidSchema, filters: PaginationQuerySchema): Promise<PaginatedResult<Category>> {
-      const page = filters.page && filters.page > 0 ? filters.page : 1;
+        const page = filters.page && filters.page > 0 ? filters.page : 1;
         const limit = filters.limit && filters.limit > 0 ? filters.limit : 20;
         const order = filters.order ?? 'DESC';
 
@@ -25,7 +26,7 @@ export class CategoryService {
             .skip((page - 1) * limit)
             .take(limit);
 
-       const [categories, total] = await qb.getManyAndCount();
+        const [categories, total] = await qb.getManyAndCount();
 
         return {
             items: categories,
@@ -36,7 +37,7 @@ export class CategoryService {
     }
 
     async getCategoryById(categoryId: UuidSchema, userId: UuidSchema): Promise<Category> {
-        const category = await this.categoryRepo.findOne({ where: { id: categoryId, user: { id: userId } }, relations: ["transactions"] })
+        const category = await this.categoryRepo.findOne({ where: { id: categoryId, user: { id: userId as any } }, relations: ["transactions"] })
         if (!category) throw new NotFoundError("Categoria no encontrada o no pertenece al usuario.")
         return category
     }
@@ -45,7 +46,7 @@ export class CategoryService {
         const user = await this.userRepo.findOneBy({ id: userId })
         if (!user) throw new BadRequestError("User not found")
         const categoryExist = await this.categoryRepo.findOneBy({ name: category.name, user: { id: userId }, type: category.type })
-        if (categoryExist) throw new ConflictError("Usuario ya tiene categoria con este nombre y tipo")
+        if (categoryExist) throw new ConflictError("Usuario ya tiene categoria con este nombre y tipo", { name: "Ya existe una categoría con este nombre y tipo" })
         let nCategory = this.categoryRepo.create({
             name: category.name,
             type: category.type,
@@ -61,7 +62,7 @@ export class CategoryService {
 
         if (categoryUpdate.name) {
             const categoryExist = await this.categoryRepo.findOneBy({ name: categoryUpdate.name, user: { id: userId }, type: categoryFound.type })
-            if (categoryExist && categoryExist.id !== categoryId) throw new ConflictError("Usuario ya tiene categoria con este nombre y tipo")
+            if (categoryExist && categoryExist.id !== categoryId) throw new ConflictError("Usuario ya tiene categoria con este nombre y tipo", { name: "Ya existe una categoría con este nombre y tipo" })
         }
 
         if (categoryFound.isBase) {
@@ -80,11 +81,11 @@ export class CategoryService {
 
     }
 
-     async deleteCategory(userId: UuidSchema, categoryId: UuidSchema): Promise<Category> {
+    async deleteCategory(userId: UuidSchema, categoryId: UuidSchema): Promise<Category> {
         const categoryFound = await this.categoryRepo.findOne({ where: { id: categoryId, user: { id: userId } } })
         if (!categoryFound) throw new NotFoundError("Categoria no encontrada o no pertenece al usuario.")
         if (categoryFound.isBase) throw new BadRequestError("No se puede eliminar una categoria base")
-        if(categoryFound.transactions && categoryFound.transactions.length > 0) throw new BadRequestError("No se puede eliminar una categoria que tiene transacciones asociadas")
+        if (categoryFound.transactions && categoryFound.transactions.length > 0) throw new BadRequestError("No se puede eliminar una categoria que tiene transacciones asociadas")
         await this.categoryRepo.remove(categoryFound)
         return categoryFound
     }

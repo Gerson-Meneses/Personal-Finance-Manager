@@ -1,0 +1,218 @@
+/* ─── Header ──────────────────────────────────────────── */
+.app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #0d0d2b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0 2rem;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-logo {
+    width: 2.5em;
+    height: 2.5em;
+    background: rgba(241, 196, 15, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.header-logo svg {
+    width: 2.5vh;
+    height: 2.5vh;
+}
+
+.header-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.header-app-name {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #f8fafc;
+    line-height: 1;
+}
+
+.header-user-name {
+    font-size: 0.90rem;
+    color: #64748b;
+    line-height: 1;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-avatar {
+    width: 6vh;
+    height: 6vh;
+    border-radius: 50%;
+    background: rgba(241, 196, 15, 0.12);
+    border: 1px solid rgba(241, 196, 15, 0.2);
+    color: #f1c40f;
+    font-size: 2.5vh;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.header-logout-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 5px 12px;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.header-logout-btn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.06);
+}
+
+/* ─── Main ────────────────────────────────────────────── */
+main {
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+    padding-bottom: 80px;
+    /* espacio para el FAB */
+}
+
+/* ─── Nav pills ───────────────────────────────────────── */
+.nav-pills {
+    display: flex;
+    gap: 8px;
+    position: fixed;
+    right: 26px;
+    bottom: 85px;
+    flex-direction: column;
+    z-index: 50;
+}
+
+.nav-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 3.8em;
+    height: 3.8em;
+    border-radius: 50%;
+    color: #94a3b8;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.nav-pill:last-child {
+    background-color: #111111;
+}
+
+.nav-pill:first-child {
+    background-color: #111111;
+}
+
+.nav-pill:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #f8fafc;
+    background-color: #212121;
+}
+
+/* ─── FAB ─────────────────────────────────────────────── */
+.fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #f1c40f;
+    border: none;
+    color: #020120;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(241, 196, 15, 0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 50;
+}
+
+.fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 24px rgba(241, 196, 15, 0.5);
+}
+
+.fab:active {
+    transform: scale(0.96);
+}
+
+/* ─── Footer ──────────────────────────────────────────── */
+.app-footer {
+    background-color: #0d0d2b;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+    color: #334155;
+    padding: 12px;
+    font-size: 0.75rem;
+    box-sizing: border-box;
+}
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 640px) {
+    .app-header {
+        padding: 0 1rem;
+        height: 52px;
+    }
+
+    /* En móvil ocultamos el texto del logout y solo mostramos el avatar */
+    .header-logout-btn {
+        display: block;
+    }
+
+    /* El avatar en móvil actúa como trigger del menú (o solo está de adorno) */
+    .header-avatar {
+        cursor: pointer;
+        width: 34px;
+        height: 34px;
+    }
+
+    .nav-pills {
+        bottom: 80px;
+        right: 16px;
+    }
+
+    .fab {
+        bottom: 20px;
+        right: 16px;
+        width: 48px;
+        height: 48px;
+    }
+}
+

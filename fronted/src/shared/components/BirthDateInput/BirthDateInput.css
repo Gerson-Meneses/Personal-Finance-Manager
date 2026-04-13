@@ -1,0 +1,51 @@
+.birthdate-selects {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.birthdate-select-wrapper {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.6rem 0.75rem;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.birthdate-select-wrapper:hover,
+.birthdate-select-wrapper:focus-within {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.birthdate-select-wrapper select {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f8fafc;
+    font-size: 0.85rem;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* cuando no hay valor seleccionado, el texto del select se ve como placeholder */
+.birthdate-select-wrapper.placeholder select {
+    color: #64748b;
+}
+
+.birthdate-select-wrapper select option {
+    background: #1e293b;
+    color: #f8fafc;
+}
+
+.birthdate-selects.disabled .birthdate-select-wrapper:hover,
+.birthdate-selects.disabled .birthdate-select-wrapper:focus-within {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.birthdate-selects.disabled select {
+    cursor: default;
+}
+
+

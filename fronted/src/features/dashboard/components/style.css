@@ -4,7 +4,8 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  background-color: #161a2e; /* Un tono ligeramente distinto para diferenciar secciones */
+  background-color: #161a2e;
+  /* Un tono ligeramente distinto para diferenciar secciones */
   padding: 16px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -13,7 +14,8 @@
 .summary-item {
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centrado para que se vea ordenado */
+  align-items: center;
+  /* Centrado para que se vea ordenado */
   text-align: center;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -37,21 +39,17 @@
 }
 
 /* Colores funcionales */
-.income {
-  color: #00e676 !important;
-}
-
-.expense {
-  color: #ff5252 !important;
-}
+.income { color: #22c55e; }   /* ← era rgb(0,255,0) */
+.expense { color: #ef4444; }
 
 /* Responsive para celulares */
 @media (max-width: 600px) {
   .month-summary-container {
-    grid-template-columns: 1fr; /* Uno debajo de otro en móvil */
+    grid-template-columns: 1fr;
+    /* Uno debajo de otro en móvil */
     gap: 20px;
   }
-  
+
   .summary-item {
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -194,7 +192,8 @@
 }
 
 .warning {
-  color: #f39c12; /* Color naranja para alertas de pago */
+  color: #f39c12;
+  /* Color naranja para alertas de pago */
 }
 
 .btn-outline-small {

@@ -41,6 +41,7 @@ export const errorHandler = (err: unknown, c: Context) => {
         error: {
           type: err.type,
           message: err.message,
+          details: err.details ? err.details : undefined,
         },
       },
       err.statusCode

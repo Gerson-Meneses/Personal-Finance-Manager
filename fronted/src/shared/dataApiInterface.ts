@@ -7,3 +7,14 @@ export interface Data<T> {
     totalPages: number;
   }
 }
+
+export type DetailsError<T> = {
+  [K in keyof T]?: string[];
+}
+
+export interface DataError<T> {
+  type: string
+  message: string
+  details?: DetailsError<T>
+}
+

@@ -1,116 +1,55 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../../shared/api";
-import type { Account } from "../accounts/types";
-import type { Category } from "../categories/types";
-
-interface User {
-  id: string;
-  name: string;
-  birthDate: string,
-  phone: string,
-  country: string | null,
-  isAdmin: boolean,
-  createdAt: string,
-  updatedAt: string,
-  accounts: Account[],
-  categories: Category[]
-}
-
-interface RegisterDto {
-  name: string
-  birthDate: string,
-  phone: string,
-  country: string,
-  isAdmin: boolean,
-  email: string,
-  password: string
-}
+import type { User } from "./types";
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterDto) => Promise<void>;
-  logout: () => void;
+  setUser: (user: User | null) => void;
+  setToken: (token: string | null) => void;
   loading: boolean;
 }
+
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token")
+  const [token, setTokenState] = useState<string | null>(
+    () => localStorage.getItem("token") // lazy init, mejor práctica
   );
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate()
 
-  const login = async (email: string, password: string) => {
-    try {
-      const data: { token: string } = await apiFetch("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password })
-      });
-
-      localStorage.setItem("token", data.token);
-      setToken(data.token);
-
-    } catch (error: any) {
-      throw error
+  const setToken = (newToken: string | null) => {
+    if (newToken) {
+      localStorage.setItem("token", newToken);
+    } else {
+      localStorage.removeItem("token");
     }
+    setTokenState(newToken);
   };
 
-  const register = async (registerData: RegisterDto) => {
-    try {
-      const data: { user: {token: string} } = await apiFetch("/auth/register", {
-        method: "POST",
-        body: JSON.stringify(registerData)
-      });
-
-      localStorage.setItem("token", data.user.token);
-      setToken(data.user.token);
-
-    } catch (error: any) {
-      throw error;
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
-    navigate('/login')
-  };
-
+  // Solo hidrata el usuario al montar o cuando cambia el token
   useEffect(() => {
-    const fetchUser = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const data = await apiFetch<any>("/user/me");
-        setUser(data);
-      } catch {
-        logout();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
+    apiFetch<User>("/user/me")
+      .then(setUser)
+      .catch(() => setToken(null)) // token inválido → limpiar
+      .finally(() => setLoading(false));
   }, [token]);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, setUser, setToken, loading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used inside AuthProvider");
-  return context;
+export function useAuthContext() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuthContext must be used inside AuthProvider");
+  return ctx;
 }

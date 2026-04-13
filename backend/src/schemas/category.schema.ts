@@ -3,11 +3,33 @@ import { TypeTransaction } from '../utils/Enums';
 
 
 export const categorySchema = z.object({
-    name: z.string({ message: `Se necesita "name" para crear la categoria` }).min(2, { message: "El nombre debe tener al menos 2 caracteres" }).max(99, { message: "El nombre no puede exceder los 99 caracteres" }).toUpperCase().trim(),
-    type: z.enum(TypeTransaction, { message: `El campo "type" debe ser uno de los siguientes valores: "INCOME" o "EXPENSE"` }),
-    color: z.string().min(3).refine(value => /^#[0-9A-Fa-f]{6}$/.test(value), { message: "El color debe tener un formato hexadecimal válido (#RRGGBB)" }).optional(),
-    icon: z.string().optional(),
-    visible: z.boolean().optional()
+    name: z
+        .string({ message: `Se necesita "name" para crear la categoria` })
+        .trim()
+        .min(3, { message: "El nombre debe tener al menos 2 caracteres" })
+        .max(99, { message: "El nombre no puede exceder los 99 caracteres" })
+        .toUpperCase(),
+
+    type: z
+        .enum(TypeTransaction, { message: `El campo "type" debe ser uno de los siguientes valores: "INCOME" o "EXPENSE"` }),
+
+    color: z.string({ message: "El campo 'color' debe ser una cadena de texto" })
+        .trim()
+        .min(3, { message: "El color debe tener al menos 3 caracteres" })
+        .max(6, { message: "El color no puede exceder los 6 caracteres" })
+        .refine(value => /^#[0-9A-Fa-f]{6}$/.test(value), { message: "El color debe tener un formato hexadecimal válido (#RRGGBB)" })
+        .optional()
+        .nullable(),
+
+    icon: z
+    .string({ message: "El campo 'icon' debe ser una cadena de texto" })
+    .optional()
+    .nullable(),
+    
+    visible: z
+    .boolean({ message: "El campo 'visible' debe ser un valor booleano" })
+    .optional()
+    .nullable()
 });
 
 export type CategorySchema = z.infer<typeof categorySchema>;

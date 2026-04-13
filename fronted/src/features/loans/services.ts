@@ -7,8 +7,8 @@ import type {
     LoanPayment
 } from "./types"
 
-export const getLoans = async (): Promise<Loan[]> => {
-    const { data } = await apiFetch<Data<Loan>>("/loan")
+export const getLoans = async (): Promise<Data<Loan>> => {
+    const data = await apiFetch<Data<Loan>>("/loan")
     return data
 }
 

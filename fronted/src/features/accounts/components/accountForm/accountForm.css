@@ -1,0 +1,26 @@
+/* Contenedor de los campos opcionales */
+.form-credit-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Mantiene el ritmo de tus otros rows */
+    
+    /* Aplicamos la animación */
+    animation: slideInDown 2s cubic-bezier(0.6, 1, 0.3, 1) forwards;
+    transform-origin: top;
+    will-change: transform, opacity;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        max-height: 500px; /* Ajusta según el alto total de tus campos */
+    }
+}
+

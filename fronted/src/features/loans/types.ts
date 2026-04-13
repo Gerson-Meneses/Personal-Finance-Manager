@@ -16,7 +16,10 @@ export interface CreateLoanDTO {
     principalAmount: number
     type: LoanType
     startDate: string
+    date: string
+    time?: string
     accountId: string
+    description?: string
 }
 
 export interface LoanPayment {

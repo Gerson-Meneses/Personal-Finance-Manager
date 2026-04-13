@@ -4,8 +4,8 @@ import { authMiddleware } from "../middlewares/authMiddleware";
 import { zValidator } from "@hono/zod-validator";
 import { ZodError } from "zod";
 import { zodErrorResponse } from "../helpers/zodErrorResponse";
-import { createTransaction, deleteTransaction, getAllTransactionsByUser, getTransactionById, transferTransaction } from "../controllers/transactionController";
-import { transactionSchema } from "../schemas/transaction.schema";
+import { createTransaction, deleteTransaction, getAllTransactionsByUser, getTransactionById, transferTransaction, updateTransaction } from "../controllers/transactionController";
+import { transactionSchema, updateTransactionSchema } from "../schemas/transaction.schema";
 import { transferSchema } from "../schemas/transfers.schema";
 import { TransactionQuerySchema, transactionQuerySchema } from "../schemas/querysTransaction.schema";
 import { uuidParamSchema } from "../schemas/uuid.schema";
@@ -17,12 +17,12 @@ transactionRouter.get("/",
         const userId = c.get('user').sub;
         const parsed = transactionQuerySchema.safeParse(c.req.query());
         if (!parsed.success) {
-           return zodErrorResponse(parsed.error, c)
+            return zodErrorResponse(parsed.error, c)
         }
         const filters: TransactionQuerySchema = {
             ...parsed.data,
         };
-        return await getAllTransactionsByUser(c,userId, filters)
+        return await getAllTransactionsByUser(c, userId, filters)
     }
 )
 
@@ -49,28 +49,43 @@ transactionRouter.post("/",
     }
 )
 
-
-transactionRouter.post("/transfer",
-    authMiddleware,
-    zValidator("json", transferSchema, (result, c) => {
+transactionRouter.patch("/:id",
+    zValidator("param", uuidParamSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    zValidator("json", updateTransactionSchema, (result, c) => {
         if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
     }),
     async (c) => {
         const user = c.get("user")
-        const account = c.req.valid("json")
-
-        return await transferTransaction(c, user.sub, account)
-    }
+        const transactionId = c.req.valid("param").id
+        const updateData = c.req.valid("json")
+        return await updateTransaction(c, user.sub, transactionId, updateData)
+    } 
 )
+
+
+transactionRouter.post("/transfer",
+        authMiddleware,
+        zValidator("json", transferSchema, (result, c) => {
+            if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+        }),
+        async (c) => {
+            const user = c.get("user")
+            const account = c.req.valid("json")
+
+            return await transferTransaction(c, user.sub, account)
+        }
+    )
 
 
 transactionRouter.delete("/:id",
-    zValidator("param", uuidParamSchema, (result, c) => {
-        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
-    }),
-    async (c) => {
-        const userId = c.get('user').sub;
-        const transactionId = c.req.valid("param").id
-        return await deleteTransaction(c, userId, transactionId)
-    }
-)
+        zValidator("param", uuidParamSchema, (result, c) => {
+            if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+        }),
+        async (c) => {
+            const userId = c.get('user').sub;
+            const transactionId = c.req.valid("param").id
+            return await deleteTransaction(c, userId, transactionId)
+        }
+    )

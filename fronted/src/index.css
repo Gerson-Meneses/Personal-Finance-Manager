@@ -1,0 +1,21 @@
+/* Estilos Generales*/
+
+/* Autofill inouts*/
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.95) inset !important;
+    -webkit-text-fill-color: #f8fafc !important;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: #f8fafc;
+}
+
+/* Mensajes al hacer hover */
+.tooltip {
+    background-color: #1e1a3f;
+    color: #a2a2a2;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: .8em;
+    margin-bottom: 16px;
+}

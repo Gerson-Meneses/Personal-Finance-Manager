@@ -1,0 +1,98 @@
+/* Reutiliza .custom-form-group e .input-label de tu CSS global */
+
+.toggle-wrapper {
+    display: flex;
+    position: relative; /* Necesario para posicionar el slider */
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 4px; /* Espacio entre el borde y el slider */
+    gap: 0; /* Quitamos el gap para que el slider cubra perfecto */
+    width: 100%;
+    min-width: 180px;
+    transition: border-color 0.3s ease;
+    overflow: hidden; /* Asegura que nada salga de los bordes redondeados */
+    isolation: isolate; /* Crea un nuevo contexto de apilamiento */
+}
+
+/* El elemento que se desliza (el fondo) */
+.toggle-slider {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    /* Ancho es la mitad del contenedor menos los paddings */
+    width: calc(50% - 4px); 
+    border-radius: 8px;
+    /* Usamos la variable CSS definida en React */
+    background: var(--active-color); 
+    
+    /* ANIMACIONES CLAVE */
+    transition: 
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), /* Movimiento suave */
+        background-color 0.3s ease, /* Cambio de color suave */
+        box-shadow 0.3s ease;
+    
+    z-index: 0; /* Detrás del texto */
+    
+    /* Brillo sutil */
+    box-shadow: 0 4px 12px -2px var(--active-color);
+}
+
+/* Estados de posición del slider */
+.toggle-slider.is-left {
+    transform: translateX(0);
+}
+
+.toggle-slider.is-right {
+    /* Mueve el elemento exactamente a la derecha */
+    transform: translateX(100%); 
+}
+
+/* Botones transparentes */
+.toggle-button {
+    flex: 1;
+    background: transparent; /* Importante: fondo transparente */
+    border: none;
+    outline: none;
+    padding: 0.6rem;
+    border-radius: 8px;
+    color: #94a3b8; /* Color texto inactivo */
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    z-index: 1; /* Por encima del slider para recibir clicks y que se vea el texto */
+    position: relative;
+}
+
+/* Hover en botones inactivos */
+.toggle-button:hover:not(:disabled):not(.active) {
+    color: #f8fafc;
+}
+
+/* Texto cuando está activo */
+.toggle-button.active {
+    color: white;
+}
+
+/* Manejo de Errores y Deshabilitado (Igual que antes) */
+.has-error .toggle-wrapper {
+    border-color: #ef4444;
+}
+
+.disabled .toggle-wrapper {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.disabled .toggle-button,
+.disabled .toggle-slider {
+    cursor: not-allowed;
+    box-shadow: none; /* Quitar brillo si está disabled */
+}
+
+/* Efecto focus en el contenedor */
+.toggle-wrapper:focus-within {
+    border-color: #38bdf8;
+}

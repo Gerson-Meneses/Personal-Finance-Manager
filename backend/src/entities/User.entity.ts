@@ -5,6 +5,7 @@ import { Category } from './Category.entity';
 import { Transaction } from './Transaction.entity';
 import { Loan } from './Loan.entity';
 import { ReccurentTransaction } from './ReccurentTransaction.entity';
+import { Codes } from './Codes.entity';
 
 
 @Entity('users')
@@ -30,15 +31,21 @@ export class User {
 
     @Column({
         type: 'boolean',
-        default: false  
+        default: false
     })
     isAdmin: boolean;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
 
-    @UpdateDateColumn({ type: 'timestamp' })    
+    @UpdateDateColumn({ type: 'timestamp' })
     updatedAt: Date;
+    
+    @Column({ type: "boolean", default: false })
+    is_verified: boolean
+    
+    @OneToMany(() => Codes, code => code.user, { nullable: true })
+    codes: Codes[]
 
     @OneToOne(() => Credential, credential => credential.user, { cascade: true })
     @JoinColumn()

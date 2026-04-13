@@ -10,6 +10,7 @@ import { ReccurentTransaction } from '../entities/ReccurentTransaction.entity'
 import { Transaction } from '../entities/Transaction.entity'
 import { User } from '../entities/User.entity'
 import { LoanPayment } from '../entities/LoanPayment.entity'
+import { Codes } from '../entities/Codes.entity'
 
  export const AppDataSourceProd = new DataSource({
     type: 'postgres',
@@ -20,11 +21,11 @@ import { LoanPayment } from '../entities/LoanPayment.entity'
     synchronize: true, // ⚠️ en producción NO uses true
     dropSchema: false, // ⚠️ en producción NO uses true
     logging: ['error'],
-    entities: [Account, Category, Credential, Loan, LoanInstallment, LoanPayment ,ReccurentTransaction, Transaction, User],
+    entities: [Account, Category, Credential, Loan, LoanInstallment, LoanPayment ,ReccurentTransaction, Transaction, User, Codes],
 })  
 
-/* 
-export const AppDataSourceProd = new DataSource({
+
+/* export const AppDataSourceProd = new DataSource({
     type: 'postgres',
     host: 'localhost',
     port: 5432,
@@ -34,7 +35,6 @@ export const AppDataSourceProd = new DataSource({
     dropSchema: false,
     synchronize: true, // ❗ solo en desarrollo
     logging: ["error"],
-    entities: [Account, Category, Credential, Loan, LoanInstallment, LoanPayment, ReccurentTransaction, Transaction, User],
+    entities: [Account, Category, Credential, Loan, LoanInstallment, LoanPayment, ReccurentTransaction, Transaction, User, Codes],
 })
-
  */

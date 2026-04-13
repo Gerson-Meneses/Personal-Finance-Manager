@@ -8,7 +8,7 @@ export const AppDataSource = new DataSource({
   username: 'postgres',
   password: 'admin123',
   database: 'finance_manager',
-  dropSchema: false,
+  dropSchema: true,
   synchronize: true, // ❗ solo en desarrollo
   logging: ["error"],
   entities: ['src/entities/**/*.entity.ts'],

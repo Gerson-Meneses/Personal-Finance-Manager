@@ -1,0 +1,62 @@
+.construction-container {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 !important;
+  background-color: #0f172a; /* Fondo oscuro consistente */
+  color: white;
+  padding: 20px;
+}
+
+.construction-content {
+  text-align: center;
+  max-width: 450px;
+}
+
+.construction-icon {
+  color: #f39c12; /* Naranja construcción */
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.construction-content h1 {
+  font-size: 3.5rem; /* Un poco más pequeño que el 404 por el largo del texto */
+  font-weight: 900;
+  margin: 0;
+  line-height: 1.2;
+  background: linear-gradient(180deg, #f39c12 0%, #e67e22 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.construction-content h2 {
+  font-size: 1.5rem;
+  margin: 15px 0 20px;
+  color: #f8fafc;
+}
+
+.construction-content p {
+  color: #94a3b8;
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.construction-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+/* Reutilizamos tu animación de flotado */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}

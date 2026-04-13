@@ -3,17 +3,19 @@ import { ContentfulStatusCode } from "hono/utils/http-status"
 export class DomainError extends Error {
     readonly statusCode: ContentfulStatusCode
     readonly type: string
+    readonly details?: {}
 
-    constructor(message: string, statusCode: ContentfulStatusCode = 400, type = "DOMAIN_ERROR") {
+    constructor(message: string, statusCode: ContentfulStatusCode = 400, type = "DOMAIN_ERROR", details?: {}) {
         super(message)
         this.statusCode = statusCode
         this.type = type
+        this.details = details
     }
 }
 
 export class ConflictError extends DomainError {
-    constructor(message: string) {
-        super(message, 409, "CONFLICT")
+    constructor(message: string, details?: {}) {
+        super(message, 409, "CONFLICT", details ? details : undefined)
     }
 }
 
@@ -29,8 +31,8 @@ export class UnauthorizedError extends DomainError {
     }
 }
 export class BadRequestError extends DomainError {
-    constructor(message: string) {
-        super(message, 400, "BAD_REQUEST")
+    constructor(message: string, details?: {}) {
+        super(message, 400, "BAD_REQUEST", details ? { details: details } : undefined)
     }
 }
 

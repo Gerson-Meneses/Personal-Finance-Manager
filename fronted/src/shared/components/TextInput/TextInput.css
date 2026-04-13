@@ -1,0 +1,32 @@
+.input-text {
+    background-color: transparent;
+    border: none;
+    appearance: none;
+    padding: .6rem;
+    outline: none;
+    color: #f8fafcdb;
+    text-align: center;
+    min-width: 20ch;
+}
+
+.input-text:hover,
+.input-text:focus {
+    border: none;
+    outline: none;
+}
+
+.input-arealabel {
+    resize: none;
+    background-color: transparent;
+    overflow: hidden;
+    border: none;
+    appearance: none;
+    padding: .6rem;
+    min-height: 50px;
+    outline: none;
+    color: #f8fafcdb;
+    min-width: 180px;
+    width: fit-content;
+    max-width: 250px;
+    field-sizing: content; /* El textarea crece solo con el texto */
+}

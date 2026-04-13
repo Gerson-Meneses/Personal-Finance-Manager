@@ -8,11 +8,22 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "module": "commonjs",
+    "rootDir": "./src",
     "outDir": "./dist",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "strictPropertyInitialization": false,
     "skipLibCheck": true,
-    "moduleResolution": "node"
-  }
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "types": [
+      "bun"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ], // ESTO ES LO QUE FALTA: Indica dónde está tu código
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts"
+  ]
 }

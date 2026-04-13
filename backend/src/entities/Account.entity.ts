@@ -28,14 +28,16 @@ export class Account {
     balance: number;
 
     @Column({
-        default: "#FFFFFF"
+        default: "#004f12",
+        nullable: true
     })
-    color: string;
+    color: string
 
     @Column({
-        nullable: true,
+        default: "wallet",
+        nullable: true
     })
-    icon: string;
+    icon: string
 
     @Column({
         nullable: true,

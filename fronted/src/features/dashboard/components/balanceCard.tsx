@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 // Asume que este icono es de una librería como lucide-react o react-icons
-import { CreditCard, Banknote, AlertTriangle, ArrowRight } from "lucide-react"; 
+import { CreditCard, Banknote, ArrowRight } from "lucide-react"; 
 
 interface Props {
   balances: {
@@ -20,7 +20,7 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-export default function BalanceCards({ balances, credit }: Props) {
+export default function BalanceCards({ balances }: Props) {
   const navigate = useNavigate();
 
   const cards = [
@@ -37,13 +37,6 @@ export default function BalanceCards({ balances, credit }: Props) {
       className: "card-credit",
       path: "/accounts",
       icon: CreditCard,
-    },
-    {
-      title: "Deuda total",
-      amount: credit.debt,
-      className: "card-danger",
-      path: "/accounts",
-      icon: AlertTriangle,
     },
   ];
 

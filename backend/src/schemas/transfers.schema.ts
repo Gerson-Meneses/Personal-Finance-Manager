@@ -1,11 +1,11 @@
 import { z } from "zod"
 
 export const transferSchema = z.object({
-    amount: z.number().positive().min(10, { message: "La cantidad minima son 10 centavos." }).transform(n => n * 100),
-    date: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Invalid date format" }),
+    amount: z.number({message:"Debe ser un número."}).positive({ message: "La cantidad minima son 10 centavos." }).min(0.1, { message: "La cantidad minima son 10 centavos." }).transform(n => n * 100),
+    date: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Formato incorrecto de fecha" }),
     time: z.string().optional(),
-    fromAccount: z.string().uppercase(),
-    toAccount: z.string().uppercase(),
+    fromAccount: z.uuid({message:"Cuenta de origen requerida"}),
+    toAccount: z.uuid({message:"Cuenta de destino requerida"}),
     description: z.string().optional()
 });
 

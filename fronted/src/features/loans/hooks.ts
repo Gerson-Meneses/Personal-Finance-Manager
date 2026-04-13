@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import * as service from "./services"
-import type { CreateLoanDTO, CreateLoanPaymentDTO } from "./types"
+import type { CreateLoanDTO, CreateLoanPaymentDTO, Loan, LoanPayment } from "./types"
+import type { DataError } from "../../shared/dataApiInterface"
 
 export const useLoans = () => {
 
@@ -11,20 +12,20 @@ export const useLoans = () => {
     queryFn: service.getLoans
   })
 
-  const createLoanMutation = useMutation({
+  const createLoanMutation = useMutation<Loan, DataError<CreateLoanDTO>, CreateLoanDTO>({
     mutationFn: (data: CreateLoanDTO) =>
       service.createLoan(data),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["loans"]
+        queryKey: ["loans", "accounts", "dashboard"]
       })
     }
   })
 
-  const createPaymentMutation = useMutation({
+  const createPaymentMutation = useMutation<LoanPayment, DataError<CreateLoanPaymentDTO>, CreateLoanPaymentDTO>({
     mutationFn: (data: CreateLoanPaymentDTO) =>
-      service.createLoanPayment( data),
+      service.createLoanPayment(data),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -46,11 +47,12 @@ export const useLoans = () => {
 
   return {
 
-    loans: loansQuery.data ?? [],
+    loans: loansQuery.data?.data ?? [] as Loan[],
+    total: loansQuery.data?.meta.total ?? 0,
     loading: loansQuery.isLoading,
 
-    createLoan: createLoanMutation.mutateAsync,
-    payLoan: createPaymentMutation.mutateAsync,
-    deleteLoan: deleteLoanMutation.mutateAsync
+    createLoan: createLoanMutation,
+    payLoan: createPaymentMutation,
+    deleteLoan: deleteLoanMutation
   }
 }

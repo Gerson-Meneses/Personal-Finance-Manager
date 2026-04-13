@@ -5,11 +5,10 @@ import { Category } from "../entities/Category.entity"
 import { Loan } from "../entities/Loan.entity"
 import { Transaction } from "../entities/Transaction.entity"
 import { DashboardQuerySchema } from "../schemas/dashboardQuerySchema"
-import { TypeTransaction } from "../utils/Enums"
+import { money } from "../utils/normalizarMoney"
+import { getMaxBalance } from "../utils/getBalanceToCreditCard"
 
-const round = (n: number) => Math.round(n * 100) / 100
 
-const money = (value?: number | null) => round(value ?? 0) / 100;
 
 export interface DashboardResponse {
 
@@ -37,6 +36,7 @@ export interface DashboardResponse {
 
     expensesByCategory: {
         category: Category
+        total: number
         amount: number
     }[]
 
@@ -80,6 +80,7 @@ export class DashboardService {
 
             if (acc.type === "CREDIT") {
                 credit += money(acc.balance)
+                acc.creditLimit = money(acc.creditLimit)
             } else {
                 debit += money(acc.balance)
             }
@@ -95,10 +96,8 @@ export class DashboardService {
         const creditDebt = accounts
             .filter(a => a.type === "CREDIT")
             .reduce((sum, a) => {
-                let balanceWithOverdraft = a.creditLimit * ((a.overdraft / 100 || 0) + 1);
-                return sum + ((balanceWithOverdraft) - (a.balance*100))
+                return sum + (((getMaxBalance(a.creditLimit, a.overdraft)) - (a.balance)))
             }, 0)
-
         /* -------------------------------- */
         /* LOANS */
         /* -------------------------------- */
@@ -165,6 +164,7 @@ export class DashboardService {
             .addSelect("category.color", "color")
             .addSelect("category.icon", "icon")
             .addSelect("SUM(t.amount)", "amount")
+            .addSelect("COUNT(t.id)", "transactionCount")
             .where("t.userId = :userId", { userId })
             .andWhere("t.type = 'EXPENSE'")
             .andWhere("t.date >= :start", { start: startOfMonth })
@@ -175,14 +175,18 @@ export class DashboardService {
             .addGroupBy("category.icon")
             .getRawMany()
 
-        const expensesByCategory = rawCategories.map(row => ({
+
+
+        const expensesByCategory = rawCategories.map(row => (
+           {
             category: {
                 id: row.id,
                 name: row.name,
                 color: row.color,
                 icon: row.icon
             } as Category,
-            amount: money(Number(row.amount))
+            amount: money(Number(row.amount)),
+            total: row.transactionCount
         }))
 
         /* -------------------------------- */
@@ -193,7 +197,7 @@ export class DashboardService {
             where: {
                 user: { id: userId }
             },
-            relations: ["category"],
+            relations: ["category", "account", "relatedAccount", "loan", "loanPayment"],
             order: {
                 createdAt: "DESC"
             },
@@ -216,7 +220,7 @@ export class DashboardService {
             },
 
             credit: {
-                debt: money(creditDebt)
+                debt: creditDebt
             },
 
             loans: {

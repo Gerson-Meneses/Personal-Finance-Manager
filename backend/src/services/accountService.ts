@@ -7,6 +7,8 @@ import { PaginationQuerySchema } from "../schemas/queryPagination.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
 import { PaginatedResult } from "../types";
 import { TypeAccount } from "../utils/Enums";
+import { getMaxBalance } from "../utils/getBalanceToCreditCard";
+
 
 export class AccountService {
     private accountRepo = AppDataSourceProd.getRepository(Account);
@@ -28,7 +30,7 @@ export class AccountService {
 
         let [accounts, total] = await qb.getManyAndCount();
 
-        accounts = accounts.map(account => { account.balance = account.balance / 100; return account })
+        accounts = accounts.map(account => { account.balance = account.balance / 100, account.creditLimit = account.creditLimit / 100; return account })
 
         return {
             items: accounts,
@@ -42,17 +44,14 @@ export class AccountService {
         let newAccount: Account = {} as Account
 
         const { name, type, color, icon } = account
-        let { balance } = account
-
-        balance = balance ? balance * 100 : 0
 
         const user: User | null = await this.userRepo.findOneBy({ id: userId });
         if (!user) throw new NotFoundError("Usuario no encontrado para asignar la cuenta.")
 
-        if (name === "EFECTIVO") throw new ConflictError("El nombre 'EFECTIVO' está reservado y no puede ser utilizado para una cuenta.")
+        if (name === "EFECTIVO") throw new ConflictError("El nombre 'EFECTIVO' está reservado y no puede ser utilizado para una cuenta.", { name: ["El nombre 'EFECTIVO' está reservado y no puede ser utilizado para una cuenta."] })
 
         let accountExist = await this.accountRepo.findOne({ where: { name, user: { id: userId }, type } })
-        if (accountExist) throw new ConflictError("El usuario ya tiene una cuenta con este nombre y tipo.")
+        if (accountExist) throw new ConflictError("El usuario ya tiene una cuenta con este nombre y tipo.", { name: ["El usuario ya tiene una cuenta con este nombre y tipo."] })
 
 
         if (type === TypeAccount.CREDIT) {
@@ -63,10 +62,10 @@ export class AccountService {
                 throw new BadRequestError("Required creditLimit,  billingCLoseDay, paymentDueDay for Type Account Credit")
             }
             newAccount = this.accountRepo.create({
-                name,
-                type,
-                icon,
                 color,
+                icon,
+                name, 
+                type,
                 balance: Math.floor(creditLimit * ((overdraft ? overdraft / 100 : 0) + 1)),
                 creditLimit,
                 billingCloseDay,
@@ -82,7 +81,7 @@ export class AccountService {
             newAccount = this.accountRepo.create({
                 name,
                 type,
-                balance: balance ? balance : 0,
+                balance: 0,
                 user,
                 color,
                 icon
@@ -105,13 +104,31 @@ export class AccountService {
         const account = await this.accountRepo.findOne({ where: { id: accountId, user: { id: userId } } });
         if (!account) throw new NotFoundError("Cuenta no encontrada o no pertenece al usuario.")
 
-        if (account.type === TypeAccount.CASH) throw new BadRequestError("No se puede actualizar la cuenta de EFECTIVO.")
-        if (account.name === updateData.name) throw new BadRequestError("La cuenta no puede tener el mismo nombre.")
+        if (updateData.name) {
+            const isNameAvailable = await this.accountRepo.findOne({ where: { name: updateData.name, user: { id: userId }, type: account.type } })
+            if (isNameAvailable && isNameAvailable.id !== accountId) throw new ConflictError("El usuario ya tiene una cuenta con este nombre y tipo.", { name: ["El usuario ya tiene una cuenta con este nombre y tipo."] })
+        }
 
-        const isNameAvailable = await this.accountRepo.findOne({ where: { name: updateData.name, user: { id: userId }, type: account.type } })
-        if (isNameAvailable && isNameAvailable.id !== accountId) throw new ConflictError("El usuario ya tiene una cuenta con este nombre y tipo.")
+        if (updateData.name && updateData.name === "EFECTIVO") throw new ConflictError("El nombre 'EFECTIVO' está reservado y no puede ser utilizado para una cuenta.", { name: ["El nombre 'EFECTIVO' está reservado y no puede ser utilizado para una cuenta."] })
 
-        if (updateData.name && updateData.name === "EFECTIVO") throw new ConflictError("El nombre 'EFECTIVO' está reservado y no puede ser utilizado para una cuenta.")
+
+        if (account.type === TypeAccount.CREDIT) {
+            const currentDebt = getMaxBalance(account.creditLimit, account.overdraft) - account.balance
+
+            if (updateData.creditLimit) {
+                account.creditLimit = updateData.creditLimit
+                account.balance = getMaxBalance(account.creditLimit, account.overdraft) - currentDebt
+                if (account.balance < 0) throw new BadRequestError("No se puede reducir el límite de crédito por debajo de la deuda actual.")
+            }
+
+            if (updateData.overdraft || updateData.overdraft === 0) {
+                account.overdraft = updateData.overdraft
+                account.balance = getMaxBalance(account.creditLimit, account.overdraft) - currentDebt
+                if (account.balance < 0) throw new BadRequestError("No se puede aumentar el porcentaje de sobregiro por debajo de la deuda actual.")
+            }
+
+            account.creditLimit = account.creditLimit / 100
+        }
 
         const updatedAccount = Object.assign(account, updateData);
         const savedAccount = await this.accountRepo.save(updatedAccount);
@@ -126,6 +143,6 @@ export class AccountService {
         if (account.transactions && account.transactions.length > 0) throw new BadRequestError("No se puede eliminar una cuenta que tiene transacciones asociadas.")
 
         await this.accountRepo.remove(account)
-        return 
+        return
     }
 }

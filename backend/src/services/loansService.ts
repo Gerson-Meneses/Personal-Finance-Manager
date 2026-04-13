@@ -50,7 +50,7 @@ export class LoansService {
     }
 
     async getLoan(userId: UuidSchema, loanId: UuidSchema): Promise<Loan> {
-        const loan = await this.loanRepo.findOne({ relations: ["user", "payments"], where: { user: { id: userId }, id: loanId } })
+        const loan = await this.loanRepo.findOne({ relations: ["user", "payments"], where: { userId, id: loanId } })
         if (!loan) throw new NotFoundError("Prestamo no encontrado.")
 
         return { ...loan, principalAmount: loan.principalAmount / 100 }
@@ -59,7 +59,7 @@ export class LoansService {
     async createLoan(userId: UuidSchema, loanData: LoanSchema): Promise<any> {
         const user = await this.userService.getUserById(userId)
         const type = (loanData.type == TypeLoan.GIVEN) ? TypeTransaction.EXPENSE : TypeTransaction.INCOME;
-        const category = user.categories.find(cat => (cat.name === "PRESTAMO" && cat.type === type))
+        const category = user.categories.find(cat => (cat.name === "PRÉSTAMOS" && cat.type === type))
         if (!category) {
             throw new NotFoundError("Categoria de prestamos no encontrada")
         }
@@ -71,7 +71,9 @@ export class LoansService {
                 type: type,
                 amount: loanData.principalAmount,
                 date: loanData.startDate,
+                time: loanData.time,
                 categoryId: category.id,
+                description: loanData.description,
                 accountId: loanData.accountId
             }, userId)
 
@@ -108,30 +110,32 @@ export class LoansService {
         let amountPaid = loan.payments.reduce((total, payment) => total + payment.amount, 0);
         amountPaid = amountPaid / 100
         if (amountPaid >= loan.principalAmount) {
-            throw new ConflictError("El prestamo ya esta pagado")
+            throw new ConflictError("El prestamo ya esta pagado", { loan: "El prestamo ya esta pagado" })
         }
 
         if (data.amount > ((loan.principalAmount - amountPaid) * 100)) {
-            throw new ConflictError("El monto del pago excede el monto restante del prestamo, monto restante: " + (loan.principalAmount - amountPaid))
+            throw new ConflictError("El monto del pago excede el monto restante del prestamo, monto restante: " + (loan.principalAmount - amountPaid), { amount: ["El monto del pago excede el monto restante del prestamo, monto restante: " + (loan.principalAmount - amountPaid)] })
         }
 
         if (loan.status === StatusLoan.PAID) {
-            throw new ConflictError("No se puede pagar un prestano ya pagado")
+            throw new ConflictError("No se puede pagar un prestano ya pagado", { loan: "No se puede pagar un prestano ya pagado" })
         }
 
         const type = (loan.type == TypeLoan.GIVEN) ? TypeTransaction.INCOME : TypeTransaction.EXPENSE;
-        const category = user.categories.find(cat => (cat.name === "DEVOLUCION DE PRESTAMO" && cat.type === type))
+        const category = user.categories.find(cat => (cat.name === "DEVOLUCIÓN DE PRÉSTAMO" && cat.type === type))
         if (!category) {
             throw new NotFoundError("Categoria de prestamos no encontrada")
         }
 
-        const { date, amount, accountId } = data
+        const { date, amount, accountId, time, description } = data
 
         const transaction: Transaction = await this.transactionService.createTransaction({
             name: (loan.type == TypeLoan.GIVEN) ? `Pago de prestamo de ${loan.lender}` : `Pago de prestamo a ${loan.lender}`,
             type,
             amount,
             date,
+            time,
+            description,
             categoryId: category.id,
             accountId
         }, user.id)

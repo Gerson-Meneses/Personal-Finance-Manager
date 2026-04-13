@@ -1,0 +1,161 @@
+.loans-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    /* ← elimina background-color: #0f172a */
+}
+
+.loans-header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin: 0;
+    /* ← elimina el gradient text — no es consistente con el resto */
+}
+
+.loans-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+
+.subtitle {
+  color: #94a3b8;
+  margin: 5px 0 0 0;
+}
+
+/* Botón de Añadir */
+.btn-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btn-add.active {
+  background-color: #ef4444;
+}
+
+/* Controles de Vista (Toggles) */
+.view-controls {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.filter-group {
+  display: flex;
+  background-color: #1e293b;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+}
+
+.filter-group button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.filter-group button:hover {
+  color: #f8fafc;
+}
+
+.filter-group button.active {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* Grillas */
+.loans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* Grupos por Persona */
+.lender-group {
+  background-color: #1e293b;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.lender-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.lender-header:hover {
+  background-color: #24344d;
+}
+
+.lender-info h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.badge {
+  display: inline-block;
+  margin-top: 5px;
+  background-color: #334155;
+  color: #94a3b8;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.lender-summary {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.total-amount {
+  font-weight: 700;
+  color: #10b981;
+}
+
+.lender-loans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  padding: 20px;
+  background-color: #131d2e;
+  border-top: 1px solid #334155;
+}
+
+/* Loading */
+.loading-state {
+  text-align: center;
+  padding: 50px;
+  color: #94a3b8;
+  font-size: 1.2rem;
+}

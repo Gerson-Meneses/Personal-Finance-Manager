@@ -1,230 +1,241 @@
-import { useEffect, useState } from "react"
-import { useAuth } from "../../../features/auth/authContext"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { generateYears, getDaysInMonth, months } from "./dateUtils"
+import type { RegisterDTO } from "../../../features/auth/types"
+import { useRegister } from "../../../features/auth/useRegister"
+import { PasswordInput } from "../../../shared/components/PasswordInput/PasswordInput"
+import { BirthDateInput } from "../../../shared/components/BirthDateInput/BithrDateInput"
+import { TextInput } from "../../../shared/components/TextInput/TextInput"
+import { handleFieldChange } from "../../../shared/utils/handleFieldChange"
+import type { DetailsError } from "../../../shared/dataApiInterface"
 
+const ADMIN_EMAIL = "gersonmeneses1612@gmail.com"
+
+const initialForm: Omit<RegisterDTO, "birthDate"> = {
+    name: "",
+    phone: "",
+    country: "",
+    isAdmin: false,
+    email: "",
+    password: "",
+}
 
 export const RegisterPage = () => {
-
-    const [name, setName] = useState("")
-    const [day, setDay] = useState("")
-    const [month, setMonth] = useState("")
-    const [year, setYear] = useState("")
-    const [phone, setPhone] = useState("")
-    const [country, setCountry] = useState("")
-    const [isAdmin, setIsAdmin] = useState(false)
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
-    const [error, setError] = useState<string | null>(null)
-    const [submitting, setSubmitting] = useState(false)
-    const [show, setShow] = useState(false);
-    const [coinciden, setCoinciden] = useState(true)
-    const { register } = useAuth()
     const navigate = useNavigate()
+    const register = useRegister()
 
-    const days = Array.from(
-        { length: getDaysInMonth(month, year) },
-        (_, i) => i + 1
-    )
+    const [formData, setFormData] = useState(initialForm)
+    const [birthDate, setBirthDate] = useState({ day: "", month: "", year: "" })
+    const [confirmPassword, setConfirmPassword] = useState("")
+    const [passwordMatch, setPasswordMatch] = useState(true)
+    const [errors, setErrors] = useState<DetailsError<RegisterDTO> | null>(null)
 
-    const years = generateYears()
-
-    const detailsToText = (details: any) => {
-        let text = "";
-        for (const key in details) {
-            text += `${key}:\n`;
-            details[key].forEach((item: any) => {
-                text += `- ${item}\n`;
-            });
+    // Sincroniza errores del servidor con el estado local
+    useEffect(() => {
+        if (register.error?.details) {
+            setErrors(register.error.details as DetailsError<RegisterDTO>)
         }
-        return text;
+    }, [register.error])
+
+    // Limpia errores al montar
+    useEffect(() => {
+        register.reset()
+    }, [])
+
+    const onChange = <K extends keyof typeof formData>(field: K, value: (typeof formData)[K]) => {
+        handleFieldChange(field, value, setFormData, setErrors)
+        // Si cambia el email, quitar admin automáticamente
+        if (field === "email") {
+            setFormData(prev => ({ ...prev, isAdmin: false }))
+        }
     }
 
-    useEffect(() => {
-        const maxDays = getDaysInMonth(month, year)
-        if (Number(day) > maxDays) {
-            setDay("")
-        }
-    }, [month, year])
+    const getError = (field: keyof RegisterDTO) => errors?.[field]?.[0] ?? null
 
-    const handleRegister = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        setError(null)
-        setSubmitting(true)
+        setErrors(null)
 
-        try {
-            await register({
-                name,
-                birthDate: `${year}-${month}-${day}`,
-                phone,
-                country,
-                isAdmin,
-                email,
-                password
-            })
-            navigate("/")
-
-        } catch (err: any) {
-            if (err?.error?.message === "Errores de validación") {
-                console.log(err?.error?.message === "Errores de validación")
-                const validationErrors = detailsToText(err.error.details)
-                setError(validationErrors)
-                return
-            } else {
-                setError(err.error.message?.toString() || "Error al enviar el formulario")
-            }
-        } finally {
-            setSubmitting(false)
+        if (formData.password !== confirmPassword) {
+            setPasswordMatch(false)
+            return
         }
+
+        setPasswordMatch(true)
+
+        register.mutate({
+            ...formData,
+            birthDate: `${birthDate.year}-${birthDate.month}-${birthDate.day}`
+        })
     }
 
     return (
-        <>
+        <form
+            className="form-default-container login-form"
+            onSubmit={handleSubmit}
+            style={{ margin: "10vh" }}
+        >
+            <div className="form-default-row">
+                <h1>Registro</h1>
+            </div>
 
-            <form onSubmit={handleRegister}
-            style={{margin: "10vh"}}
-            >
-                <h1>Register</h1>
+            {/* antes de Nombre */}
+            <p className="form-section-label">Información personal</p>
 
-                <label htmlFor="nameInput">Nombre:</label>
-                <input
-                    id="nameInput"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Nombre"
+
+            {/* Nombre */}
+            <div className="form-default-row">
+                <TextInput
+                    name="name"
+                    label="Nombre"
+                    icon="User"
+                    value={formData.name}
+                    onChange={(val) => onChange("name", val)}
+                    error={getError("name")}
+                    placeholder="Tu nombre"
+                    required
+                    disabled={register.isPending}
+                />
+            </div>
+
+            {/* Fecha de nacimiento */}
+            <div className="form-default-row">
+                <BirthDateInput
+                    value={birthDate}
+                    onChange={setBirthDate}
+                    error={getError("birthDate")}
+                    disabled={register.isPending}
                     required
                 />
+            </div>
 
-                <label htmlFor="birthdateInput">Fecha de Nacimiento:</label>
-                <div style={{ display: "flex", gap: "10px" }}>
-
-                    <select className="cursorPointer" value={day} onChange={(e) => setDay(e.target.value)}>
-                        <option value="">Día</option>
-                        {days.map(d => (
-                            <option key={d} value={String(d).padStart(2, "0")}>
-                                {d}
-                            </option>
-                        ))}
-                    </select>
-
-                    <select className="cursorPointer" value={month} onChange={(e) => setMonth(e.target.value)}>
-                        <option value="">Mes</option>
-                        {months.map(m => (
-                            <option key={m.value} value={m.value}>
-                                {m.label}
-                            </option>
-                        ))}
-                    </select>
-
-                    <select className="cursorPointer" value={year} onChange={(e) => setYear(e.target.value)}>
-                        <option value="">Año</option>
-                        {years.map(y => (
-                            <option key={y} value={y}>
-                                {y}
-                            </option>
-                        ))}
-                    </select>
-
-                </div>
-
-                <label htmlFor="phoneInput">Teléfono:</label>
-                <input
-                    id="phoneInput"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+51 123 456 789"
+            {/* Teléfono y País */}
+            <div className="form-default-row">
+                <TextInput
+                    name="phone"
+                    label="Teléfono"
+                    icon="Phone"
+                    value={formData.phone}
+                    onChange={(val) => onChange("phone", val)}
+                    error={getError("phone")}
+                    placeholder="123 456 789"
                     required
+                    disabled={register.isPending}
                 />
-
-                <label htmlFor="countryInput">País:</label>
-                <input
-                    id="countryInput"
-                    type="text"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
+                <TextInput
+                    name="country"
+                    label="País"
+                    icon="MapPin"
+                    value={formData.country}
+                    onChange={(val) => onChange("country", val)}
+                    error={getError("country")}
                     placeholder="Perú"
                     required
+                    disabled={register.isPending}
                 />
+            </div>
 
-                <label htmlFor="emailInput">Email:</label>
-                <input
-                    id="emailInput"
-                    type="email"
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); setIsAdmin(false) }}
+            {/* antes del Email */}
+            <div className="form-section-divider" />
+            <p className="form-section-label">Cuenta</p>
+
+            {/* Email */}
+            <div className="form-default-row">
+                <TextInput
+                    name="email"
+                    label="Email"
+                    icon="Mail"
+                    value={formData.email}
+                    onChange={(val) => onChange("email", val)}
+                    error={getError("email")}
                     placeholder="correo@email.com"
                     required
+                    width="300px"
+                    disabled={register.isPending}
+                />
+            </div>
+
+            {/* Contraseñas */}
+            <div className="form-default-row">
+                <PasswordInput
+                    name="password"
+                    label="Contraseña"
+                    value={formData.password}
+                    onChange={(val) => onChange("password", val)}
+                    onBlur={() => setPasswordMatch(confirmPassword === formData.password)}
+                    error={getError("password")}
+                    required
+                    disabled={register.isPending}
+                />
+            </div>
+            <div className="form-default-row">
+                <PasswordInput
+                    name="confirmPassword"
+                    label="Confirmar contraseña"
+                    value={confirmPassword}
+                    onChange={(val) => {
+                        setConfirmPassword(val)
+                        setPasswordMatch(val === formData.password)
+                    }}
+                    error={!passwordMatch ? "Las contraseñas deben coincidir" : null}
+                    required
+                    disabled={register.isPending}
                 />
 
-                <label htmlFor="passwordInput">Password:</label>
+            </div>
+            <div className="form-default-row">
 
-                <div className="password-field">
-                    <input
-                        id="passwordInput"
-                        type={show ? "text" : "password"}
-                        placeholder="*********"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onBlur={() => { setCoinciden(confirmPassword === password) }}
-                        required
-                    />
+                {/* Requisitos de contraseña */}
+                <ul className="password-rules">
+                    {[
+                        { test: formData.password.length >= 8 && formData.password.length <= 16, label: "8–16 caracteres" },
+                        { test: /[a-z]/.test(formData.password), label: "Una minúscula" },
+                        { test: /[A-Z]/.test(formData.password), label: "Una mayúscula" },
+                        { test: /\d/.test(formData.password), label: "Un número" },
+                        { test: /[!@#$%^&*()_\-+=.]/.test(formData.password), label: "Un símbolo válido (!@#...)" },
+                    ].map((rule, i) => (
+                        <li key={i} className={`password-rule ${rule.test ? "pass" : ""}`}>
+                            <span className="rule-dot" />
+                            {rule.label}
+                        </li>
+                    ))}
+                </ul>
+            </div>
 
-                    <button
-                        type="button"
-                        className="password-toggle"
-                        onClick={(e) => { e.preventDefault(); setShow(!show); }}
-                    >
-                        {show ? "🚫" : "👁️"}
-                    </button>
+            {/* Admin (solo visible si el email coincide) */}
+            {formData.email === ADMIN_EMAIL && (
+                <div className="form-default-row">
+                    <label className="input-label" style={{ cursor: "pointer" }}>
+                        <input
+                            type="checkbox"
+                            checked={formData.isAdmin}
+                            onChange={(e) =>
+                                setFormData(prev => ({ ...prev, isAdmin: e.target.checked }))
+                            }
+                            disabled={register.isPending}
+                        />
+                        Es administrador
+                    </label>
                 </div>
+            )}
 
-                <label htmlFor="passwordInput">Reingrese su contraseña:</label>
-
-                <div className="password-field">
-                    <input
-                        id="passwordInput"
-                        type={show ? "text" : "password"}
-                        placeholder="*********"
-                        value={confirmPassword}
-                        onChange={(e) => { setConfirmPassword(e.target.value); }}
-                        onBlur={() => { setCoinciden(confirmPassword === password) }}
-                        required
-                    />
-
-                    <button
-                        type="button"
-                        className="password-toggle"
-                        onClick={(e) => { e.preventDefault(); setShow(!show); }}
-                    >
-                        {show ? "🚫" : "👁️"}
-                    </button>
+            {/* Error general del servidor (sin details) */}
+            {register.error && !register.error.details && (
+                <div className="error-banner">
+                    {register.error.message || "Ocurrió un error inesperado"}
                 </div>
-                {!coinciden && <span className="error">Las contraseñas deben coincidir.</span>}
+            )}
 
-                <label htmlFor="adminInput">
-                    <input
-                        className="cursorPointer"
-                        id="adminInput"
-                        type="checkbox"
-                        checked={isAdmin}
-                        onChange={(e) => { if (email === "gersonmeneses1612@gmail.com") { setIsAdmin(e.target.checked) } else { alert("Usuario no admitido para ser administrador, por favor contactarse con el administrador."); } }}
-                    />
-                    Es administrador
-                </label>
+            <button
+                className="button-login"
+                type="submit"
+                disabled={register.isPending || !passwordMatch}
+            >
+                {register.isPending ? "Registrando..." : "Registrarse"}
+            </button>
 
-                {error && <span className="error">{error}</span>}
-
-                <button className="cursorPointer" type="submit" disabled={submitting || !coinciden || !name || !day || !month || !year || !phone || !country || !email || !password || !confirmPassword}>
-                    {submitting ? "Registrando..." : "Registrarse"}
-                </button>
-
-                <span className="cursorPointer" onClick={() => navigate("/login")} >¿Ya tienes cuenta?; Incia Sesion</span>
-            </form>
-        </>
+            <p className="button-message" onClick={() => navigate("/login")}>
+                ¿Ya tienes cuenta? <span>Inicia sesión</span>
+            </p>
+        </form>
     )
 }
-
-

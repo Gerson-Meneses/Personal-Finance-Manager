@@ -1,0 +1,102 @@
+
+
+.icon-picker-container {
+    width: fit-content;
+}
+
+.icon-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.6rem;
+    border-radius: 12px;
+    color: #f8fafc;
+    cursor: pointer;
+    width: fit-content;
+    position: relative;
+}
+
+.icon-trigger:hover,
+.icon-picker-container:has(.icon-popover:hover) .icon-trigger {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.icon-popover {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px;
+    width: 240px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    width: fit-content;
+    position: absolute;
+    bottom: 75%;
+    right: -15%;
+    z-index: 99;
+}
+
+.icon-popover::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 8px;
+    border-style: solid;
+    border-color: #1e293b transparent transparent transparent;
+}
+
+.icon-search-input {
+    width: fit-content;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 6px;
+    color: white;
+    margin-bottom: 10px;
+}
+
+.icon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+
+}
+
+.icon-grid-item {
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 8px;
+    border-radius: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+}
+
+.icon-grid-item:hover,
+.icon-grid-item.active {
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+    border-color: #38bdf8;
+}
+
+.disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.disabled .icon-trigger {
+    cursor: default;
+}
+
+.disabled .icon-trigger:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+}

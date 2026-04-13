@@ -1,3 +1,4 @@
+/* ─── Layout ─────────────────────────────────────────── */
 .container {
     display: flex;
     flex-direction: column;
@@ -6,38 +7,459 @@
     min-height: 100vh;
 }
 
-form {
+/* ─── Card del form ───────────────────────────────────── */
+.login-form {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2rem 1.75rem;
+    border-radius: 16px;
+    background-color: #0a1929;
+    width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ─── Título ──────────────────────────────────────────── */
+.login-form h1 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #38bdf8;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    letter-spacing: .05em;
+    text-decoration: underline;
+}
+
+/* ─── Section divider ─────────────────────────────────── */
+.form-section-divider {
+    height: 0.5px;
+    background: #6580a6;
+    margin: 0.25rem 0 1rem;
+}
+
+.form-section-label {
+    font-size: 10px;
+    color: #6580a6;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.6rem;
+}
+
+/* ─── Rows ────────────────────────────────────────────── */
+.login-form .form-default-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    /* top-align para que los errores no desplacen */
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+/* ─── Inputs base (aplica a todos los inputs del form público) ── */
+.login-form input[type="text"],
+.login-form input[type="email"],
+.login-form input[type="tel"],
+.login-form input[type="password"] {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.55rem 0.75rem;
+    color: #f8fafc;
+    font-size: 0.875rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    box-sizing: border-box;
+}
+
+.login-form input[type="text"]:hover,
+.login-form input[type="email"]:hover,
+.login-form input[type="tel"]:hover,
+.login-form input[type="password"]:hover,
+.login-form input[type="text"]:focus,
+.login-form input[type="email"]:focus,
+.login-form input[type="tel"]:focus,
+.login-form input[type="password"]:focus {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+}
+
+/* ─── Fix autofill Chrome/Edge ────────────────────────── */
+.login-form input:-webkit-autofill,
+.login-form input:-webkit-autofill:hover,
+.login-form input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px #0a1929 inset !important;
+    -webkit-text-fill-color: #f8fafc !important;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: #f8fafc;
+    border-color: #38bdf8 !important;
+}
+
+/* ─── Selects (fecha de nacimiento) ───────────────────── */
+.login-form select {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.55rem 0.5rem;
+    color: #475569;
+    font-size: 0.8rem;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    appearance: none;
+    text-align: center;
+}
+
+.login-form select:hover,
+.login-form select:focus {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.login-form select.filled,
+.login-form select option {
+    color: #f8fafc;
+}
+
+.login-form select option {
+    background: #0f172a;
+}
+
+/* ─── Botón submit ────────────────────────────────────── */
+.button-login {
+    width: 100%;
+    padding: 0.65rem;
+    margin-top: 0.25rem;
+    background: transparent;
+    border: 1px solid #0ea5e9;
+    border-radius: 10px;
+    color: #38bdf8;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.button-login:hover:not(:disabled) {
+    transform: scale(1.02);
+    background: rgba(14, 165, 233, 0.08);
+}
+
+.button-login:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ─── Link de navegación ──────────────────────────────── */
+.button-message {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #475569;
+    cursor: pointer;
+    margin-top: 0.25rem;
+    transition: color 0.2s;
+}
+
+.button-message:hover {
+    color: #38bdf8;
+}
+
+.button-message span {
+    color: #38bdf8;
+}
+
+/* ─── Error banner (error general sin details) ────────── */
+.error-banner {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    color: #fca5a5;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+
+/* Codes */
+
+/* ─── Layout ─────────────────────────────────────────── */
+.auth-page-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* ─── Card — mismo sistema que login-form ─────────────── */
+.auth-card {
+    background: #0a1929;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2rem 1.75rem;
+    width: 100%;
+    max-width: 420px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    width: 300px;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    gap: 1rem;
 }
 
-.password-field {
-    background-color: #fff;
+/* ─── Ícono superior ──────────────────────────────────── */
+.auth-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(241, 196, 15, 0.08);
+    border: 1px solid rgba(241, 196, 15, 0.15);
     display: flex;
     align-items: center;
-    justify-content: space-around;
-    padding: 0 5px;
-
+    justify-content: center;
+    margin-bottom: 0.25rem;
 }
 
-.password-field>* {
-    background-color: transparent;
-    border: none;
-    margin: 0
+.auth-icon-wrap.success {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.15);
 }
 
-.password-field>*:focus {
-    background-color: transparent;
-    border: none;
-    outline: none;
+/* ─── Tipografía — consistente con register ───────────── */
+.auth-title {
+    font-size: 1.4rem;
+    font-weight: 500;       /* igual que el h1 del register */
+    color: #f8fafc;
+    text-align: center;
+    margin: 0;
+    letter-spacing: -0.015em;
 }
 
-.password-field>input {
+.auth-subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.auth-subtitle strong {
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+/* ─── Inputs full width dentro de auth-card ───────────── */
+.auth-card .form-default-row {
     width: 100%;
+}
+
+.auth-card .custom-form-group {
+    width: 100%;
+}
+
+.auth-card .input-wrapper-password {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Hereda el estilo base de .login-form inputs */
+.auth-card input[type="text"],
+.auth-card input[type="email"] {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.55rem 0.75rem;
+    color: #f8fafc;
+    font-size: 0.875rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    box-sizing: border-box;
+}
+
+.auth-card input[type="text"]:hover,
+.auth-card input[type="email"]:hover,
+.auth-card input[type="text"]:focus,
+.auth-card input[type="email"]:focus {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+}
+
+/* ─── Fix autofill ────────────────────────────────────── */
+.auth-card input:-webkit-autofill,
+.auth-card input:-webkit-autofill:hover,
+.auth-card input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px #0a1929 inset !important;
+    -webkit-text-fill-color: #f8fafc !important;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: #f8fafc;
+    border-color: #38bdf8 !important;
+}
+
+/* ─── OTP inputs ──────────────────────────────────────── */
+.otp-inputs {
+    display: flex;
+    gap: 10px;
+    margin: 0.25rem 0;
+}
+
+.otp-input {
+    width: 48px;
+    height: 52px;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #f8fafc;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    caret-color: #38bdf8;
+    box-sizing: border-box;
+
+    /* Elimina el aspecto nativo de input en todos los browsers */
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.otp-input:focus {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.06);
+}
+
+.otp-input.filled {
+    border-color: rgba(241, 196, 15, 0.35);
+    background: rgba(241, 196, 15, 0.04);
+    color: #f1c40f;
+}
+
+.otp-input.otp-error {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.otp-input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px #0a1929 inset !important;
+}
+
+/* ─── Botón — igual que .button-login ────────────────── */
+.auth-card .button-login {
+    width: 100%;
+    padding: 0.65rem;
+    background: transparent;
+    border: 1px solid #0ea5e9;
+    border-radius: 10px;
+    color: #38bdf8;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+    margin-top: 0.25rem;
+}
+
+.auth-card .button-login:hover:not(:disabled) {
+    transform: scale(1.02);
+    background: rgba(14, 165, 233, 0.08);
+}
+
+.auth-card .button-login:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ─── Link de navegación ──────────────────────────────── */
+.auth-card .button-message {
+    font-size: 0.78rem;
+    color: #475569;
+    cursor: pointer;
+    transition: color 0.2s;
+    text-align: center;
+    margin: 0;
+}
+
+.auth-card .button-message:hover { color: #38bdf8; }
+.auth-card .button-message span  { color: #38bdf8; }
+
+/* ─── Banners ─────────────────────────────────────────── */
+.success-banner {
+    width: 100%;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    color: #86efac;
+    font-size: 0.82rem;
+    text-align: center;
+}
+
+/* ─── Reglas de contraseña ────────────────────────────── */
+.password-rules {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+}
+
+.password-rule {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.75rem;
+    color: #475569;
+    transition: color 0.2s;
+}
+
+.password-rule.pass {
+    color: #22c55e;
+}
+
+.rule-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+/* ─── Divider sutil entre secciones del form ──────────── */
+.auth-divider {
+    width: 100%;
+    height: 0.5px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 0.25rem 0;
+}
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 1.75rem 1.25rem;
+    }
+
+    .otp-inputs {
+        gap: 7px;
+    }
+
+    .otp-input {
+        width: 42px;
+        height: 48px;
+        font-size: 1.1rem;
+        border-radius: 8px;
+    }
+
+    .password-rules {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-title {
+        font-size: 1.2rem;
+    }
 }

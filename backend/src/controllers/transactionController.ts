@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { TransactionService } from "../services/transactionService";
-import { TransactionSchema } from "../schemas/transaction.schema";
+import { TransactionSchema, UpdateTransactionSchema } from "../schemas/transaction.schema";
 import { TransferSchema } from "../schemas/transfers.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
 import { ApiPaginated } from "../typesResponseHttp/apiResponses";
@@ -24,6 +24,11 @@ export const
 export const createTransaction = async (c: Context, userId: UuidSchema, transaction: TransactionSchema) => {
     const newTransaction = await categoryService.createTransaction(transaction, userId)
     return c.json(newTransaction, 201)
+}
+
+export const updateTransaction = async (c: Context, userId: UuidSchema, transactionId: UuidSchema, updateData: UpdateTransactionSchema) => {
+    const updatedTransaction = await categoryService.updateTransaction(transactionId, userId, updateData)
+    return c.json(updatedTransaction, 200)
 }
 
 export const transferTransaction = async (c: Context, userId: UuidSchema, transaction: TransferSchema) => {

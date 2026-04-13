@@ -1,72 +1,75 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import * as service from "./services"
-import type { Account, CreateAccountDTO } from "./types";
-import type { Data } from "../../shared/dataApiInterface";
+import * as service from "./services";
+import type { Account, CreateAccountDTO, UpdateAccountDTO } from "./types";
+import type { DataError } from "../../shared/dataApiInterface";
 
 export const useAccounts = (id?: string) => {
+  const queryClient = useQueryClient();
 
-  const queryClient = useQueryClient()
-
+  // 1. Consulta de todas las cuentas
   const accountsQuery = useQuery({
     queryKey: ["accounts"],
-    queryFn: service.getAccounts
-  })
+    queryFn: service.getAccounts,
+  });
 
+  // 2. Consulta de una cuenta específica (Detalle/Edición)
   const accountByIdQuery = useQuery({
     queryKey: ["accounts", id],
     queryFn: () => service.getAccountById(id!),
-    enabled: !!id
-  })
+    enabled: !!id,
+  });
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["accounts"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // Para actualizar saldos totales
+    queryClient.invalidateQueries({ queryKey: ["transactions"] }); // Por si cambió el nombre de la cuenta
+  };
 
   const createMutation = useMutation({
-    mutationFn: (data: CreateAccountDTO) =>
-      service.createAccount(data),
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["accounts"]
-      })
-    }
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) =>
-      service.deleteAccount(id),
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["accounts"]
-      })
-    }
-  })
+    mutationFn: service.createAccount,
+    onSuccess: invalidateAll,
+  });
 
   const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      data
-    }: {
-      id: string
-      data: Partial<CreateAccountDTO>
-    }) => service.updateAccount(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateAccountDTO }) =>
+      service.updateAccount(id, data),
+    onSuccess: (updatedAccount) => {
+      invalidateAll();
+      queryClient.setQueryData(["accounts", id], updatedAccount);
+    },
+  });
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["accounts"]
-      })
-    }
-  })
+  const saveAccount = useMutation<Account, DataError<CreateAccountDTO>, CreateAccountDTO | UpdateAccountDTO>({
+    mutationFn: (data: CreateAccountDTO | UpdateAccountDTO) => {
+      if ('accountId' in data && data.accountId) {
+        return updateMutation.mutateAsync({ id: data.accountId, data: data });
+      }
+      return createMutation.mutateAsync(data as CreateAccountDTO);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: service.deleteAccount,
+    onSuccess: invalidateAll,
+  });
 
   return {
+    // Datos y Meta
+    accounts: accountsQuery.data?.data ?? [] as Account[],
+    meta: accountsQuery.data?.meta,
+    account: accountByIdQuery.data,
 
-    accounts: accountsQuery.data ?? {} as Data<Account>,
-    account: accountByIdQuery.data as Account,
+    // Estados de carga (mejorados)
     loading: accountsQuery.isLoading || accountByIdQuery.isLoading,
+    error: accountsQuery.error || accountByIdQuery.error,
 
-    createAccount: createMutation.mutateAsync,
-    deleteAccount: deleteMutation.mutateAsync,
+    // Acciones
+    createAccount: createMutation,
+    updateAccount: updateMutation,
+    saveAccount,
+    deleteAccount: deleteMutation,
 
-    updateAccount: updateMutation.mutateAsync,
-
-    refetch: accountsQuery.refetch
-  }
-}
+    // Utilidades
+    refetch: accountsQuery.refetch,
+  };
+};

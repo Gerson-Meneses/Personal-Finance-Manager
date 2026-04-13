@@ -1,0 +1,49 @@
+/* .transactions-page {} */
+
+.tx-filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tx-filter-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 6px 16px;
+    color: #64748b;
+    font-size: 0.82rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.tx-filter-btn:hover { border-color: rgba(255,255,255,0.2); color: #f8fafc; }
+.tx-filter-btn.active.all     { border-color: #38bdf8; color: #38bdf8; background: rgba(56,189,248,0.08); }
+.tx-filter-btn.active.income  { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,0.08);  }
+.tx-filter-btn.active.expense { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08);  }
+
+.tx-grouped-list { display: flex; flex-direction: column; gap: 20px; }
+
+/* .tx-date-group {} */
+
+.tx-date-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 0 4px;
+}
+.tx-date-header span:first-child {
+    font-size: 0.78rem;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.tx-date-count {
+    font-size: 0.7rem;
+    color: #334155;
+    background: rgba(255,255,255,0.05);
+    border-radius: 20px;
+    padding: 1px 8px;
+}

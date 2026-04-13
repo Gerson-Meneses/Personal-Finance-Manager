@@ -1,0 +1,83 @@
+.input-wrapper-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.4rem 0.6rem;
+    width: 100%;
+    min-width: 200px;
+    transition: all 0.2s ease;
+}
+
+.input-wrapper-select:focus-within,
+.input-wrapper-select:hover {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+}
+
+/* Estilos para el Select nativo */
+.custom-select {
+    background: transparent;
+    color: #f8fafcdb;
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0.2rem;
+}
+
+.custom-select option {
+    background-color: #1e293b; /* Color oscuro para el dropdown */
+    color: #f8fafc;
+}
+
+.special-option {
+    color: #38bdf8;
+    font-weight: bold;
+}
+
+/* Contenedor cuando es Input de texto */
+.custom-input-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+}
+
+.text-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f8fafcdb;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+/* Botón para regresar al Select */
+.back-to-list-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    transition: all 0.2s;
+}
+
+.back-to-list-btn:hover {
+    background: #38bdf8;
+    color: white;
+}
+
+/* Error State */
+.has-error .input-wrapper-select {
+    border-color: #ef4444;
+}
+

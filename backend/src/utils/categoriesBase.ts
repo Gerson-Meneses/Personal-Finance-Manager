@@ -1,150 +1,145 @@
 export const categoriesBase = [
-    //GASTOS:
+    // GASTOS (EXPENSE)
     {
-        name: "ALIMENTACION",
+        name: "ALIMENTACIÓN",
         type: "EXPENSE",
         icon: "utensils",
-        color: "#F97316"
+        color: "#F97316" // Naranja
     },
     {
         name: "TRANSPORTE",
         type: "EXPENSE",
-        icon: "bus",
-        color: "#0EA5E9"
+        icon: "car",
+        color: "#0EA5E9" // Azul
     },
     {
         name: "VIVIENDA",
         type: "EXPENSE",
         icon: "home",
-        color: "#64748B"
+        color: "#6366F1" // Indigo
     },
     {
         name: "SERVICIOS",
         type: "EXPENSE",
-        icon: "bolt",
-        color: "#FACC15"
+        icon: "zap", // Cambiado de 'bolt' a 'zap' (más estándar en Lucide)
+        color: "#EAB308" // Amarillo
     },
     {
         name: "ENTRETENIMIENTO",
         type: "EXPENSE",
-        icon: "gamepad",
-        color: "#8B5CF6"
+        icon: "clapperboard",
+        color: "#8B5CF6" // Morado
     },
     {
         name: "SALUD",
         type: "EXPENSE",
-        icon: "heart-pulse",
-        color: "#EF4444"
+        icon: "activity", // Cambiado de 'heart-pulse' a 'activity'
+        color: "#EF4444" // Rojo
     },
     {
         name: "EDUCACIÓN",
         type: "EXPENSE",
         icon: "graduation-cap",
-        color: "#22C55E"
+        color: "#10B981" // Esmeralda
     },
     {
         name: "COMPRAS",
         type: "EXPENSE",
-        icon: "shopping-cart",
-        color: "#EC4899"
+        icon: "shopping-bag",
+        color: "#EC4899" // Rosa
+    },
+    {
+        name: "MANTENIMIENTO", // Agregada (Hogar, Vehículos, etc.)
+        type: "EXPENSE",
+        icon: "wrench",
+        color: "#78350F" 
+    },
+    {
+        name: "SUSCRIPCIONES",
+        type: "EXPENSE",
+        icon: "refresh-cw", // Cambiado de 'calendar-sync' a 'refresh-cw'
+        color: "#475569"
+    },
+    {
+        name: "DEVOLUCIÓN DE PRÉSTAMO",
+        type: "EXPENSE",
+        icon: "hand-coins", // Icono más descriptivo de pagar
+        color: "#0D727F"
+    },
+    {
+        name: "PRÉSTAMOS",
+        type: "EXPENSE",
+        icon: "landmark", 
+        color: "#941751"
     },
     {
         name: "OTROS GASTOS",
         type: "EXPENSE",
-        icon: "ellipsis",
+        icon: "archive", // Cambiado de 'shredder'
         color: "#94A3B8"
     },
-    {
-        name: "DEVOLUCION DE PRESTAMO",
-        type: "EXPENSE",
-        icon: "plus-circle",
-        color: "#4aafde"
-    }, 
-    {
-        name: "PRESTAMO",
-        type: "EXPENSE",
-        icon: "plus-circle",
-        color: "#9c1297"
-    },
-    // INGRESOS:
+
+    // INGRESOS (INCOME)
     {
         name: "SUELDO",
         type: "INCOME",
-        icon: "wallet",
-        color: "#22C55E"
+        icon: "banknote",
+        color: "#22C55E" // Verde
+    },
+    {
+        name: "VENTAS", // Agregada (Muy útil si el usuario vende algo ocasional)
+        type: "INCOME",
+        icon: "store",
+        color: "#16A34A"
     },
     {
         name: "FREELANCE",
         type: "INCOME",
-        icon: "briefcase",
-        color: "#16A34A"
+        icon: "laptop",
+        color: "#059669" 
     },
     {
         name: "REGALOS",
         type: "INCOME",
-        icon: "plus-circle",
-        color: "#4ADE80"
-    }, 
+        icon: "gift",
+        color: "#F472B6" 
+    },
     {
-        name: "DEVOLUCION DE PRESTAMO",
+        name: "DEVOLUCIÓN DE PRÉSTAMO",
         type: "INCOME",
-        icon: "plus-circle",
-        color: "#f121cf"
-    }, 
+        icon: "receipt-cent",
+        color: "#8B5CF6" 
+    },
     {
-        name: "PRESTAMO",
+        name: "PRÉSTAMOS",
         type: "INCOME",
-        icon: "plus-circle",
-        color: "#00d4d4"
+        icon: "piggy-bank", 
+        color: "#06B6D4"
+    },
+    {
+        name: "INVERSIONES",
+        type: "INCOME",
+        icon: "trending-up",
+        color: "#84CC16"
     },
     {
         name: "OTROS INGRESOS",
         type: "INCOME",
-        icon: "dots-horizontal",
+        icon: "circle-ellipsis",
         color: "#86EFAC"
+    },
+
+    // TIPOS ÚNICOS
+    {
+        name: "TRANSFERENCIA",
+        type: "TRANSFER",
+        icon: "arrow-left-right",
+        color: "#64748B",
+    },
+    {
+        name: "PAGO DE TARJETA",
+        type: "CREDIT_PAYMENT",
+        icon: "credit-card",
+        color: "#1E1B4B"
     }
-
-
-]
-
-
-
-/*
-No te emociones. Menos es más.
-
-🟢 Gastos
-
-🍔 Alimentación
-
-🚗 Transporte
-
-🏠 Hogar
-
-📱 Servicios
-
-🎉 Ocio
-
-🛒 Compras
-
-🏥 Salud
-
-📚 Educación
-
-👕 Ropa
-
-💸 Otros
-
-🟢 Ingresos
-
-💼 Sueldo
-
-💻 Freelance
-
-🎁 Regalos
-
-💰 Otros ingresos
-
-Reglas:
-
-
-*/
+];

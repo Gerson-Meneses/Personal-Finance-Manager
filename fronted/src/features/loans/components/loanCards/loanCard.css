@@ -1,4 +1,104 @@
-.loan-card {
+.loan-card-v2 {
+    background: #0d1a2e;
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border: 1px solid rgba(255,255,255,0.07);
+    transition: transform 0.2s, border-color 0.2s;
+}
+.loan-card-v2:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255,255,255,0.15);
+}
+.loan-card-v2.type-given    { border-left: 4px solid #3b82f6; }
+.loan-card-v2.type-received { border-left: 4px solid #ec4899; }
+
+/* Header */
+.lc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.lc-lender { display: flex; align-items: center; gap: 10px; }
+.lc-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.lc-name { display: block; font-size: 0.95rem; font-weight: 500; color: #f8fafc; }
+.lc-direction { font-size: 0.72rem; color: #64748b; }
+
+.lc-status {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+.lc-status.pending { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.lc-status.paid    { background: rgba(34,197,94,0.15);  color: #22c55e; }
+
+/* Monto */
+.lc-amount-section { display: flex; flex-direction: column; gap: 2px; }
+.lc-amount-label { font-size: 0.72rem; color: #64748b; }
+.lc-amount {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #f8fafc;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Detalle extendido */
+.lc-detail-row { display: flex; gap: 20px; }
+.lc-detail-item { display: flex; flex-direction: column; gap: 2px; }
+.lc-detail-label { font-size: 0.72rem; color: #64748b; }
+.lc-detail-value { font-size: 0.95rem; font-weight: 500; font-family: monospace; }
+
+/* Progreso */
+.lc-progress { display: flex; flex-direction: column; gap: 6px; }
+.lc-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+.lc-progress-track {
+    height: 6px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.lc-progress-fill {
+    height: 100%;
+    background: #22c55e;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+.lc-progress-fill.near-done { background: #f1c40f; }
+
+/* Footer */
+.lc-footer {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 14px;
+}
+.lc-paid-badge {
+    text-align: center;
+    color: #22c55e;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+
+
+
+/* .loan-card {
   border: 1px solid #ddd;
   padding: 16px;
   border-radius: 8px;
@@ -37,3 +137,121 @@
 .loan-actions {
   margin-top: 10px;
 }
+
+
+.loan-card-v2 {
+  background-color: #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 15px;
+  border: 1px solid #334155;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.loan-card-v2:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+
+.loan-card-v2.type-given {
+  border-left: 4px solid #3b82f6;
+}
+
+.loan-card-v2.type-received {
+  border-left: 4px solid #ec4899; 
+}
+
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lender-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.status-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.status-tag.pending {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.status-tag.paid {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+
+.amount-section label {
+  display: block;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.amount-section .principal {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background-color: #334155;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.progress-container small {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+
+.card-footer {
+  margin-top: 10px;
+  border-top: 1px solid #334155;
+  padding-top: 15px;
+}
+
+.paid-badge {
+  text-align: center;
+  color: #10b981;
+  font-weight: 600;
+  font-size: 0.9rem;
+} */

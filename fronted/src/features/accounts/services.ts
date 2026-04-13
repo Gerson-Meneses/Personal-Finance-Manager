@@ -2,31 +2,28 @@ import { apiFetch } from "../../shared/api";
 import type { Data } from "../../shared/dataApiInterface";
 import type { Account, CreateAccountDTO } from "./types";
 
-export const getAccounts = async (): Promise<Data<Account>> => {
-  const accounts = await apiFetch<Data<Account>>("/accounts");
-  return accounts
-}
+const BASE_PATH = "/accounts";
 
-export const createAccount = async (data: CreateAccountDTO): Promise<Account> => {
-  console.log(data)
-  return await apiFetch<Account>("/accounts", {
+export const getAccounts = () =>
+  apiFetch<Data<Account>>(BASE_PATH);
+
+export const getAccountById = (id: string) =>
+  apiFetch<Account>(`${BASE_PATH}/${id}`);
+
+export const createAccount = (data: CreateAccountDTO) =>
+  apiFetch<Account>(BASE_PATH, {
     method: "POST",
-    body: JSON.stringify(data),
+    body: data, 
   });
-}
 
-export const getAccountById = async (id: string): Promise<Account> => {
-  return await apiFetch<Account>(`/accounts/${id}`);
-}
-export const deleteAccount = async (id: string): Promise<void> => {
-  await apiFetch<void>(`/accounts/${id}`, {
+export const deleteAccount = (id: string) =>
+  apiFetch<void>(`${BASE_PATH}/${id}`, {
     method: "DELETE",
-  })
-}
+  });
 
-export const updateAccount = async (id: string, data: Partial<CreateAccountDTO>): Promise<Account> => {
-  return await apiFetch<Account>(`/accounts/${id}`, {
+
+export const updateAccount = (id: string, data: Partial<CreateAccountDTO>) =>
+  apiFetch<Account>(`${BASE_PATH}/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(data),
-  })
-}
+    body: data,
+  });

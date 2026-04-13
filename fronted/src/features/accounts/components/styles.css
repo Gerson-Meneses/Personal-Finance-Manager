@@ -1,0 +1,267 @@
+/* 
+
+
+.card-glass-effect {
+  position: absolute;
+  top: -50%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.icon-badge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.account-type-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+.account-name {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.balance-display {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.balance-display .currency {
+  font-size: 1.2rem;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.balance-display .amount {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+}
+
+.progress-bar-bg {
+  background: rgba(255, 255, 255, 0.2);
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+  background: white;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s ease-in-out;
+}
+
+.progress-bar-fill.danger {
+  background: #ff5252;
+}
+
+.limit-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  background: rgba(0, 230, 118, 0.2);
+  padding: 4px 10px;
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background: #00e676;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #00e676;
+}
+
+.form-container {
+  border: none;
+
+  max-width: 500px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  --accent-color: #6366f1;
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+}
+
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
+
+
+
+
+
+ Grid para campos de crédito 
+.credit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+}
+
+
+
+.color-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+}
+
+input[type="color"] {
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  background: none;
+}
+
+.color-hex {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.icon-selector-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.preview-emoji {
+  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem;
+  border-radius: 12px;
+  min-width: 45px;
+  text-align: center;
+}
+
+/* Botones 
+.btn-primary {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+/* Utilidades y Animaciones 
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.mt-8 {
+  margin-top: 2rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+}
+
+ 

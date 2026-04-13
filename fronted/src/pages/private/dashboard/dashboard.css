@@ -1,96 +1,451 @@
-/* --- BalanceCards Component Styles --- */
-
-.balance-cards-container {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 10px 0;
-  flex-wrap: wrap; /* Para que sea responsivo */
+/* ─── Contenedor principal ────────────────────────────── */
+.dashboard {
+    padding: 20px 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
+.dashboard-error {
+    padding: 40px 24px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+/* ─── Sección balances ────────────────────────────────── */
+.dashboard-balances .balance-cards-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+/* ─── Sección mes ─────────────────────────────────────── */
+.dashboard-month .month-summary-card {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: #0d1a2e;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+}
+
+.month-summary-item {
+    padding: 16px 20px;
+    text-align: center;
+}
+
+.month-summary-item+.month-summary-item {
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Grid medio (cuentas + préstamos) ────────────────── */
+.dashboard-mid-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 80px;
+    position: relative;
+}
+
+.dashboard-mid-grid::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 10%;
+    bottom: 1%;
+    border-left: 2px dotted #334155;
+}
+
+/* ─── Cards generales del dashboard ──────────────────────*/
+.dashboard-card {
+    background: #0d1a2e;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 18px 20px;
+}
+
+.dashboard-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.dashboard-card-title {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #f8fafc;
+    margin: 0;
+}
+
+.dashboard-card-action {
+    font-size: 0.75rem;
+    color: #f1c40f;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    padding: 0;
+    transition: opacity 0.2s;
+}
+
+.dashboard-card-action:hover {
+    opacity: 0.75;
+}
+
+/* ─── Balance card individual ─────────────────────────── */
 .balance-card {
-  flex: 1; /* Distribuye el espacio equitativamente */
-  min-width: 280px; /* Tamaño mínimo para no verse muy estrechas */
-  background-color: #1a1e36; /* Fondo de tarjeta sutilmente más claro */
-  border-radius: 12px;
-  padding: 24px;
-  cursor: pointer;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative; /* Para el borde lateral */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra suave para profundidad */
+    background: #0d1a2e;
+    border-radius: 14px;
+    padding: 18px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Efecto hover profesional */
 .balance-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  background-color: #212644;
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* Borde lateral sutil para cada tarjeta */
 .balance-card::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 5px;
-  border-radius: 12px 0 0 12px;
-  transition: width 0.3s ease-in-out;
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
 }
 
-/* Colores específicos para los bordes */
-.card-debit::before { background-color: #27ae60; } /* Verde para débito */
-.card-credit::before { background-color: #2980b9; } /* Azul para crédito */
-.card-danger::before { background-color: #c0392b; } /* Rojo para deuda */
+.card-debit::before {
+    background: #22c55e;
+}
 
-/* Estilos de los elementos internos */
+.card-credit::before {
+    background: #3b82f6;
+}
+
+.card-danger::before {
+    background: #ef4444;
+}
+
 .card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.card-icon {
-  color: #f1c40f; /* Color dorado/amarillo principal */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
 }
 
 .card-label {
-  color: #bdc3c7; /* Texto de etiqueta sutil */
-  font-size: 0.9rem;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+    font-size: 0.72rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0;
+}
+
+.card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .card-amount {
-  color: #fff; /* Monto en blanco para máximo contraste */
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0 0 16px 0;
-  line-height: 1.2;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin: 0 0 10px;
+    font-family: 'JetBrains Mono', monospace;
 }
 
-/* Estilo para el enlace de detalles, sutil por defecto */
 .card-details {
-  color: #7f8c8d;
-  font-size: 0.8rem;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  opacity: 0.7;
-  transition: opacity 0.2s ease, color 0.2s ease;
-  align-self: flex-end; /* Alineado a la derecha */
+    font-size: 0.72rem;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+    transition: color 0.2s;
 }
 
-/* El enlace destaca solo en el hover de la tarjeta completa */
 .balance-card:hover .card-details {
-  opacity: 1;
-  color: #f1c40f;
+    color: #f1c40f;
 }
 
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 768px) {
+    .dashboard {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    /* Las 3 balance cards pasan a 1 columna */
+    .dashboard-balances .balance-cards-container {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-mid-grid::before{
+        display: none;
+    }
+
+    /* El resumen del mes: income y expense en 2 cols, balance abajo */
+    .dashboard-month .month-summary-card {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .month-summary-item:last-child {
+        grid-column: span 2;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Cuentas y préstamos apilados */
+    .dashboard-mid-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard {
+        padding: 12px;
+    }
+
+    .card-amount {
+        font-size: 1.35rem;
+    }
+
+    /* En móvil chico el mes va todo en 1 columna */
+    .dashboard-month .month-summary-card {
+        grid-template-columns: 1fr;
+    }
+
+    .month-summary-item:last-child {
+        grid-column: span 1;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .month-summary-item+.month-summary-item {
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+}
+
+/* ___________________________vertical-line__________ */
+
+
+
+/* ─── QuickStats ──────────────────────────────────────── */
+.quick-stats-card {
+    background: #0d1a2e;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.qs-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+}
+
+.qs-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0 12px;
+    text-align: center;
+}
+
+.qs-item + .qs-item {
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.qs-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.qs-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.qs-sub {
+    font-size: 0.68rem;
+    color: #334155;
+}
+
+/* Fila inferior */
+.qs-bottom {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 12px;
+}
+
+.qs-tag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    transition: border-color 0.2s;
+}
+
+.qs-tag:hover { border-color: rgba(255, 255, 255, 0.15); }
+
+.qs-tag-warning {
+    border-color: rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.04);
+}
+
+.qs-tag strong { color: #f8fafc; font-weight: 500; }
+
+.qs-tag-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ─── ExpensesByCategory ──────────────────────────────── */
+
+
+.cat-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 0;
+    border: 1px dashed rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+}
+
+.cat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cat-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto 6px;
+    align-items: center;
+    gap: 6px 12px;
+}
+
+.cat-row-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cat-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.cat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.cat-name {
+    font-size: 0.83rem;
+    color: #f8fafc;
+    font-weight: 400;
+}
+
+.cat-count {
+    font-size: 0.7rem;
+    color: #475569;
+}
+
+.cat-row-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+}
+
+.cat-amount {
+    font-size: 0.88rem;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.cat-pct {
+    font-size: 0.68rem;
+    color: #475569;
+}
+
+.cat-bar-track {
+    grid-column: 1 / -1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.cat-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    opacity: 0.8;
+}
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 768px) {
+    .qs-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .qs-item:nth-child(3) {
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding-top: 12px;
+        margin-top: 4px;
+    }
+
+    .qs-item:nth-child(4) {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding-top: 12px;
+        margin-top: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .qs-value { font-size: 1rem; }
+}
+
+.qs-tag-success {
+    border-color: rgba(34, 197, 94, 0.2);
+    background: rgba(34, 197, 94, 0.04);
+}

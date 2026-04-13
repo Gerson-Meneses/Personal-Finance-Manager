@@ -1,0 +1,25 @@
+.btn-container {
+  position: relative; /* Clave para el posicionamiento del mensaje */
+  display: inline-block;
+}
+
+.success-badge {
+  position: absolute;
+  top: -40px; /* Lo sitúa arriba del botón */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #10b981; /* Verde esmeralda */
+  color: white;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  animation: fadeInOut 0.3s ease-in-out;
+  white-space: nowrap;
+}
+
+/* Animación simple para que el mensaje no aparezca de golpe */
+@keyframes fadeInOut {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}

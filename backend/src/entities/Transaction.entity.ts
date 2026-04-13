@@ -28,7 +28,7 @@ export class Transaction {
     amount: number;
 
     @Column({ type: 'date' })
-    date: Date;
+    date: string;
 
     @Column({ type: "date", nullable: true })
     postedAt: Date;
