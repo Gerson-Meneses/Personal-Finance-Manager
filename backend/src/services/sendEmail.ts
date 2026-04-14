@@ -9,9 +9,10 @@ export interface MailOptions {
 }
 
 export const sendEmail = async (mailOptions: MailOptions) => {
+    console.log("Conectado al servicio de mails")
     try {
         const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent: ' + info.response);
+        console.log('Email Enviado: ' + info.response);
     } catch (error) {
         console.error('Error sending email: ', error);
     }
