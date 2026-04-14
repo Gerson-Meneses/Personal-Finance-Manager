@@ -1,6 +1,6 @@
 import { google } from 'googleapis';
 import 'dotenv/config';
-import transporter from "../config/nodemailer";
+
 
 export interface MailOptions {
     to: string;
@@ -8,30 +8,13 @@ export interface MailOptions {
     text?: string;
     html?: string
 }
-
-/* export const sendEmail = async (mailOptions: MailOptions) => {
-    console.log("Conectado al servicio de mails")
-    try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email Enviado: ' + info.response);
-    } catch (error) {
-        console.error('Error sending email: ', error);
-    }
-};
- */
-
-/**
- * Función para enviar correo usando la API de Gmail (HTTP)
- * Esto evita el bloqueo de puertos de Render
- */
 export const sendEmail = async (mailOptions: MailOptions) => {
-
-    const {to, subject, text, html} = mailOptions
+    const { to, subject, text, html } = mailOptions;
 
     const oauth2Client = new google.auth.OAuth2(
         process.env.CLIENT_ID,
         process.env.CLIENT_SECRET,
-        "https://google.com"
+        "https://developers.google.com/oauthplayground" // DEBE ser esta para que acepte el token del playground
     );
 
     oauth2Client.setCredentials({
@@ -40,7 +23,10 @@ export const sendEmail = async (mailOptions: MailOptions) => {
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // Crear el cuerpo del correo en formato RFC 2822
+    console.log('ID cargado:', process.env.CLIENT_ID?.substring(0, 10) + '...');
+    console.log('Secret cargado:', process.env.CLIENT_SECRET ? 'SÍ' : 'NO');
+
+    // Construcción del mensaje simplificada para evitar errores de parseo
     const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
     const messageParts = [
         `From: <${process.env.EMAIL_USER}>`,
@@ -49,12 +35,10 @@ export const sendEmail = async (mailOptions: MailOptions) => {
         'Mime-Version: 1.0',
         `Subject: ${utf8Subject}`,
         '',
-        text,
-        html
+        html || text // Prioriza HTML si existe
     ];
-    const message = messageParts.join('\n');
 
-    // Codificar en Base64 para la API de Google
+    const message = messageParts.join('\n');
     const encodedMessage = Buffer.from(message)
         .toString('base64')
         .replace(/\+/g, '-')
@@ -64,15 +48,15 @@ export const sendEmail = async (mailOptions: MailOptions) => {
     try {
         const res = await gmail.users.messages.send({
             userId: 'me',
-            requestBody: {
-                raw: encodedMessage,
-            },
+            requestBody: { raw: encodedMessage },
         });
-        console.log('Correo enviado con éxito:', res.data.id);
+        console.log('✅ Correo enviado:', res.data.id);
         return res.data;
-    } catch (error) {
-        console.error('Error enviando por Gmail API:', error);
+    } catch (error: any) {
+        // Log detallado para ver exactamente qué dice Google si falla
+        if (error.response) {
+            console.error('❌ Error API:', error.response.data);
+        }
         throw error;
     }
 };
-
