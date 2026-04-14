@@ -10,7 +10,9 @@ import 'dotenv/config'
 }); */
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: '://gmail.com',
+    port: 465,
+    secure: true, // Forzamos el uso de SSL
     auth: {
         type: 'OAuth2',
         user: process.env.EMAIL_USER,
@@ -18,7 +20,12 @@ const transporter = nodemailer.createTransport({
         clientSecret: process.env.CLIENT_SECRET,
         refreshToken: process.env.REFRESH_TOKEN,
     },
-});
+    // Añadimos esto para ignorar problemas de red local en Render
+    tls: {
+        rejectUnauthorized: false
+    }
+} as any);
+
 
 
 export default transporter;
