@@ -14,7 +14,7 @@ export const sendEmail = async (mailOptions: MailOptions) => {
     const oauth2Client = new google.auth.OAuth2(
         process.env.CLIENT_ID,
         process.env.CLIENT_SECRET,
-        "https://developers.google.com/oauthplayground" // DEBE ser esta para que acepte el token del playground
+        "https://developers.google.com/oauthplayground" 
     );
 
     oauth2Client.setCredentials({
@@ -35,7 +35,7 @@ export const sendEmail = async (mailOptions: MailOptions) => {
         'Mime-Version: 1.0',
         `Subject: ${utf8Subject}`,
         '',
-        html || text // Prioriza HTML si existe
+        html || text
     ];
 
     const message = messageParts.join('\n');
@@ -53,7 +53,6 @@ export const sendEmail = async (mailOptions: MailOptions) => {
         console.log('✅ Correo enviado:', res.data.id);
         return res.data;
     } catch (error: any) {
-        // Log detallado para ver exactamente qué dice Google si falla
         if (error.response) {
             console.error('❌ Error API:', error.response.data);
         }

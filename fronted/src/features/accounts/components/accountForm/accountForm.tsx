@@ -29,7 +29,7 @@ interface PropsAccountForm {
     fieldsHidden?: Fields
     fieldsDisabled?: Fields
     isEdit?: boolean
-    onSuccess?: () => void
+    onSuccess?: (account: Account) => void
 }
 
 /* function generarColorHex() {
@@ -39,12 +39,13 @@ interface PropsAccountForm {
 
 export default function AccountForm({ mutation, account, fieldsHidden, fieldsDisabled, isEdit, onSuccess }: PropsAccountForm) {
 
-    const { mutate, isPending, error, reset, isSuccess } = mutation;
+    const { mutateAsync, isPending, error, reset, isSuccess } = mutation;
+    const [newAccount, setNewAccount] = useState<Account>({} as Account)
 
     const initialStateForm: CreateAccountDTO = {
-        type: "CREDIT",
+        type: "DEBIT",
         name: "",
-        color: "",
+        color: "#000000",
         icon: "Banknote",
         creditLimit: 0,
         billingCloseDay: 0,
@@ -60,7 +61,8 @@ export default function AccountForm({ mutation, account, fieldsHidden, fieldsDis
             if (!isEdit) setFormData(initialStateForm);
             setErrors(null);
             reset();
-            onSuccess && onSuccess();
+            console.log(newAccount)
+            onSuccess && onSuccess(newAccount);
         }
     }, [isSuccess]);
 
@@ -103,8 +105,9 @@ export default function AccountForm({ mutation, account, fieldsHidden, fieldsDis
         return errors?.[field] ? errors[field][0] : null;
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        e.stopPropagation()
         setErrors(null);
 
         if (isEdit && account) {
@@ -112,9 +115,10 @@ export default function AccountForm({ mutation, account, fieldsHidden, fieldsDis
                 ...formData,
                 accountId: account.id
             };
-            mutate(updateData);
+            setNewAccount(await mutateAsync(updateData))
         } else {
-            mutate(formData);
+
+            setNewAccount(await mutateAsync(formData))
         }
     };
 

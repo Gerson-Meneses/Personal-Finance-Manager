@@ -8,6 +8,7 @@
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
     "@types/morgan": "^1.9.10",
+    "colord": "^2.9.3",
     "dotenv": "^17.3.1",
     "googleapis": "^171.4.0",
     "hono": "^4.11.3",

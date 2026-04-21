@@ -53,6 +53,7 @@ export const RegisterPage = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+        e.stopPropagation()
         setErrors(null)
 
         if (formData.password !== confirmPassword) {

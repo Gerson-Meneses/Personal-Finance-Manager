@@ -1,0 +1,74 @@
+.form-payment-tc {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  max-width: 500px;
+  margin: auto;
+}
+
+.form-header-payment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 1rem;
+}
+
+.pay-icon {
+  background: #eef2ff;
+  color: #4f46e5;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.title-group .form-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.payment-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.datetime-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn-pay-submit {
+  width: 100%;
+  margin-top: 1.5rem;
+  background-color: #059669; /* Verde éxito */
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-pay-submit:hover {
+  background-color: #047857;
+}
+
+.btn-pay-submit:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.error-banner {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  border: 1px solid #fee2e2;
+}

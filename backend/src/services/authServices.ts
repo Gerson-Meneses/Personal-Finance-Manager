@@ -61,14 +61,14 @@ export class AuthService {
 			})
 			await queryRunner.manager.save(accountCash);
 
-			categoriesBase.forEach(async (category) => {
-				const newCategory = queryRunner.manager.create('Category', {
-					...category,
-					isBase: true,
-					user: user
-				});
-				await queryRunner.manager.save(newCategory);
-			});
+
+			const categoriesToSave = categoriesBase.map(cat => ({
+				...cat,
+				isBase: true,
+				user: user
+			}));
+
+			await queryRunner.manager.insert('Category', categoriesToSave);
 
 			await queryRunner.commitTransaction();
 			const data = await this.logingUser({ email: userData.email, password: userData.password });
@@ -136,7 +136,7 @@ export class AuthService {
 		const code = this.ramdonNum();
 		const code_hashed = await Bun.password.hash(code);
 
-		
+
 		const newCode = this.codesRepo.create({
 			used: false,
 			attemps: 0,

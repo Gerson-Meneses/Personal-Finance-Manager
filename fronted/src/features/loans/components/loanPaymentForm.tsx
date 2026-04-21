@@ -4,19 +4,19 @@ import { NumericInput } from "../../../shared/components/NumericInput/NumericInp
 import { DatePicker } from "../../../shared/components/DateInput/DateInput"
 import { SelectAccount } from "../../accounts/components/selectAccount/selectAccount"
 import dayjs from "dayjs"
-import type { CreateLoanPaymentDTO } from "../types"
+import type { CreateLoanPaymentDTO, Loan } from "../types"
 import { handleFieldChange } from "../../../shared/utils/handleFieldChange"
 import type { DetailsError } from "../../../shared/dataApiInterface"
 import { SuccessToast } from "../../../shared/components/SuccesToast/SuccesToast"
 
-interface Props { loanId: string }
+interface Props { loan: Loan }
 
-export default function LoanPaymentForm({ loanId }: Props) {
+export default function LoanPaymentForm({ loan }: Props) {
     const { payLoan } = useLoans()
     const { mutate, error, isSuccess, isPending, reset } = payLoan
 
     const initalStateForm: CreateLoanPaymentDTO = {
-        id: loanId,
+        id: loan.id,
         amount: 0,
         date: dayjs().format("YYYY-MM-DD"),
         accountId: ""
@@ -28,6 +28,7 @@ export default function LoanPaymentForm({ loanId }: Props) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        e.stopPropagation()
         mutate(formData)
     }
 
@@ -73,6 +74,7 @@ export default function LoanPaymentForm({ loanId }: Props) {
                     value={formData.accountId}
                     onChange={(val) => onChange("accountId", val)}
                     error={getErrorMessage("accountId")}
+                    noCredit={loan.type == "RECEIVED" ? false : true}
                     balance
                     required
                 />
@@ -103,83 +105,3 @@ export default function LoanPaymentForm({ loanId }: Props) {
         </form>
     )
 }
-
-
-
-/* ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-/* import { useState } from "react"
-import type { Account } from "../../accounts/types"
-import { useAccounts } from "../../accounts/hooks"
-import { useLoans } from "../hooks"
-
-interface Props {
-    loanId: string
-}
-
-export default function LoanPaymentForm({
-    loanId
-}: Props) {
-
-    const [amount, setAmount] = useState(0)
-    const [date, setDate] = useState(new Date().toISOString().split("T")[0])
-    const [accountId, setAccountId] = useState("")
-    const { payLoan } = useLoans()
-
-    const { accounts, loading } = useAccounts();
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        if (!amount) return
-        await payLoan.mutateAsync({ id: loanId, amount, date, accountId })
-        setAmount(0)
-        setDate(new Date().toISOString().split("T")[0])
-        setAccountId("")
-    }
-
-    if (loading) return <span>Cargando...</span>
-
-    return (
-
-        <form onSubmit={handleSubmit}>
-
-            <input
-                name=""
-                type="number"
-                placeholder="Pago"
-                value={amount}
-                onChange={(e) =>
-                    setAmount(Number(e.target.value))
-                }
-            />
-            
-            <input
-                className="cursorPointer"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-            />
-          
-            <select
-                className="cursorPointer"
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-                required
-            >
-                <option value="">Selecciona cuenta</option>
-                {accounts?.map((acc: Account) => (
-                    <option key={acc.id} value={acc.id}>
-                        {acc.name} - {acc.balance} - {acc.type}
-                    </option>
-                ))}
-            </select>
-
-
-            <button>
-                Registrar pago
-            </button>
-
-        </form>
-    )
-}
- */

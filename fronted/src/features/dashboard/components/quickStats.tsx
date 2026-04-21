@@ -56,7 +56,7 @@ export default function QuickStats({
     ]
 
     return (
-        <div className="quick-stats-card">
+        <div className="card">
             <div className="qs-grid">
                 {stats.map((s, i) => (
                     <div key={i} className="qs-item">

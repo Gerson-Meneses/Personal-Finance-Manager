@@ -79,9 +79,6 @@
   font-style: italic;
 }
 
-.text-danger { color: #ef4444; }
-.text-success { color: #22c55e; }
-
 .tx-name-group {
   display: flex;
   align-items: center;
@@ -114,3 +111,7 @@
 .tx-date:first-child {
   text-transform: capitalize;
 }
+
+
+
+

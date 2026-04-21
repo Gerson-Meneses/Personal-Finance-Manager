@@ -10,10 +10,10 @@ import DashboardPage from "./pages/private/dashboard/dashboard";
 import LoansPage from "./pages/private/loans/loans";
 import CategoriesPage from "./pages/private/categories/categories";
 import NotFoundView from "./shared/components/NotFoundView/NotFoundView";
-import "./App.css"
 import UnderConstructionView from "./shared/components/UnderConstruction/UnderConstruction";
 import { VerifyEmailPage } from "./pages/public/verifyEmail/VerifyEmail";
 import { ResetPasswordPage } from "./pages/public/ResetPassword/ResetPassword";
+import "./App.css"
 
 export default function App() {
   return (

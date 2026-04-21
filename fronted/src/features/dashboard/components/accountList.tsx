@@ -9,16 +9,15 @@ interface Props {
 export default function AccountsList({ accounts }: Props) {
   const navigate = useNavigate()
   return (
-    <div className="card accounts-section">
-      <div className="card-header-flex">
-        <h3>Mis Cuentas</h3>
-
-        <button className="btn-text" onClick={() => navigate("/accounts")} >Gestionar</button>
+    <div className="card">
+      <div className="card-head">
+        <h3 className="card-head-title">Mis Cuentas</h3>
+        <button className="btn-ghost" onClick={() => navigate("/accounts")} >Gestionar →</button>
       </div>
 
-      <div className="accounts-stack">
+      <div className="grid-auto">
         {accounts.map((acc) => (
-          <AccountCard key={acc.id} account={acc} ></AccountCard>
+          <AccountCard key={acc.id} account={acc} onClick={(id) => navigate("/accounts/" + id)} ></AccountCard>
         ))}
       </div>
     </div>

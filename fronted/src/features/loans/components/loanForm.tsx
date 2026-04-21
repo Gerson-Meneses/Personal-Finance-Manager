@@ -10,6 +10,7 @@ import { DatePicker, TimePicker } from "../../../shared/components/DateInput/Dat
 import { SelectAccount } from "../../accounts/components/selectAccount/selectAccount";
 import { SelectInput } from "../../../shared/components/SelectOrInputText/SelectOrInputText";
 import { TextInput } from "../../../shared/components/TextInput/TextInput";
+import { SuccessToast } from "../../../shared/components/SuccesToast/SuccesToast";
 
 interface Props {
   lenders?: Array<string>;
@@ -18,8 +19,8 @@ interface Props {
 }
 
 const initialState: CreateLoanDTO = {
-  lender: "Abi",
-  principalAmount: 10,
+  lender: "",
+  principalAmount: 0,
   type: "GIVEN" as LoanType,
   startDate: dayjs().format("YYYY-MM-DD"),
   date: dayjs().format("YYYY-MM-DD"),
@@ -30,7 +31,7 @@ const initialState: CreateLoanDTO = {
 
 export default function LoanForm({ lenders = [], mutation, onSuccess }: Props) {
 
-  const { mutate, isPending, error, reset } = mutation;
+  const { mutate, isPending, error, reset, isSuccess } = mutation;
 
   const [formData, setFormData] = useState(initialState);
 
@@ -60,10 +61,10 @@ export default function LoanForm({ lenders = [], mutation, onSuccess }: Props) {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation()
     setErrors(null);
-
     mutate(formData)
-
+    setFormData(initialState)
     onSuccess && onSuccess();
   };
 
@@ -75,8 +76,8 @@ export default function LoanForm({ lenders = [], mutation, onSuccess }: Props) {
         <TypeToggle
           value={formData.type}
           onChange={(val) => onChange("type", val as LoanType)}
-          leftOption={{ label: "Preste Dinero", value: "GIVEN", color: "#a59" }}
-          rightOption={{ label: "Me prestaron", value: "RECEIVED", color: "#95f" }}
+          leftOption={{ label: "Preste Dinero", value: "GIVEN", color: "#941751" }}
+          rightOption={{ label: "Me prestaron", value: "RECEIVED", color: "#06B6D4" }}
         ></TypeToggle>
       </div>
 
@@ -107,6 +108,14 @@ export default function LoanForm({ lenders = [], mutation, onSuccess }: Props) {
           required
           error={getErrorMessage("principalAmount")}
         />
+        <SelectAccount
+          value={formData.accountId}
+          onChange={(val) => onChange("accountId", val)}
+          balance={formData.lender == "GIVEN" ? true : false}
+          error={getErrorMessage("accountId")}
+          required
+          noCredit={formData.type == "GIVEN" ? false : true}
+        />
       </div>
 
       <div className="form-default-row">
@@ -114,15 +123,6 @@ export default function LoanForm({ lenders = [], mutation, onSuccess }: Props) {
           label="Fecha de inicio"
           value={formData.startDate}
           onChange={(val) => onChange("startDate", val)}
-        />
-      </div>
-
-      <div className="form-default-row">
-        <SelectAccount
-          value={formData.accountId}
-          onChange={(val) => onChange("accountId", val)}
-          balance={formData.lender == "GIVEN" ? true : false}
-          error={getErrorMessage("accountId")}
         />
       </div>
 
@@ -150,7 +150,7 @@ export default function LoanForm({ lenders = [], mutation, onSuccess }: Props) {
           value={formData.description}
           placeholder="Notas adiconales..."
           onChange={(val) => onChange("description", val)}
-          texarea
+          textarea
           disabled={isPending}
         />
       </div>
@@ -162,10 +162,11 @@ export default function LoanForm({ lenders = [], mutation, onSuccess }: Props) {
           </div>
         )}
       </div>
-
-      <button type="submit" disabled={isPending}>
-        {isPending ? "Guardando..." : "Crear préstamo"}
-      </button>
+      <SuccessToast isSucces={isSuccess} successText="Préstamo guardado con éxito." >
+        <button type="submit" disabled={isPending}>
+          {isPending ? "Guardando..." : "Crear préstamo"}
+        </button>
+      </SuccessToast>
     </form>
   );
 }

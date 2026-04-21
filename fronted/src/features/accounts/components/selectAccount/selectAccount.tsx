@@ -4,6 +4,9 @@ import type { Account, AccountType } from "../../types"
 import './selectAccount.css'
 import { getIcon } from '../../../../shared/utils/GetIcon'
 import { formatCurrency } from "../../../../shared/utils/formatCurrency"
+import { useState } from "react"
+import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal"
+import AccountForm from "../accountForm/accountForm"
 
 interface Props {
     onChange: (accountId: string) => void
@@ -20,7 +23,6 @@ interface Props {
     required?: boolean
     disabled?: boolean
 }
-
 export const SelectAccount = ({
     onChange,
     value,
@@ -34,52 +36,65 @@ export const SelectAccount = ({
     icon = "Wallet",
     noCredit,
     disabled,
-    required }: Props) => {
+    required 
+}: Props) => {
 
-    const { accounts, loading } = useAccounts()
+    const { accounts, loading, saveAccount } = useAccounts();
+    const [showForm, setShowForm] = useState(false);
 
-    if (loading) return <LoadingScreen></LoadingScreen>
+    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const val = e.target.value;
+        if (val === "Nueva") {
+            setShowForm(true);
+        } else {
+            onChange(val);
+        }
+    };
 
-    let filtered = type ? accounts.filter(acc => acc.type === type) : accounts
+    const handleSuccess = (newAccount: Account) => {
+        onChange(String(newAccount.id));
+        setShowForm(false);
+    };
 
-    filtered = noCredit ? filtered.filter(acc => acc.type !== "CREDIT") : filtered
+    if (loading) return <LoadingScreen />;
 
-    filtered = balance ? filtered.filter(acc => acc.balance > 0) : filtered
-
-    filtered = noAccountId ? filtered.filter(acc => acc.id !== noAccountId) : filtered
+    let filtered = type ? accounts.filter(acc => acc.type === type) : accounts;
+    filtered = noCredit ? filtered.filter(acc => acc.type !== "CREDIT") : filtered;
+    filtered = balance ? filtered.filter(acc => acc.balance > 0) : filtered;
+    filtered = noAccountId ? filtered.filter(acc => acc.id !== noAccountId) : filtered;
 
     return (
         <div className={`custom-form-group ${error ? 'has-error' : ''}`}>
-
             <label className="input-label">
                 {icon && getIcon(icon)} {label}
             </label>
 
             <div className="input-wrapper">
-
                 <select
                     value={value ?? ""}
-                    onChange={(e) => onChange(String(e.target.value))}
+                    onChange={handleSelectChange}
                     required={required}
                     disabled={disabled}
                 >
-                    <option value="">
-                        {placehoder}
-                    </option>
+                    <option value="">{placehoder}</option>
+                    <option value="Nueva">+ Nueva Cuenta</option>
+                    
                     {filtered.map((acc: Account) => (
-
-                        <option
-                            key={acc.id}
-                            value={acc.id}
-                        >
-                            {acc.name} {!noRenderBalance && <> - {formatCurrency(acc.balance)}</>}
+                        <option key={acc.id} value={acc.id}>
+                            {acc.name} {!noRenderBalance && ` - ${formatCurrency(acc.balance)}`}
                         </option>
-
                     ))}
                 </select>
             </div>
+            
             {error && <span className="error-text">{error}</span>}
-        </div>
-    )
 
-}
+            <ModalPortal isOpen={showForm} onClose={() => setShowForm(false)}>
+                <AccountForm 
+                    mutation={saveAccount} 
+                    onSuccess={handleSuccess} // Pasamos la función manejadora
+                />
+            </ModalPortal>
+        </div>
+    );
+};

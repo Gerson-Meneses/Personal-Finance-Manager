@@ -8,7 +8,7 @@ interface TextInputProps {
     label?: string
     error?: string | null
     placeholder?: string
-    texarea?: boolean
+    textarea?: boolean
     icon?: string
     required?: boolean
     disabled?: boolean
@@ -23,7 +23,7 @@ export const TextInput = ({
     label = "Nombre",
     error,
     placeholder = "Ingresar Nombre",
-    texarea,
+    textarea,
     icon = "Type",
     required,
     minWidth = "5ch",
@@ -40,7 +40,7 @@ export const TextInput = ({
             </label>
 
             <div className="input-wrapper">
-                {!texarea ? <input
+                {!textarea ? <input
                     style={{ width: inputWidth }}
                     className="input-text"
                     name={name}

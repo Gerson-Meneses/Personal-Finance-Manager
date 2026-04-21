@@ -39,6 +39,7 @@ export const LoginPage = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+        e.stopPropagation()
         setErrors(null)
         login.mutate(formData)
     }

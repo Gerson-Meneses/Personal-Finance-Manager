@@ -77,7 +77,7 @@ export default function LoanCard({ loan, extended = false }: Props) {
             {/* Footer */}
             <div className="lc-footer">
                 {isPending ? (
-                    <LoanPaymentForm loanId={loan.id} />
+                    <LoanPaymentForm loan={loan} />
                 ) : (
                     <div className="lc-paid-badge">✓ Liquidado</div>
                 )}
@@ -85,72 +85,3 @@ export default function LoanCard({ loan, extended = false }: Props) {
         </div>
     )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* import type { Loan } from "../../types"
-import {
-    getRemaining,
-    getProgress
-} from "../../utils"
-import "./loanCard.css"
-import LoanPaymentForm from "../loanPaymentForm"
-
-interface Props {
-    loan: Loan
-}
-
-export default function LoanCard({ loan }: Props) {
-    const remaining = getRemaining(loan);
-    const progress = getProgress(loan);
-    const isGiven = loan.type === "GIVEN";
-
-    return (
-        <div className={`loan-card-v2 ${isGiven ? 'type-given' : 'type-received'}`}>
-            <div className="card-header">
-                <span className="lender-name">{loan.lender}</span>
-                <span className={`status-tag ${loan.status.toLowerCase()}`}>
-                    {loan.status === "PENDING" ? "Pendiente" : "Pagado"}
-                </span>
-            </div>
-
-            <div className="card-body">
-                <div className="amount-section">
-                    <label>{isGiven ? "Prestaste" : "Recibiste"}</label>
-                    <span className="principal">${loan.principalAmount}</span>
-                </div>
-
-                <div className="progress-container">
-                    <div className="progress-text">
-                        <span>Progreso de pago</span>
-                        <span>{progress}%</span>
-                    </div>
-                    <div className="progress-track">
-                        <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-                    </div>
-                    <small>Restante: <strong>${remaining}</strong></small>
-                </div>
-            </div>
-
-            <div className="card-footer">
-                {loan.status === "PENDING" ? (
-                    <LoanPaymentForm loanId={loan.id} />
-                ) : (
-                    <div className="paid-badge">✨ Liquidado con éxito</div>
-                )}
-            </div>
-        </div>
-    );
-} */

@@ -1,0 +1,264 @@
+/* ─── Wrap ────────────────────────────────────────────── */
+.tf-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ─── Top bar ─────────────────────────────────────────── */
+.tf-top-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Búsqueda */
+.tf-search-wrap {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.55rem 0.75rem;
+    transition: border-color 0.2s, background 0.2s;
+}
+.tf-search-wrap:focus-within {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.tf-search-icon {
+    color: #475569;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.tf-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f8fafc;
+    font-size: 0.875rem;
+    font-family: inherit;
+}
+.tf-search-input::placeholder { color: #475569; }
+
+/* Controls */
+.tf-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.tf-select-small {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.tf-select-small:hover { border-color: #38bdf8; color: #f8fafc; }
+
+/* Toggle filtros */
+.tf-filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.5rem 0.9rem;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+.tf-filter-toggle:hover { border-color: rgba(255,255,255,0.25); color: #f8fafc; }
+.tf-filter-toggle.active {
+    border-color: #38bdf8;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.08);
+}
+
+.tf-active-count {
+    background: #38bdf8;
+    color: #020120;
+    font-size: 0.65rem;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Reset */
+.tf-reset-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 10px;
+    padding: 0.5rem 0.75rem;
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.tf-reset-btn:hover { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; }
+
+/* ─── Panel ───────────────────────────────────────────── */
+.tf-panel {
+    background: #0d1a2e;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tf-divider {
+    height: 0.5px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Grupos ──────────────────────────────────────────── */
+.tf-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tf-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tf-group-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+}
+
+/* Row helpers */
+.tf-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.tf-row-end { justify-content: flex-end; }
+
+/* ─── Fields ──────────────────────────────────────────── */
+.tf-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 130px;
+}
+
+.tf-field label {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.tf-field input,
+.tf-select {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    color: #f8fafc;
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+.tf-field input:hover,
+.tf-field input:focus,
+.tf-select:hover,
+.tf-select:focus {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.04);
+}
+
+.tf-field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* ─── Mode toggle (Rango / Exacto) ───────────────────── */
+.tf-mode-toggle {
+    display: flex;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.tf-mode-toggle button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 4px 10px;
+    color: #475569;
+    font-size: 0.72rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.tf-mode-toggle button.active {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+}
+
+/* ─── Chips ───────────────────────────────────────────── */
+.tf-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tf-chip {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 4px 12px;
+    color: #64748b;
+    font-size: 0.78rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.tf-chip:hover { border-color: rgba(255,255,255,0.2); color: #f8fafc; }
+.tf-chip.active {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: #38bdf8;
+    color: #38bdf8;
+}
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 640px) {
+    .tf-top-bar { flex-direction: column; align-items: stretch; }
+    .tf-controls { justify-content: flex-end; }
+    .tf-select-small { flex: 1; }
+}

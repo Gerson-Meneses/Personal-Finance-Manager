@@ -2,6 +2,7 @@ import "./accountCard.css"
 import type { Account } from "../../types";
 import { formatCurrency } from "../../../../shared/utils/formatCurrency";
 import { getIcon } from "../../../../shared/utils/GetIcon";
+import { getProgressColor } from "../../../../shared/utils/generateColors";
 
 interface Props {
   account: Account;
@@ -14,9 +15,6 @@ export default function AccountCard({ account, onClick }: Props) {
     creditLimit, overdraft
   } = account;
   const isCredit = type === "CREDIT";
-
-  // Cálculo de porcentaje para tarjetas de crédito
-  // Si es crédito, el "balance" suele ser la deuda.
   const usedPercentage = isCredit && creditLimit
     ? Math.min(Math.round(((creditLimit! * ((overdraft || 0) / 100 + 1) - balance) / creditLimit) * 100), 100)
     : 0;
@@ -30,22 +28,19 @@ export default function AccountCard({ account, onClick }: Props) {
         cursor: onClick ? 'pointer' : 'default'
       } as React.CSSProperties}
     >
-      <div className="card-glass-effect"></div>
-
-      {/* Encabezado: Icono y Tipo */}
-      <div className="card-header">
+      <div className="card-head">
         <div className="icon-badge">
           {icon && getIcon(icon, { color, defaultIcon: "wallet" })}
         </div>
-        <div className="rigth">
 
-          <span className="account-type-label">
-            {isCredit ? "Crédito" : "Débito"}
-          </span>
-        </div>
+
+        <span className="account-type-label">
+          {isCredit ? "Crédito" : "Débito"}
+        </span>
+
       </div>
 
-      {/* Cuerpo: Nombre y Saldo */}
+
       <div className="card-body">
         <h3 className="account-name">{name}</h3>
         <div className="balance-display">
@@ -54,7 +49,7 @@ export default function AccountCard({ account, onClick }: Props) {
         {isCredit && <div style={{ display: "block", width: "100%" }} > Usado: {formatCurrency((account.creditLimit! * ((account.overdraft || 0) / 100 + 1) - account.balance))} </div>}
       </div>
 
-      {/* Pie: Barra de progreso (Solo Crédito) */}
+
       {isCredit && (
         <div className="card-footer">
           <div className="progress-info">
@@ -63,8 +58,9 @@ export default function AccountCard({ account, onClick }: Props) {
           </div>
           <div className="progress-bar-bg">
             <div
-              className={`progress-bar-fill ${usedPercentage > 90 ? 'danger' : ''}`}
-              style={{ width: `${usedPercentage}%` }}
+              className={`progress-bar-fill`}
+              style={{ width: `${usedPercentage}%`, background: `${getProgressColor(usedPercentage)}` }}
+
             ></div>
           </div>
           <div className="limit-details">

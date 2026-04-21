@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as service from "./services"
 import type { Category, CreateCategoryDTO } from "./types"
-import type { Data } from "../../shared/dataApiInterface";
+import type { Data, DataError } from "../../shared/dataApiInterface";
 
 
 export const useCategories = () => {
@@ -15,7 +15,7 @@ export const useCategories = () => {
   // Centralizamos la invalidación para no repetir código
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["categories"] });
 
-  const createMutation = useMutation({
+  const createMutation = useMutation<Category, DataError<CreateCategoryDTO>, CreateCategoryDTO>({
     mutationFn: service.createCategory,
     onSuccess: invalidate
   });
@@ -36,7 +36,7 @@ export const useCategories = () => {
     categories: categoriesQuery.data?.data ?? [],
     total: categoriesQuery.data?.meta.total ?? 0,
     loading: categoriesQuery.isLoading,
-    createCategory: createMutation.mutateAsync,
+    createCategory: createMutation,
     deleteCategory: deleteMutation.mutateAsync,
     updateCategory: updateMutation.mutateAsync,
     refetch: categoriesQuery.refetch

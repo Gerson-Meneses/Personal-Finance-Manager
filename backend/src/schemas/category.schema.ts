@@ -1,5 +1,10 @@
 import { z } from 'zod';
 import { TypeTransaction } from '../utils/Enums';
+import { colord } from "colord";
+
+const colorSchema = z.string().refine((val) => colord(val).isValid(), {
+    message: "Debe ser un color válido (Hex, RGB, HSL o nombre)",
+});
 
 
 export const categorySchema = z.object({
@@ -13,23 +18,17 @@ export const categorySchema = z.object({
     type: z
         .enum(TypeTransaction, { message: `El campo "type" debe ser uno de los siguientes valores: "INCOME" o "EXPENSE"` }),
 
-    color: z.string({ message: "El campo 'color' debe ser una cadena de texto" })
-        .trim()
-        .min(3, { message: "El color debe tener al menos 3 caracteres" })
-        .max(6, { message: "El color no puede exceder los 6 caracteres" })
-        .refine(value => /^#[0-9A-Fa-f]{6}$/.test(value), { message: "El color debe tener un formato hexadecimal válido (#RRGGBB)" })
+    color: colorSchema,
+
+    icon: z
+        .string({ message: "El campo 'icon' debe ser una cadena de texto" })
         .optional()
         .nullable(),
 
-    icon: z
-    .string({ message: "El campo 'icon' debe ser una cadena de texto" })
-    .optional()
-    .nullable(),
-    
     visible: z
-    .boolean({ message: "El campo 'visible' debe ser un valor booleano" })
-    .optional()
-    .nullable()
+        .boolean({ message: "El campo 'visible' debe ser un valor booleano" })
+        .optional()
+        .nullable()
 });
 
 export type CategorySchema = z.infer<typeof categorySchema>;

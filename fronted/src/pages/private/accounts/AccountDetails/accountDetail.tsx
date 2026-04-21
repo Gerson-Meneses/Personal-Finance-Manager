@@ -14,6 +14,7 @@ import TransferForm from "../../../../features/transfers/components/TransferForm
 import { getIcon } from "../../../../shared/utils/GetIcon";
 import AccountForm from "../../../../features/accounts/components/accountForm/accountForm";
 import InfoModal from "../../../../shared/components/InfoModal/InfoModal";
+import PaymentCreditCardForm from "../../../../features/CreditPayment/Components/CreditPaymentForm";
 
 export function AccountDetail() {
     const { id } = useParams();
@@ -22,6 +23,7 @@ export function AccountDetail() {
     const { transactions: trans, loading: tx2Loading } = useTransactions({ relatedAccountId: id });
     const { createTransfer } = useTransfers()
     const navigate = useNavigate()
+
 
     transactions = [...transactions, ...trans]
 
@@ -67,18 +69,18 @@ export function AccountDetail() {
 
             <div className="detail-layout">
                 {/* COLUMNA IZQUIERDA: Info de Cuenta */}
-                <aside className="detail-sidebar">
+                <aside className="default-column">
                     <AccountCard account={account} />
 
                     <div className="card action-card mt-6">
                         <h3>Acciones Rápidas</h3>
                         <div className="action-buttons">
-                            <button onClick={() => setShowModal(true)} className="btn-primary w-full">
+                            <button onClick={() => setShowModal(true)} className="btn-primary ">
                                 {isCredit ? "Pagar Tarjeta" : "Transferir Dinero"}
                             </button>
                             {/* <button className="btn-outline w-full">Descargar Reporte</button> */}
-                            <button className="btn-outline edit-button" onClick={() => setEditModal(true)} > {getIcon("edit-2")} Editar cuenta </button>
-                            <button className="btn-outline trash-button" onClick={() => deleteAccount.mutate(account.id)} >Eliminar cuenta</button>
+                            <button className="btn-icon btn-icon-edit" onClick={() => setEditModal(true)} > {getIcon("edit-2")} Editar cuenta </button>
+                            <button className="btn-icon btn-icon-delete" onClick={() => deleteAccount.mutate(account.id)} >Eliminar cuenta</button>
                         </div>
                     </div>
                 </aside>
@@ -123,8 +125,20 @@ export function AccountDetail() {
                 <AccountForm fieldsHidden={{ "type": true }} fieldsDisabled={{ "balance": true }} account={account} isEdit mutation={saveAccount} ></AccountForm>
             </ModalPortal>
 
-            <ModalPortal isOpen={showModal} onClose={() => setShowModal(false)} >
-                <TransferForm account={account} mutation={createTransfer} ></TransferForm>
+            {/* Modal Dinámico */}
+            <ModalPortal isOpen={showModal} onClose={() => setShowModal(false)}>
+                {isCredit ? (
+                    <PaymentCreditCardForm
+                        cardId={account.id}
+                        cardName={account.name}
+                        onSuccess={() => setShowModal(false)} // Opcional: cerrar al terminar
+                    />
+                ) : (
+                    <TransferForm
+                        account={account}
+                        mutation={createTransfer}
+                    />
+                )}
             </ModalPortal>
 
             <InfoModal isOpen={errorTrashModal} onClose={() => setErrorTrashModal(false)} type="error" title="Hubo un error al eliminar la cuenta" message={errorTrash?.message} ></InfoModal>

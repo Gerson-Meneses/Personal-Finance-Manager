@@ -16,11 +16,11 @@ export default function ExpensesByCategory({ expenses, totalExpense }: Props) {
         .slice(0, 6)
 
     return (
-        <div className="dashboard-card expenses-by-cat">
-            <div className="dashboard-card-header">
-                <h3 className="dashboard-card-title">Gastos por categoría</h3>
+        <div className="card expenses-by-cat">
+            <div className="card-head">
+                <h3 className="card-head-title">Gastos por categoría</h3>
                 <button
-                    className="dashboard-card-action"
+                    className="btn-ghost"
                     onClick={() => navigate("/categories")}
                 >
                     Gestionar →
@@ -28,10 +28,10 @@ export default function ExpensesByCategory({ expenses, totalExpense }: Props) {
             </div>
 
             {sorted.length === 0 ? (
-                <div className="cat-empty">
-                    <span className="text-muted" style={{ fontSize: "0.82rem" }}>
+                <div className="empty-state">
+                    <p className="text-muted">
                         Sin gastos registrados este mes
-                    </span>
+                    </p>
                 </div>
             ) : (
                 <div className="cat-list">

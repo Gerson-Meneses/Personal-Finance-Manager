@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as service from "./services";
 import type { Transaction, TransactionQuerySchema, CreateTransactionDTO, UpdateTransactionDTO } from "./types";
-import type { DataError } from "../../shared/dataApiInterface";
+import type { DataError, Meta } from "../../shared/dataApiInterface";
 
 export const useTransactions = (filters?: TransactionQuerySchema) => {
   const queryClient = useQueryClient();
@@ -48,7 +48,7 @@ export const useTransactions = (filters?: TransactionQuerySchema) => {
 
   return {
     transactions: transactionsQuery.data?.data ?? [] as Transaction[],
-    total: transactionsQuery.data?.meta.total ?? 0,
+    meta: transactionsQuery.data?.meta ?? {} as Meta,
     loading: transactionsQuery.isLoading,
     isFetching: transactionsQuery.isFetching,
     error: transactionsQuery.error,

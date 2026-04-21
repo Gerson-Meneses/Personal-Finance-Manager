@@ -5,7 +5,7 @@
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 
 .dashboard-error {
@@ -14,172 +14,8 @@
     color: #94a3b8;
 }
 
-/* ─── Sección balances ────────────────────────────────── */
-.dashboard-balances .balance-cards-container {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-}
-
-/* ─── Sección mes ─────────────────────────────────────── */
-.dashboard-month .month-summary-card {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    background: #0d1a2e;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    overflow: hidden;
-}
-
-.month-summary-item {
-    padding: 16px 20px;
-    text-align: center;
-}
-
-.month-summary-item+.month-summary-item {
-    border-left: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* ─── Grid medio (cuentas + préstamos) ────────────────── */
-.dashboard-mid-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 80px;
-    position: relative;
-}
-
-.dashboard-mid-grid::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 10%;
-    bottom: 1%;
-    border-left: 2px dotted #334155;
-}
 
 /* ─── Cards generales del dashboard ──────────────────────*/
-.dashboard-card {
-    background: #0d1a2e;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    padding: 18px 20px;
-}
-
-.dashboard-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-}
-
-.dashboard-card-title {
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: #f8fafc;
-    margin: 0;
-}
-
-.dashboard-card-action {
-    font-size: 0.75rem;
-    color: #f1c40f;
-    cursor: pointer;
-    background: none;
-    border: none;
-    font-family: inherit;
-    padding: 0;
-    transition: opacity 0.2s;
-}
-
-.dashboard-card-action:hover {
-    opacity: 0.75;
-}
-
-/* ─── Balance card individual ─────────────────────────── */
-.balance-card {
-    background: #0d1a2e;
-    border-radius: 14px;
-    padding: 18px 20px;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-    overflow: hidden;
-}
-
-.balance-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(255, 255, 255, 0.15);
-}
-
-.balance-card::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-}
-
-.card-debit::before {
-    background: #22c55e;
-}
-
-.card-credit::before {
-    background: #3b82f6;
-}
-
-.card-danger::before {
-    background: #ef4444;
-}
-
-.card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-.card-label {
-    font-size: 0.72rem;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin: 0;
-}
-
-.card-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.card-amount {
-    font-size: 1.6rem;
-    font-weight: 600;
-    color: #f8fafc;
-    margin: 0 0 10px;
-    font-family: 'JetBrains Mono', monospace;
-}
-
-.card-details {
-    font-size: 0.72rem;
-    color: #475569;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.balance-card:hover .card-details {
-    color: #f1c40f;
-}
 
 /* ─── Responsive ──────────────────────────────────────── */
 @media (max-width: 768px) {
@@ -191,21 +27,6 @@
     /* Las 3 balance cards pasan a 1 columna */
     .dashboard-balances .balance-cards-container {
         grid-template-columns: 1fr;
-    }
-
-    .dashboard-mid-grid::before{
-        display: none;
-    }
-
-    /* El resumen del mes: income y expense en 2 cols, balance abajo */
-    .dashboard-month .month-summary-card {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .month-summary-item:last-child {
-        grid-column: span 2;
-        border-left: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     /* Cuentas y préstamos apilados */
@@ -221,21 +42,6 @@
 
     .card-amount {
         font-size: 1.35rem;
-    }
-
-    /* En móvil chico el mes va todo en 1 columna */
-    .dashboard-month .month-summary-card {
-        grid-template-columns: 1fr;
-    }
-
-    .month-summary-item:last-child {
-        grid-column: span 1;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .month-summary-item+.month-summary-item {
-        border-left: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
     }
 }
 

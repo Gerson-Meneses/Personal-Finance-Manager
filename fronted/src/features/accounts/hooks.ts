@@ -21,10 +21,10 @@ export const useAccounts = (id?: string) => {
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["accounts"] });
-    queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // Para actualizar saldos totales
-    queryClient.invalidateQueries({ queryKey: ["transactions"] }); // Por si cambió el nombre de la cuenta
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] }); 
+    queryClient.invalidateQueries({ queryKey: ["transactions"] });
   };
-
+  
   const createMutation = useMutation({
     mutationFn: service.createAccount,
     onSuccess: invalidateAll,

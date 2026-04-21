@@ -15,8 +15,8 @@ export default function ModalPortal({ children, isOpen, onClose, color="#0B1628"
   if (!isOpen) return null;
 
   return ReactDOM.createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div style={{backgroundColor: color}} className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={()=> {onClose(), console.log("Click cierre")}}>
+      <div style={{backgroundColor: color}} className="modal-content" onClick={(e) => {e.stopPropagation(), console.log("Click")}}>
         <button className="close-x" onClick={onClose}><X size={20} /></button>
         { children}
       </div>

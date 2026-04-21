@@ -1,120 +1,49 @@
-.edit-button,
-.trash-button {
-    display: flex;
-    padding: 8px;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.edit-button {
-    background-color: #2563eb !important;
-    color: #00144d !important
-}   
-
-.edit-button:hover {
-    background-color: #1d4ed8 !important;
-    color: aliceblue !important;
-}
-
-.trash-button {
-    background-color: #ff5252;
-    color: #760000
-}
-
-.trash-button:hover {
-    background-color: #fb3131;
-}
-.accounts-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
-}
-
-.summary-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-}
-
-.summary-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Colores suaves para los fondos de iconos */
-.bg-success-soft { background: rgba(0, 230, 118, 0.1); }
-.bg-danger-soft { background: rgba(255, 82, 82, 0.1); }
-.bg-warning-soft { background: rgba(241, 196, 15, 0.1); }
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  border: 2px dashed #334155;
-  background: transparent;
-}
-
+/* ─── AccountPage ─────────────────────────────────────── */
 .empty-icon {
-  font-size: 3rem;
-  margin-bottom: 16px;
+    font-size: 2.5rem;
+    margin-bottom: 12px;
 }
 
-/* Vista de cada cuenta individual */
-
-.detail-layout {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 30px;
+/* ─── AccountDetail ───────────────────────────────────── */
+.detail-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
-@media (max-width: 900px) {
-  .detail-layout { grid-template-columns: 1fr; }
+.detail-main { min-width: 0; }
+
+.transactions-list { display: flex; flex-direction: column; }
+
+.empty-tx {
+    text-align: center;
+    padding: 32px 20px;
+    color: #475569;
+    font-size: 0.85rem;
+    border: 1px dashed rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+/* ─── Botones de acción específicos ───────────────────── */
+.action-btn-edit {
+    background: rgba(37, 99, 235, 0.12) !important;
+    border-color: rgba(37, 99, 235, 0.3) !important;
+    color: #3b82f6 !important;
+    justify-content: center;
+    gap: 8px;
+}
+.action-btn-edit:hover {
+    background: rgba(37, 99, 235, 0.25) !important;
+    border-color: #3b82f6 !important;
+    color: #93c5fd !important;
 }
 
-.tx-item {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #1e293b;
-  transition: background 0.2s;
+.action-btn-delete {
+    border-color: rgba(239, 68, 68, 0.3) !important;
+    color: #ef4444 !important;
+    justify-content: center;
 }
-
-.tx-item:hover { background: rgba(255,255,255,0.02); }
-
-.tx-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 16px;
-}
-
-.tx-icon.EXPENSE { background: rgba(255, 82, 82, 0.1); color: #ff5252; }
-.tx-icon.INCOME { background: rgba(0, 230, 118, 0.1); color: #00e676; }
-
-.tx-info { flex: 1; }
-.tx-name { font-weight: 500; margin: 0; }
-.tx-amount { font-weight: 600; font-size: 1.1rem; }
-.tx-amount.EXPENSE { color: #ff5252; }
-.tx-amount.INCOME { color: #00e676; }
-
-.action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
+.action-btn-delete:hover {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border-color: #ef4444 !important;
 }

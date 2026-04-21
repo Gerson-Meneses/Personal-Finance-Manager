@@ -38,12 +38,12 @@ export default function TransactionItem({ transaction, currentAccountId, hideFie
   // El color y el signo dependen del tipo y de la dirección
   const isNegative = type === "EXPENSE" || isOutgoingTransfer || type === "CREDIT_PAYMENT";
 
-  const { saveTransaction, deleteTransaction } = useTransactions()
+  const { saveTransaction } = useTransactions()
 
   const [modalEditOpen, setModalEditOpen] = useState(false);
 
   return (
-    <div className={`tx-item-card animate-fade-in ${type.toLowerCase()}`} style={{ borderLeft: `3px solid ${category.color}` }}>
+    <div onClick={() => setModalEditOpen(true)} className={`tx-item-card animate-fade-in ${type.toLowerCase()}`} style={{ borderLeft: `3px solid ${category.color}` }}>
       <div className="tx-main-content">
         {/* ICONO CON COLOR DINÁMICO */}
         <div
@@ -52,6 +52,7 @@ export default function TransactionItem({ transaction, currentAccountId, hideFie
             backgroundColor: `${category.color}20`,
             color: category.color
           }}
+          
         >
           {category.icon && getIcon(category.icon)}
         </div>
@@ -67,17 +68,13 @@ export default function TransactionItem({ transaction, currentAccountId, hideFie
                 </span>
               )}
             </div>
-
-            <span className="edit-button" onClick={() => setModalEditOpen(true)}>
-              {getIcon("edit-2")}
-            </span>
             <ModalPortal isOpen={modalEditOpen} onClose={() => setModalEditOpen(false)}>
-              <TransactionForm transaction={transaction} isEdit mutation={saveTransaction} ></TransactionForm>
+              <TransactionForm transaction={transaction} fieldsDisabled={{ all: true }} isEdit mutation={saveTransaction} ></TransactionForm>
             </ModalPortal>
 
-            <span className="delete-button" onClick={() => deleteTransaction.mutate(transaction.id)}>
+            {/*  <span className="delete-button" onClick={() => deleteTransaction.mutate(transaction.id)}>
               {getIcon("trash2")}
-            </span>
+            </span> */}
             <span className={`tx-amount amount-font ${isNegative ? "text-danger" : "text-success"}`}>
               {isNegative ? "-" : "+"} {formatCurrency(amount)}
             </span>

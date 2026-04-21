@@ -11,7 +11,6 @@ import type { Transaction } from "../../../transactions/types";
 import type { CreateTransferDto } from "../../types";
 import { handleFieldChange } from "../../../../shared/utils/handleFieldChange";
 import type { DataError, DetailsError } from "../../../../shared/dataApiInterface";
-import '../../../../styles-default/form-default.css';
 import './TransferForm.css'
 
 interface Props {
@@ -67,6 +66,7 @@ export default function TransferForm({ mutation, account }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        e.stopPropagation()
         setLocalErrors(null);
         if (formData.amount <= 0) {
             setLocalErrors({ amount: ["El monto debe ser mayor a 0"] });
@@ -108,7 +108,7 @@ export default function TransferForm({ mutation, account }: Props) {
                 />
             </div>
 
-            <div className="form-default-row mt-4">
+            <div className="form-default-row">
                 <NumericInput
                     label="Monto"
                     value={formData.amount}
@@ -139,7 +139,7 @@ export default function TransferForm({ mutation, account }: Props) {
                     disabled={isPending}
                     value={formData.description}
                     onChange={(val) => onChange("description", val)}
-                    texarea
+                    textarea
                     icon="AlignLeft"
                     placeholder="Notas adicionales..."
                 />

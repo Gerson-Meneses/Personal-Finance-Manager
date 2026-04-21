@@ -12,26 +12,25 @@ export const useLoans = () => {
     queryFn: service.getLoans
   })
 
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    queryClient.invalidateQueries({ queryKey: ["accounts"] }); // Para actualizar balances en la vista de cuentas
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // Crucial para actualizar balances
+    queryClient.invalidateQueries({ queryKey: ["loans"] }); // Crucial para actualizar balances
+  };
+
   const createLoanMutation = useMutation<Loan, DataError<CreateLoanDTO>, CreateLoanDTO>({
     mutationFn: (data: CreateLoanDTO) =>
       service.createLoan(data),
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["loans", "accounts", "dashboard"]
-      })
-    }
+    onSuccess: invalidateAll
   })
 
   const createPaymentMutation = useMutation<LoanPayment, DataError<CreateLoanPaymentDTO>, CreateLoanPaymentDTO>({
     mutationFn: (data: CreateLoanPaymentDTO) =>
       service.createLoanPayment(data),
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["loans"]
-      })
-    }
+    onSuccess: invalidateAll
   })
 
   const deleteLoanMutation = useMutation({

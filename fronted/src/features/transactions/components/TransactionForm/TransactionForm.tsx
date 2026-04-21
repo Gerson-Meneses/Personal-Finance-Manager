@@ -6,13 +6,14 @@ import SelectCategory from "../../../categories/components/selectCategory";
 import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
 import { TextInput } from "../../../../shared/components/TextInput/TextInput";
 import './TransactionForm.css'
-import type { CreateTransactionDTO, Transaction, TransactionType, UpdateTransactionDTO } from "../../types";
+import type { CreateTransactionDTO, Transaction, UpdateTransactionDTO } from "../../types";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { DataError, DetailsError } from "../../../../shared/dataApiInterface";
 import { handleFieldChange } from "../../../../shared/utils/handleFieldChange";
 import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle";
 import { validateInputsTransactionForm } from "./ValidateInputs";
 import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
+import type { TransactionTypeBase } from "../../../categories/types";
 
 interface Fields {
   name?: boolean;
@@ -23,6 +24,7 @@ interface Fields {
   date?: boolean;
   time?: boolean;
   description?: boolean;
+  all?: boolean
 }
 
 interface PropsTransactionForm {
@@ -77,7 +79,6 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
 
 
   useEffect(() => {
-    console.log(isSuccess)
   }, [isSuccess])
   useEffect(() => {
     if (error?.details) {
@@ -104,6 +105,7 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    e.stopPropagation()
     setErrors(null);
 
     if (isEdit && transaction) {
@@ -139,9 +141,9 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
         {!fieldsHidden?.type && (
           <TypeToggle
             value={formData.type}
-            onChange={(val) => onChange("type", val as TransactionType)}
+            onChange={(val) => onChange("type", val as TransactionTypeBase)}
             error={getErrorMessage("type")}
-            disabled={isPending || fieldsDisabled?.type}
+            disabled={isPending || fieldsDisabled?.type || fieldsDisabled?.all}
           />
         )}
       </div>
@@ -154,7 +156,7 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
           value={formData.name}
           onChange={(val) => onChange("name", val)}
           error={getErrorMessage("name")}
-          disabled={isPending || fieldsDisabled?.name}
+          disabled={isPending || fieldsDisabled?.name || fieldsDisabled?.all}
           required
         />)}
 
@@ -165,7 +167,7 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
           value={formData.amount}
           onChange={(val) => onChange("amount", val)}
           error={getErrorMessage("amount")}
-          disabled={isPending || fieldsDisabled?.amount}
+          disabled={isPending || fieldsDisabled?.amount || fieldsDisabled?.all}
           required
         />}
       </div>
@@ -176,7 +178,7 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
           type={formData.type}
           onChange={(val) => onChange("categoryId", val)}
           error={getErrorMessage("categoryId")}
-          disabled={isPending || fieldsDisabled?.category}
+          disabled={isPending || fieldsDisabled?.category || fieldsDisabled?.all}
           noLoan
           required
         />}
@@ -185,7 +187,7 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
           value={formData.accountId}
           onChange={(val) => onChange("accountId", val)}
           error={getErrorMessage("accountId")}
-          disabled={isPending || fieldsDisabled?.account}
+          disabled={isPending || fieldsDisabled?.account || fieldsDisabled?.all}
         />}
       </div>
 
@@ -195,7 +197,7 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
           value={formData.date}
           onChange={(val) => onChange("date", val)}
           error={getErrorMessage("date")}
-          disabled={isPending || fieldsDisabled?.date}
+          disabled={isPending || fieldsDisabled?.date || fieldsDisabled?.all}
         />}
 
         {!fieldsHidden?.time && <TimePicker
@@ -203,7 +205,7 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
           onChange={(val) => onChange("time", val)}
           error={getErrorMessage("time")}
           selectedDate={formData.date}
-          disabled={isPending || fieldsDisabled?.time}
+          disabled={isPending || fieldsDisabled?.time || fieldsDisabled?.all}
         />}
       </div>
 
@@ -214,8 +216,8 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
           value={formData.description}
           placeholder="Notas adiconales..."
           onChange={(val) => onChange("description", val)}
-          texarea
-          disabled={isPending || fieldsDisabled?.description}
+          textarea
+          disabled={isPending || fieldsDisabled?.description || fieldsDisabled?.all}
         />}
       </div>
 
@@ -226,13 +228,14 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
           </div>
         )}
       </div>
-      <div className="form-default-row">
+      {!fieldsDisabled?.all && <div className="form-default-row">
         <SuccessToast successText={(formData.type ? "Gasto" : "Ingreso") + " guardado con exito."} isSucces={isSuccess}>
           <button type="submit" style={{ '--button-color': "#fff" } as React.CSSProperties} className={`form-default-button ${formData.type.toLowerCase()}`} disabled={isPending}>
             {isEdit ? "Actualizar" : "Crear"}
           </button>
         </SuccessToast>
       </div>
+      }
     </form>
   );
 }

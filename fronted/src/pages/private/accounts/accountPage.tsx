@@ -29,9 +29,9 @@ export function AccountPage() {
   return (
     <div className="page-container animate-fade-in">
       {/* Cabecera con Resumen */}
-      <header className="page-header">
+      <header className="page-header card">
         <div>
-          <h1>Mis Cuentas</h1>
+          <h1 className="card-head-title">Mis Cuentas</h1>
           <p className="text-muted">Gestiona tus bancos, efectivo y tarjetas</p>
         </div>
         <SuccessToast isSucces={toast} successText="Cuenta creada con exito" >
@@ -43,9 +43,9 @@ export function AccountPage() {
       </header>
 
       {/* Widgets de Resumen Rápido */}
-      <section className="accounts-summary-grid mb-8">
-        <div className="card summary-item">
-          <div className="summary-icon bg-success-soft">
+      <section className="default-row">
+        <div className="card card-flex">
+          <div className="badge-2 bg-success-soft">
             <Wallet className="text-success" />
           </div>
           <div>
@@ -54,8 +54,8 @@ export function AccountPage() {
           </div>
         </div>
 
-        <div className="card summary-item">
-          <div className="summary-icon bg-danger-soft">
+        <div className="card card-flex">
+          <div className="badge-2 bg-danger-soft">
             <CreditCard className="text-danger" />
           </div>
           <div>
@@ -64,8 +64,8 @@ export function AccountPage() {
           </div>
         </div>
 
-        <div className="card summary-item">
-          <div className="summary-icon bg-warning-soft">
+        <div className="card card-flex">
+          <div className="badge-2 bg-warning-soft">
             <TrendingUp className="text-warning" />
           </div>
           <div>
@@ -78,10 +78,11 @@ export function AccountPage() {
       {/* Grid de Cuentas */}
       {accounts.length === 0 ? (
         <div className="empty-state card">
-          <div className="empty-icon">🏜️</div>
+          <div className="empty-state-icon {
+">🏜️</div>
           <h3>No tienes cuentas registradas</h3>
           <p>Agrega tu primera cuenta de ahorros o tarjeta para empezar.</p>
-          <button className="btn-outline mt-4" onClick={() => setIsModalOpen(true)}>
+          <button className="btn-outline" onClick={() => setIsModalOpen(true)}>
             Crear mi primera cuenta
           </button>
         </div>

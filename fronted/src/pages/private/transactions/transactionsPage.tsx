@@ -1,26 +1,34 @@
 import { useState } from "react"
 import { useTransactions } from "../../../features/transactions/hooks"
 import TransactionItem from "../../../features/transactions/components/TransactionItem"
+import TransactionsFilters from "../../../features/transactions/components/TransactionsFilters/TransactionsFilters"
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen"
-import type { Transaction } from "../../../features/transactions/types"
-import { format } from "date-fns"
+import type { Transaction, TransactionQuerySchema } from "../../../features/transactions/types"
 import "./TransactionsPage.css"
+import dayjs from "dayjs"
+
+const DEFAULT_QUERY: TransactionQuerySchema = {
+    order: "DESC",
+    limit: 20,
+    page: 1,
+}
 
 export function TransactionsPage() {
-    const { transactions, loading, error } = useTransactions()
-    const [filter, setFilter] = useState<"ALL" | "INCOME" | "EXPENSE">("ALL")
+    const [query, setQuery] = useState<TransactionQuerySchema>(DEFAULT_QUERY)
+    const { transactions, loading, error, meta } = useTransactions(query)
 
     if (loading) return <LoadingScreen message="Cargando transacciones..." />
-    if (error instanceof Error) return <p className="text-muted" style={{ padding: "2rem" }}>{error.message}</p>
+    if (error instanceof Error) return (
+        <div className="page-container">
+            <div className="empty-state">
+                <p className="text-muted">{error.message}</p>
+            </div>
+        </div>
+    )
 
-    const filtered = filter === "ALL"
-        ? transactions
-        : transactions.filter(tx => tx.type === filter)
-
-    const grouped = filtered.reduce((acc, tx) => {
-        const date = tx.date
-        if (!acc[date]) acc[date] = []
-        acc[date].push(tx)
+    const grouped = transactions.reduce((acc, tx) => {
+        if (!acc[tx.date]) acc[tx.date] = []
+        acc[tx.date].push(tx)
         return acc
     }, {} as Record<string, Transaction[]>)
 
@@ -29,42 +37,34 @@ export function TransactionsPage() {
     )
 
     return (
-        <div className="page-container transactions-page">
+        <div className="page-container">
 
-            <header className="page-header">
+            <header className="card page-header">
                 <div>
                     <h1>Transacciones</h1>
-                    <p className="text-muted">
-                        {transactions.length} movimiento{transactions.length !== 1 ? "s" : ""} registrado{transactions.length !== 1 ? "s" : ""}
+                    <p className=" text-muted">
+                       <span className="dot-base dot-bg-muted"></span> {meta.total} resultado{meta.total !== 1 ? "s" : ""}
                     </p>
                 </div>
             </header>
 
-            {/* Filtros */}
-            <div className="tx-filter-bar">
-                {(["ALL", "INCOME", "EXPENSE"] as const).map(f => (
-                    <button
-                        key={f}
-                        className={`tx-filter-btn ${filter === f ? "active " + f.toLowerCase() : ""}`}
-                        onClick={() => setFilter(f)}
-                    >
-                        {f === "ALL" ? "Todos" : f === "INCOME" ? "Ingresos" : "Gastos"}
-                    </button>
-                ))}
-            </div>
+            <TransactionsFilters
+                query={query}
+                onChange={q => setQuery({ ...q, page: 1 })}
+                onReset={() => setQuery(DEFAULT_QUERY)}
+            />
 
-            {/* Lista agrupada por fecha */}
             {transactions.length === 0 ? (
-                <div className="dashboard-card" style={{ textAlign: "center", padding: "48px 20px" }}>
-                    <p className="text-muted">Sin transacciones registradas.</p>
+                <div className="empty-state">
+                    <p>Sin transacciones para los filtros seleccionados.</p>
                 </div>
             ) : (
-                <div className="tx-grouped-list">
+                <div className="card tx-grouped-list">
                     {sortedDates.map(date => (
                         <div key={date} className="tx-date-group">
                             <div className="tx-date-header">
-                                <span>{format(new Date(date), "dd/MM/yyyy")}</span>
-                                <span className="tx-date-count">{grouped[date].length}</span>
+                                <span>{dayjs(date).format("dddd D")}</span>
+                                <span className="badge badge-mutted">{grouped[date].length}</span>
                             </div>
                             {grouped[date].map(tx => (
                                 <TransactionItem key={tx.id} transaction={tx} />
@@ -73,36 +73,29 @@ export function TransactionsPage() {
                     ))}
                 </div>
             )}
+
+            {/* Paginación */}
+            {meta.totalPages > 1 && (
+                <div className="tf-pagination">
+                    <button
+                        className="btn-secondary"
+                        disabled={!query.page || query.page <= 1}
+                        onClick={() => setQuery(q => ({ ...q, page: (q.page ?? 1) - 1 }))}
+                    >
+                        ← Anterior
+                    </button>
+                    <span className="tf-page-info">
+                        Página {query.page ?? 1}/{meta.totalPages}
+                    </span>
+                    <button
+                        className="btn-secondary"
+                        disabled={transactions.length < (query.limit ?? 20)}
+                        onClick={() => setQuery(q => ({ ...q, page: (q.page ?? 1) + 1 }))}
+                    >
+                        Siguiente →
+                    </button>
+                </div>
+            )}
         </div>
     )
 }
-
-
-
-
-
-
-/* //////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-/* import RecentTransactions from "../../../features/dashboard/components/recentTransactions";
-import { useTransactions } from "../../../features/transactions/hooks";
-import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
-import "./trasactionPage.css"
-
-
-export function TransactionsPage() {
-    const { transactions, loading, error } = useTransactions();
-
-    if (loading) return <LoadingScreen message="Cargando transacciones..." />;
-    if (error instanceof Error) return <p>{error.message}</p>;
-
-    return (
-        <div style={{ padding: "2rem" }}>
-            <h1>Transactions</h1>
-            <ul>
-                <h2>Historial</h2>
-                <RecentTransactions transactions={transactions} messageEmpty="Sin transacciones registradas." ></RecentTransactions>
-            </ul>
-        </div>
-    );
-}
- */

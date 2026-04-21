@@ -15,7 +15,7 @@ export class CategoryService {
 
     async getCategoriesByUser(userId: UuidSchema, filters: PaginationQuerySchema): Promise<PaginatedResult<Category>> {
         const page = filters.page && filters.page > 0 ? filters.page : 1;
-        const limit = filters.limit && filters.limit > 0 ? filters.limit : 20;
+        const limit = filters.limit && filters.limit > 0 ? filters.limit : 100;
         const order = filters.order ?? 'DESC';
 
         const qb = this.categoryRepo
@@ -48,6 +48,8 @@ export class CategoryService {
         const categoryExist = await this.categoryRepo.findOneBy({ name: category.name, user: { id: userId }, type: category.type })
         if (categoryExist) throw new ConflictError("Usuario ya tiene categoria con este nombre y tipo", { name: "Ya existe una categoría con este nombre y tipo" })
         let nCategory = this.categoryRepo.create({
+            color: category.color,
+            icon: category.icon ?? "Tag",
             name: category.name,
             type: category.type,
             user: user,

@@ -8,6 +8,13 @@ export interface Data<T> {
   }
 }
 
+export interface Meta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export type DetailsError<T> = {
   [K in keyof T]?: string[];
 }

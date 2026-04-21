@@ -1,7 +1,10 @@
+export type TransactionTypeBase = "INCOME" | "EXPENSE" 
+
+
 export interface Category {
     id: string,
     name: string,
-    type: "INCOME" | "EXPENSE",
+    type: TransactionTypeBase
     color: string,
     icon: string,
     visible: boolean,
@@ -10,7 +13,7 @@ export interface Category {
 
 export interface CreateCategoryDTO {
   name: string
-  type: "INCOME" | "EXPENSE"
+  type: TransactionTypeBase
   color?: string
   icon?: string
 }
