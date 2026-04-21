@@ -1,17 +1,18 @@
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen"
 import { getIcon } from "../../../shared/utils/GetIcon"
 import { useCategories } from "../hooks"
-import type { Category, TransactionTypeBase } from "../types"
+import type { Category } from "../types"
 import './SelectCategory.css'
 import { useState } from "react"
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal"
 import { CategoryForm } from "./CategoryForm/CategoryForm"
+import type { TransactionType } from "../../transactions/types"
 
 
 interface Props {
     value?: string
     onChange: (categoryId: string) => void
-    type?: TransactionTypeBase
+    type?: TransactionType
     noLoan?: boolean
     isBase?: boolean
     visible?: boolean
@@ -122,7 +123,6 @@ export default function SelectCategory({
                 <CategoryForm
                     mutation={createCategory}
                     onSuccess={handleSuccess}
-                    initialType={type}
                 />
             </ModalPortal>
         </div>

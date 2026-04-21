@@ -1,10 +1,12 @@
+import type { TransactionType } from "../transactions/types"
+
 export type TransactionTypeBase = "INCOME" | "EXPENSE" 
 
 
 export interface Category {
     id: string,
     name: string,
-    type: TransactionTypeBase
+    type: TransactionType
     color: string,
     icon: string,
     visible: boolean,
@@ -13,7 +15,7 @@ export interface Category {
 
 export interface CreateCategoryDTO {
   name: string
-  type: TransactionTypeBase
+  type: TransactionType
   color?: string
   icon?: string
 }

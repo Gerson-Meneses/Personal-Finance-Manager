@@ -1,5 +1,5 @@
 import type { Account } from "../accounts/types";
-import type { Category, TransactionTypeBase } from "../categories/types";
+import type { Category } from "../categories/types";
 import type { Loan, LoanPayment } from "../loans/types";
 
 export type TransactionType = "INCOME" | "EXPENSE" | "CREDIT_PAYMENT" | "TRANSFER";
@@ -22,7 +22,7 @@ export interface Transaction {
 // Lo que envías al POST /transaction
 export interface CreateTransactionDTO {
   name: string;
-  type: TransactionTypeBase;
+  type: TransactionType;
   amount: number; 
   accountId: string;
   categoryId: string;
@@ -35,7 +35,7 @@ export interface CreateTransactionDTO {
 export interface UpdateTransactionDTO {
   transactionId: string;
   name?: string;
-  type?: TransactionTypeBase;
+  type?: TransactionType;
   amount?: number; 
   accountId?: string;
   categoryId?: string;

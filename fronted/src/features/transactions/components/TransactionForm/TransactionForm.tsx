@@ -6,14 +6,13 @@ import SelectCategory from "../../../categories/components/selectCategory";
 import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
 import { TextInput } from "../../../../shared/components/TextInput/TextInput";
 import './TransactionForm.css'
-import type { CreateTransactionDTO, Transaction, UpdateTransactionDTO } from "../../types";
+import type { CreateTransactionDTO, Transaction, TransactionType, UpdateTransactionDTO } from "../../types";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { DataError, DetailsError } from "../../../../shared/dataApiInterface";
 import { handleFieldChange } from "../../../../shared/utils/handleFieldChange";
 import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle";
 import { validateInputsTransactionForm } from "./ValidateInputs";
 import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
-import type { TransactionTypeBase } from "../../../categories/types";
 
 interface Fields {
   name?: boolean;
@@ -141,7 +140,7 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
         {!fieldsHidden?.type && (
           <TypeToggle
             value={formData.type}
-            onChange={(val) => onChange("type", val as TransactionTypeBase)}
+            onChange={(val) => onChange("type", val as TransactionType)}
             error={getErrorMessage("type")}
             disabled={isPending || fieldsDisabled?.type || fieldsDisabled?.all}
           />

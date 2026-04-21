@@ -1,5 +1,5 @@
 import type { UseMutationResult } from "@tanstack/react-query"
-import type { Category, CreateCategoryDTO, TransactionTypeBase } from "../../types"
+import type { Category, CreateCategoryDTO } from "../../types"
 import type { DataError, DetailsError } from "../../../../shared/dataApiInterface"
 import { TextInput } from "../../../../shared/components/TextInput/TextInput"
 import { useEffect, useState } from "react"
@@ -8,6 +8,7 @@ import { ColorPicker } from "../../../../shared/components/ColorPicker/ColorPick
 import { IconPicker } from "../../../../shared/components/IconPicker/IconPicker"
 import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle"
 import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast"
+import type { TransactionType } from "../../../transactions/types"
 
 export interface CategoryFormProps {
     mutation: UseMutationResult<Category, DataError<CreateCategoryDTO>, CreateCategoryDTO>
@@ -15,7 +16,7 @@ export interface CategoryFormProps {
     category?: Category 
     isEdit?: boolean
     title?: string 
-    initialType?: TransactionTypeBase 
+    initialType?: TransactionType
 }
 
 export const CategoryForm = ({ 
@@ -23,15 +24,14 @@ export const CategoryForm = ({
     onSuccess, 
     category, 
     isEdit, 
-    title = "Categoría", 
-    initialType 
+    title = "Categoría",  
 }: CategoryFormProps) => {
 
     const { mutateAsync, isSuccess, error, reset, isPending } = mutation;
 
     const initialStateForm: CreateCategoryDTO = {
         name: "",
-        type: initialType || "EXPENSE",
+        type:  "EXPENSE",
         color: "#000000",
         icon: "LayoutGrid"
     }
@@ -102,7 +102,7 @@ export const CategoryForm = ({
             <div className="form-default-row">
                 <TypeToggle
                     value={formData.type}
-                    onChange={(val) => onChange("type", val as TransactionTypeBase)}
+                    onChange={(val) => onChange("type", val as TransactionType)}
                     error={getErrorMessage("type")}
                 />
             </div>
