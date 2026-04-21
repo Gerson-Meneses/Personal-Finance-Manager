@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:3000"  /* import.meta.env.VITE_API_URL */ ;
+const BASE_URL = import.meta.env.VITE_API_URL  ;
 
 interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   body?: any; // Ahora aceptamos objetos, strings, etc.
