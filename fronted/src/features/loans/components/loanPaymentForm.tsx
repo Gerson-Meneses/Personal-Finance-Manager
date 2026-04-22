@@ -88,7 +88,7 @@ export default function LoanPaymentForm({ loan }: Props) {
                 <SuccessToast isSucces={isSuccess} successText="Pago registrado correctamente" >
                     <button
                         type="submit"
-                        className=""
+                        className="btn-submit" 
                         disabled={isPending}
                     >
                         {isPending ? "Registrando..." : "Registrar pago"}

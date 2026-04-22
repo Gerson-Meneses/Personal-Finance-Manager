@@ -222,8 +222,9 @@ export default function AccountForm({ mutation, account, fieldsHidden, fieldsDis
                     {error.message || "Ocurrió un error inesperado"}
                 </div>
             )}
+            <div className="form-default-row"></div>
             <SuccessToast isSucces={isSuccess} successText={"Cuenta " + (isEdit ? "actulizada" : "creada") + " con exito."}>
-                <button className="form-default-button" type="submit" disabled={isPending}>
+                <button className="btn-submit" style={{ '--button-color': "#0e20a9" } as React.CSSProperties} type="submit" disabled={isPending}>
                     {isPending ? "Guardando..." : isEdit ? "Actualizar" : "Crear"}
                 </button>
             </SuccessToast>

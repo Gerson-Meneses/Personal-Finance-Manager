@@ -14,10 +14,9 @@ import { PaginatedResult } from "../types";
 import { TransactionQuerySchema } from "../schemas/querysTransaction.schema";
 import { In } from "typeorm";
 
-
 export class TransactionService {
     private transactionRepo = AppDataSourceProd.getRepository(Transaction);
-    
+
     async getTransactions(
         userId: UuidSchema,
         filters: TransactionQuerySchema
@@ -81,17 +80,18 @@ export class TransactionService {
 
         let [transactions, total] = await qb.getManyAndCount();
 
-        transactions = transactions.map(transaction => ({ 
-            ...transaction, 
-            amount: transaction.amount / 100, 
-            account: { 
-                ...transaction.account, 
-                balance: transaction.account.balance / 100 
-            }, 
-            relatedAccount: transaction.relatedAccount ? { 
-                ...transaction.relatedAccount, 
-                balance: transaction.relatedAccount.balance / 100 
-            } : undefined 
+        // Convertir centavos a unidades para respuesta
+        transactions = transactions.map(transaction => ({
+            ...transaction,
+            amount: transaction.amount / 100,
+            account: {
+                ...transaction.account,
+                balance: transaction.account.balance / 100
+            },
+            relatedAccount: transaction.relatedAccount ? {
+                ...transaction.relatedAccount,
+                balance: transaction.relatedAccount.balance / 100
+            } : undefined
         }))
 
         return {
@@ -102,11 +102,11 @@ export class TransactionService {
         };
     }
 
-
+   
     async getTransactionById(id: UuidSchema, userId: UuidSchema): Promise<Transaction> {
-        const transaction = await this.transactionRepo.findOne({ 
-            where: { id, user: { id: userId } }, 
-            relations: ['account', 'relatedAccount', 'category'] 
+        const transaction = await this.transactionRepo.findOne({
+            where: { id, user: { id: userId } },
+            relations: ['account', 'relatedAccount', 'category']
         })
         if (!transaction) throw new NotFoundError("Transacción no encontrada para el usuario")
         return { ...transaction, amount: transaction.amount / 100 }
@@ -118,24 +118,25 @@ export class TransactionService {
         await queryRunner.startTransaction();
 
         try {
-            const user = await queryRunner.manager.findOne(User, { 
-                where: { id: userId }, 
-                relations: ["credential"] 
+        
+            const user = await queryRunner.manager.findOne(User, {
+                where: { id: userId },
+                relations: ["credential"]
             });
             if (!user) throw new NotFoundError("Usuario no encontrado");
 
-            const category = await queryRunner.manager.findOne(Category, { 
-                where: { id: transaction.categoryId, user: { id: userId } } 
+            const category = await queryRunner.manager.findOne(Category, {
+                where: { id: transaction.categoryId, user: { id: userId } }
             });
             if (!category) throw new NotFoundError("Categoría no encontrada");
             if (category.type !== transaction.type) {
-                throw new ConflictError("El tipo de categoría no coincide con la transacción.", { 
-                    type: ["El tipo de categoría no coincide con la transacción."] 
+                throw new ConflictError("El tipo de categoría no coincide con la transacción.", {
+                    type: ["El tipo de categoría no coincide con la transacción."]
                 });
             }
 
-            const account = await queryRunner.manager.findOne(Account, { 
-                where: { id: transaction.accountId, user: { id: userId } } 
+            const account = await queryRunner.manager.findOne(Account, {
+                where: { id: transaction.accountId, user: { id: userId } }
             });
             if (!account) throw new NotFoundError("Cuenta no encontrada");
 
@@ -143,18 +144,17 @@ export class TransactionService {
                 throw new BadRequestError("Lógica para transacciones recurrentes no implementada.");
             }
 
-            // Aplicar cambios según el tipo de transacción
             if (transaction.type === TypeTransaction.INCOME) {
                 if (account.type === TypeAccount.CREDIT) {
-                    throw new ConflictError("No se pueden hacer ingresos directos a cuentas de crédito.", { 
-                        type: ["No se pueden hacer ingresos directos a cuentas de crédito."] 
+                    throw new ConflictError("No se pueden hacer ingresos directos a cuentas de crédito.", {
+                        type: ["No se pueden hacer ingresos directos a cuentas de crédito."]
                     });
                 }
-                account.balance += transaction.amount;
+                account.balance += transaction.amount; 
             } else if (transaction.type === TypeTransaction.EXPENSE) {
                 if (account.balance < transaction.amount) {
-                    throw new ConflictError("Saldo insuficiente en la cuenta.", { 
-                        amount: ["Monto no disponible en la cuenta."] 
+                    throw new ConflictError("Saldo insuficiente en la cuenta.", {
+                        amount: ["Monto no disponible en la cuenta."]
                     });
                 }
                 account.balance -= transaction.amount;
@@ -182,7 +182,6 @@ export class TransactionService {
         }
     }
 
-
     async createTransfer(transaction: TransferSchema, userId: string): Promise<Transaction> {
         const queryRunner = AppDataSourceProd.createQueryRunner();
         await queryRunner.connect();
@@ -191,42 +190,42 @@ export class TransactionService {
         try {
             const { fromAccount, toAccount, ...rest } = transaction;
 
-            const user = await queryRunner.manager.findOne(User, { 
-                where: { id: userId } 
+            const user = await queryRunner.manager.findOne(User, {
+                where: { id: userId }
             });
             if (!user) throw new NotFoundError("Usuario no encontrado para asignar la creación de la transacción");
 
-            const fromAccountEntity = await queryRunner.manager.findOne(Account, { 
-                where: { id: fromAccount, user: { id: userId } } 
+            const fromAccountEntity = await queryRunner.manager.findOne(Account, {
+                where: { id: fromAccount, user: { id: userId } }
             });
             if (!fromAccountEntity) throw new NotFoundError("Cuenta origen no encontrada o no pertenece al usuario");
 
-            const toAccountEntity = await queryRunner.manager.findOne(Account, { 
-                where: { id: toAccount, user: { id: userId } } 
+            const toAccountEntity = await queryRunner.manager.findOne(Account, {
+                where: { id: toAccount, user: { id: userId } }
             });
             if (!toAccountEntity) throw new NotFoundError("Cuenta destino no encontrada o no pertenece al usuario");
 
             if (fromAccountEntity.type === TypeAccount.CREDIT || toAccountEntity.type === TypeAccount.CREDIT) {
-                throw new ConflictError("No se pueden hacer transferencias a o desde cuentas de tipo crédito", { 
-                    toAccount: ["No se pueden hacer transferencias a cuentas de tipo crédito"], 
-                    fromAccount: ["No se pueden hacer transferencias desde cuentas de tipo crédito"] 
+                throw new ConflictError("No se pueden hacer transferencias a o desde cuentas de tipo crédito", {
+                    toAccount: ["No se pueden hacer transferencias a cuentas de tipo crédito"],
+                    fromAccount: ["No se pueden hacer transferencias desde cuentas de tipo crédito"]
                 });
             }
 
             if (fromAccountEntity.id === toAccountEntity.id) {
-                throw new ConflictError("Las cuentas de origen y destino no pueden ser las mismas", { 
-                    toAccount: ["Las cuentas de origen y destino no pueden ser las mismas"] 
+                throw new ConflictError("Las cuentas de origen y destino no pueden ser las mismas", {
+                    toAccount: ["Las cuentas de origen y destino no pueden ser las mismas"]
                 });
             }
 
-            const category = await queryRunner.manager.findOne(Category, { 
-                where: { name: "TRANSFERENCIA", user: { id: userId } } 
+            const category = await queryRunner.manager.findOne(Category, {
+                where: { name: "TRANSFERENCIA", user: { id: userId } }
             });
             if (!category) throw new NotFoundError("Categoría no encontrada.");
 
             if (fromAccountEntity.balance < transaction.amount) {
-                throw new ConflictError("Sin saldo suficiente en la cuenta origen", { 
-                    amount: ["Monto no disponible en la cuenta."] 
+                throw new ConflictError("Sin saldo suficiente en la cuenta origen", {
+                    amount: ["Monto no disponible en la cuenta."]
                 });
             }
 
@@ -264,19 +263,20 @@ export class TransactionService {
         await queryRunner.startTransaction();
 
         try {
-            const user = await queryRunner.manager.findOne(User, { 
-                where: { id: userId } 
+
+            const user = await queryRunner.manager.findOne(User, {
+                where: { id: userId }
             });
             if (!user) throw new NotFoundError("Usuario no encontrado");
 
-            const relatedAccount = await queryRunner.manager.findOne(Account, { 
-                where: { id: creditCardId, user: { id: userId } } 
+            const relatedAccount = await queryRunner.manager.findOne(Account, {
+                where: { id: creditCardId, user: { id: userId } }
             });
             if (!relatedAccount) throw new NotFoundError("Cuenta a pagar no encontrada o no pertenece al usuario");
 
             if (relatedAccount.type !== TypeAccount.CREDIT) {
-                throw new ConflictError("Solo se pueden hacer pagos a cuentas de tipo crédito", { 
-                    creditCardId: ["Solo se pueden hacer pagos a cuentas de tipo crédito"] 
+                throw new ConflictError("Solo se pueden hacer pagos a cuentas de tipo crédito", {
+                    creditCardId: ["Solo se pueden hacer pagos a cuentas de tipo crédito"]
                 });
             }
 
@@ -293,13 +293,14 @@ export class TransactionService {
             const debt = withOverDraft - relatedAccount.balance;
 
             if (account.balance < payment.amount) {
-                throw new ConflictError("Sin saldo suficiente para hacer el pago", { 
-                    amount: ["Monto no disponible en la cuenta."] 
+                throw new ConflictError("Sin saldo suficiente para hacer el pago", {
+                    amount: ["Monto no disponible en la cuenta."]
                 });
             }
+
             if (payment.amount > debt) {
-                throw new BadRequestError("El monto del pago no puede ser mayor a la deuda registrada", { 
-                    amount: ["Monto excede la deuda registrada"] 
+                throw new BadRequestError("El monto del pago no puede ser mayor a la deuda registrada", {
+                    amount: ["Monto excede la deuda registrada"]
                 });
             }
 
@@ -309,8 +310,8 @@ export class TransactionService {
             await queryRunner.manager.save(account);
             await queryRunner.manager.save(relatedAccount);
 
-            const category = await queryRunner.manager.findOne(Category, { 
-                where: { name: "PAGO DE TARJETA", user: { id: userId } } 
+            const category = await queryRunner.manager.findOne(Category, {
+                where: { name: "PAGO DE TARJETA", user: { id: userId } }
             });
             if (!category) throw new NotFoundError("Categoría de pago de tarjeta no encontrada.");
 
@@ -344,15 +345,14 @@ export class TransactionService {
         let updatedTransaction = {} as Transaction;
 
         try {
-            // 1. Obtener la transacción con todas sus relaciones necesarias
-            const transaction = await queryRunner.manager.findOne(Transaction, { 
-                where: { id, user: { id: userId } }, 
-                relations: ['account', 'relatedAccount', 'category'] 
+    
+            const transaction = await queryRunner.manager.findOne(Transaction, {
+                where: { id, user: { id: userId } },
+                relations: ['account', 'relatedAccount', 'category']
             });
 
             if (!transaction) throw new NotFoundError("Transacción no encontrada");
 
-            // --- PASO A: REVERTIR EL IMPACTO ORIGINAL ---
             if (transaction.type === TypeTransaction.INCOME) {
                 transaction.account.balance -= transaction.amount;
             } else if (transaction.type === TypeTransaction.EXPENSE) {
@@ -369,35 +369,30 @@ export class TransactionService {
                 await queryRunner.manager.save(transaction.relatedAccount);
             }
 
-            // --- PASO B: ACTUALIZAR DATOS ---
-
-            // Cambio de cuentas si se solicita
             if (updateData.accountId && updateData.accountId !== transaction.account.id) {
-                const newAccount = await queryRunner.manager.findOne(Account, { 
-                    where: { id: updateData.accountId, user: { id: userId } } 
+                const newAccount = await queryRunner.manager.findOne(Account, {
+                    where: { id: updateData.accountId, user: { id: userId } }
                 });
                 if (!newAccount) throw new NotFoundError("La cuenta principal no existe.");
                 transaction.account = newAccount;
             }
 
             if (updateData.relatedAccountId && updateData.relatedAccountId !== transaction.relatedAccount?.id) {
-                const newRelatedAccount = await queryRunner.manager.findOne(Account, { 
-                    where: { id: updateData.relatedAccountId, user: { id: userId } } 
+                const newRelatedAccount = await queryRunner.manager.findOne(Account, {
+                    where: { id: updateData.relatedAccountId, user: { id: userId } }
                 });
                 if (!newRelatedAccount) throw new NotFoundError("La cuenta relacionada no existe.");
                 transaction.relatedAccount = newRelatedAccount;
             }
 
-            // Cambio de categoría
             if (updateData.categoryId) {
-                const category = await queryRunner.manager.findOne(Category, { 
-                    where: { id: updateData.categoryId, user: { id: userId } } 
+                const category = await queryRunner.manager.findOne(Category, {
+                    where: { id: updateData.categoryId, user: { id: userId } }
                 });
                 if (!category) throw new NotFoundError("La categoría no existe.");
                 transaction.category = category;
             }
 
-            // Actualizar campos básicos
             if (updateData.amount !== undefined) transaction.amount = updateData.amount;
             if (updateData.name) transaction.name = updateData.name;
             if (updateData.description) transaction.description = updateData.description;
@@ -405,20 +400,18 @@ export class TransactionService {
             if (updateData.time) transaction.time = updateData.time;
             if (updateData.type) transaction.type = updateData.type;
 
-            // --- PASO C: VALIDAR Y APLICAR NUEVO IMPACTO ---
-
             if (transaction.type === TypeTransaction.INCOME) {
                 if (transaction.account.type === TypeAccount.CREDIT) {
-                    throw new ConflictError("No se pueden hacer ingresos a cuentas de crédito.", { 
-                        type: ["No se pueden hacer ingresos a cuentas de crédito."] 
+                    throw new ConflictError("No se pueden hacer ingresos a cuentas de crédito.", {
+                        type: ["No se pueden hacer ingresos a cuentas de crédito."]
                     });
                 }
                 transaction.account.balance += transaction.amount;
             }
             else if (transaction.type === TypeTransaction.EXPENSE) {
                 if (transaction.account.balance < transaction.amount) {
-                    throw new ConflictError("Saldo insuficiente en la cuenta.", { 
-                        accountId: ["Saldo insuficiente"] 
+                    throw new ConflictError("Saldo insuficiente en la cuenta.", {
+                        accountId: ["Saldo insuficiente"]
                     });
                 }
                 transaction.account.balance -= transaction.amount;
@@ -434,8 +427,8 @@ export class TransactionService {
             }
             else if (transaction.type === TypeTransaction.CREDIT_PAYMENT) {
                 if (!transaction.relatedAccount || transaction.relatedAccount.type !== TypeAccount.CREDIT) {
-                    throw new ConflictError("El pago de crédito debe ser hacia una cuenta de tipo crédito.", { 
-                        relatedAccountId: ["El pago de crédito debe ser hacia una cuenta de tipo crédito."] 
+                    throw new ConflictError("El pago de crédito debe ser hacia una cuenta de tipo crédito.", {
+                        relatedAccountId: ["El pago de crédito debe ser hacia una cuenta de tipo crédito."]
                     });
                 }
 
@@ -443,13 +436,13 @@ export class TransactionService {
                 const debt = withOverDraft - transaction.relatedAccount.balance;
 
                 if (transaction.account.balance < transaction.amount) {
-                    throw new ConflictError("Saldo insuficiente para el pago.", { 
-                        amount: ["Monto no disponible en la cuenta."] 
+                    throw new ConflictError("Saldo insuficiente para el pago.", {
+                        amount: ["Monto no disponible en la cuenta."]
                     });
                 }
                 if (transaction.amount > debt) {
-                    throw new BadRequestError("El pago excede la deuda de la tarjeta.", { 
-                        amount: ["Monto excede la deuda registrada"] 
+                    throw new BadRequestError("El pago excede la deuda de la tarjeta.", {
+                        amount: ["Monto excede la deuda registrada"]
                     });
                 }
 
@@ -481,13 +474,13 @@ export class TransactionService {
         await queryRunner.startTransaction();
 
         try {
-            const transaction = await queryRunner.manager.findOne(Transaction, { 
-                where: { id, user: { id: userId } }, 
-                relations: ['account', 'relatedAccount'] 
+            const transaction = await queryRunner.manager.findOne(Transaction, {
+                where: { id, user: { id: userId } },
+                relations: ['account', 'relatedAccount']
             });
             if (!transaction) throw new NotFoundError("Transacción no encontrada para el usuario");
 
-            // Revertir impacto en cuentas
+            // Revertir impacto en cuentas según tipo
             switch (transaction.type) {
                 case TypeTransaction.INCOME:
                     transaction.account.balance -= transaction.amount;

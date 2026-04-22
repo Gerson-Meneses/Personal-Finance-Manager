@@ -229,7 +229,7 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
       </div>
       {!fieldsDisabled?.all && <div className="form-default-row">
         <SuccessToast successText={(formData.type ? "Gasto" : "Ingreso") + " guardado con exito."} isSucces={isSuccess}>
-          <button type="submit" style={{ '--button-color': "#fff" } as React.CSSProperties} className={`form-default-button ${formData.type.toLowerCase()}`} disabled={isPending}>
+          <button type="submit"  className={`btn-submit ${formData.type.toLowerCase()}`} disabled={isPending}>
             {isEdit ? "Actualizar" : "Crear"}
           </button>
         </SuccessToast>

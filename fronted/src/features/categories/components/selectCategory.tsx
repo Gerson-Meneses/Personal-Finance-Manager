@@ -51,7 +51,7 @@ export default function SelectCategory({
     let filtered = type ? categories.filter(c => c.type === type) : categories
 
     if (noLoan !== undefined) {
-        filtered = filtered.filter(c => c.name !== "PRESTAMOS" && c.name !== "DEVOLUCION DE PRESTAMO")
+        filtered = filtered.filter(c => c.name !== "PRESTAMOS" && c.name !== "DEVOLUCIÓN DE PRÉSTAMO")
     }
     if (isBase !== undefined) {
         filtered = filtered.filter(c => c.isBase === isBase)

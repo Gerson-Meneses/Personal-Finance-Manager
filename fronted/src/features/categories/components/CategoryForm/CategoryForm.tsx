@@ -12,26 +12,26 @@ import type { TransactionType } from "../../../transactions/types"
 
 export interface CategoryFormProps {
     mutation: UseMutationResult<Category, DataError<CreateCategoryDTO>, CreateCategoryDTO>
-    onSuccess: (category: Category) => void 
-    category?: Category 
+    onSuccess: (category: Category) => void
+    category?: Category
     isEdit?: boolean
-    title?: string 
+    title?: string
     initialType?: TransactionType
 }
 
-export const CategoryForm = ({ 
-    mutation, 
-    onSuccess, 
-    category, 
-    isEdit, 
-    title = "Categoría",  
+export const CategoryForm = ({
+    mutation,
+    onSuccess,
+    category,
+    isEdit,
+    title = "Categoría",
 }: CategoryFormProps) => {
 
     const { mutateAsync, isSuccess, error, reset, isPending } = mutation;
 
     const initialStateForm: CreateCategoryDTO = {
         name: "",
-        type:  "EXPENSE",
+        type: "EXPENSE",
         color: "#000000",
         icon: "LayoutGrid"
     }
@@ -84,7 +84,7 @@ export const CategoryForm = ({
             // Usamos mutateAsync para obtener la respuesta directamente
             console.log(formData)
             const result = await mutateAsync(formData);
-            
+
             // Si todo sale bien, ejecutamos el callback con el objeto real
             if (onSuccess) {
                 onSuccess(result);
@@ -98,7 +98,7 @@ export const CategoryForm = ({
     return (
         <form onSubmit={handleSubmit} className="form-default-container">
             <h2>{isEdit ? `Editar ${title}` : `Crear ${title}`}</h2>
-            
+
             <div className="form-default-row">
                 <TypeToggle
                     value={formData.type}
@@ -141,15 +141,17 @@ export const CategoryForm = ({
                 </div>
             )}
 
-            <SuccessToast isSucces={isSuccess} successText={`Categoría ${isEdit ? 'actualizada' : 'creada'} con éxito.`}>
-                <button 
-                    type="submit" 
-                    disabled={isPending}
-                    className={`form-default-button ${formData.type.toLowerCase()}`}
-                >
-                    {isPending ? "Guardando..." : isEdit ? "Actualizar" : "Crear categoría"}
-                </button>
-            </SuccessToast>
+            <div className="form-default-row">
+                <SuccessToast isSucces={isSuccess} successText={`Categoría ${isEdit ? 'actualizada' : 'creada'} con éxito.`}>
+                    <button
+                        type="submit"
+                        disabled={isPending}
+                        className={`btn-submit ${formData.type.toLowerCase()}`}
+                    >
+                        {isPending ? "Guardando..." : isEdit ? "Actualizar" : "Crear categoría"}
+                    </button>
+                </SuccessToast>
+            </div>
         </form>
     );
 };

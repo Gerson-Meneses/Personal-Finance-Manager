@@ -49,7 +49,7 @@ export default function LoansPage() {
                 </button>
             </header>
 
-            <ModalPortal isOpen={showForm} onClose={()=>setShowForm(false)}>
+            <ModalPortal isOpen={showForm} onClose={() => setShowForm(false)}>
                 <LoanForm lenders={lenders} mutation={createLoan} />
             </ModalPortal>
 
@@ -73,13 +73,32 @@ export default function LoansPage() {
 
             <div className="loans-content">
                 {viewMode === 'loan' ? (
-                    <div className="loans-grid">
-                        {loans.map((loan) => (
-                            <LoanCard key={loan.id} loan={loan} />
-                        ))}
-                    </div>
+                    <>
+                        {
+                            loans.length === 0 && (
+                                <div className="empty-state">
+                                    <p className="text-muted">
+                                        Sin prestamos aún registrados.
+                                    </p>
+                                </div>
+                            )
+                        }
+                        < div className="loans-grid">
+
+                            {loans.map((loan) => (
+                                <LoanCard key={loan.id} loan={loan} />
+                            ))}
+                        </div>
+                    </>
                 ) : (
                     <div className="lenders-list">
+                        {lenders.length === 0 && (
+                            <div className="empty-state">
+                                <p className="text-muted">
+                                    Sin prestamos aún registrados.
+                                </p>
+                            </div>
+                        )}
                         {lenders.map(lender => (
                             <LenderGroup
                                 key={lender}
@@ -90,6 +109,6 @@ export default function LoansPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

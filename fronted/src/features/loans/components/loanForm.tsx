@@ -163,7 +163,7 @@ export default function LoanForm({ lenders = [], mutation, onSuccess }: Props) {
         )}
       </div>
       <SuccessToast isSucces={isSuccess} successText="Préstamo guardado con éxito." >
-        <button type="submit" disabled={isPending}>
+        <button className="btn-submit"  type="submit" disabled={isPending}>
           {isPending ? "Guardando..." : "Crear préstamo"}
         </button>
       </SuccessToast>

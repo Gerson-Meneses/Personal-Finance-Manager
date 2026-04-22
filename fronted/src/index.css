@@ -36,11 +36,11 @@ form {
 .text-muted    { color: #94a3b8 !important; }
 .text-primary  { color: #f8fafc !important; }
 
-.bg-success-soft { background: rgba(0, 230, 118, 0.1); }
-.bg-danger-soft { background: #ff52521a; }
-.bg-warning-soft { background: #f1c40f1a; }
-.bg-muted-soft    { background: #94a3b81a; }
-.bg-primary-soft  { background: #f8fafc1a;}
+.bg-success-soft { background: rgba(0, 230, 118, 0.1) !important; }
+.bg-danger-soft { background: #ff52521a !important; }
+.bg-warning-soft { background: #f1c40f1a !important; }
+.bg-muted-soft    { background: #94a3b81a !important; }
+.bg-primary-soft  { background: #f8fafc1a !important;}
 
 /* ─── Tipografía ──────────────────────────────────────── */
 .amount-font {
