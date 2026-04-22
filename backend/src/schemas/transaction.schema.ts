@@ -76,7 +76,8 @@ export const updateTransactionSchema = z.object({
         .string({ message: "Description debe ser una cadena de texto." })
         .optional(),
 
-    amount: amountSchema.nullish(),
+
+    amount: amountSchema.optional(),
 
     date: z
         .string({ message: "Date debe ser una cadena de texto." })
