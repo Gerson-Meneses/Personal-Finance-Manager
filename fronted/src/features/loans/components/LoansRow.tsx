@@ -6,7 +6,7 @@ interface LoanRowProps {
   onPay: (loan: LoanWithProgress) => void;
 }
 
-export function LoanRow({ loan, isFirstInGroup, onPay }: LoanRowProps) {
+export function LoanRow({ loan, onPay }: LoanRowProps) {
   const isGiven = loan.type === "GIVEN";
   const statusColor = {
     PAID: "bg-green-50",

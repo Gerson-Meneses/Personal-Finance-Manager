@@ -14,6 +14,7 @@ export interface Loan {
     lastPaymentDate?: Date;
     paymentCount: number;
     description?: string;
+    payments?: LoanPayment[]
 }
 
 export interface LoanSummary {
