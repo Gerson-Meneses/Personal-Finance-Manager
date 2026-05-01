@@ -23,9 +23,9 @@ import { Codes } from '../entities/Codes.entity'
     logging: ['error'],
     entities: [Account, Category, Credential, Loan, LoanInstallment, LoanPayment ,ReccurentTransaction, Transaction, User, Codes],
 })  
+/* 
 
-
-/* export const AppDataSourceProd = new DataSource({
+export const AppDataSourceProd = new DataSource({
     type: 'postgres',
     host: 'localhost',
     port: 5432,

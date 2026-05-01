@@ -52,7 +52,7 @@ export default function TransactionItem({ transaction, currentAccountId, hideFie
             backgroundColor: `${category.color}20`,
             color: category.color
           }}
-          
+
         >
           {category.icon && getIcon(category.icon)}
         </div>
@@ -68,8 +68,9 @@ export default function TransactionItem({ transaction, currentAccountId, hideFie
                 </span>
               )}
             </div>
+
             <ModalPortal isOpen={modalEditOpen} onClose={() => setModalEditOpen(false)}>
-              <TransactionForm transaction={transaction} fieldsDisabled={{ all: true }} isEdit mutation={saveTransaction} ></TransactionForm>
+              <TransactionForm transaction={transaction} isEdit mutation={saveTransaction} ></TransactionForm>
             </ModalPortal>
 
             {/*  <span className="delete-button" onClick={() => deleteTransaction.mutate(transaction.id)}>

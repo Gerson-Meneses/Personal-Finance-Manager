@@ -13,6 +13,7 @@ import { handleFieldChange } from "../../../../shared/utils/handleFieldChange";
 import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle";
 import { validateInputsTransactionForm } from "./ValidateInputs";
 import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
+import { useTransactions } from "../../hooks";
 
 interface Fields {
   name?: boolean;
@@ -24,6 +25,7 @@ interface Fields {
   time?: boolean;
   description?: boolean;
   all?: boolean
+  delete?: boolean
 }
 
 interface PropsTransactionForm {
@@ -37,6 +39,7 @@ interface PropsTransactionForm {
 
 export default function TransactionForm({ mutation, transaction, fieldsHidden, fieldsDisabled, isEdit, onSuccess }: PropsTransactionForm) {
   const { mutate, isPending, error, reset, isSuccess } = mutation;
+  const { deleteTransaction } = useTransactions()
 
   const [errors, setErrors] = useState<DetailsError<CreateTransactionDTO> | null>(null);
 
@@ -227,14 +230,24 @@ export default function TransactionForm({ mutation, transaction, fieldsHidden, f
           </div>
         )}
       </div>
-      {!fieldsDisabled?.all && <div className="form-default-row">
-        <SuccessToast successText={(formData.type ? "Gasto" : "Ingreso") + " guardado con exito."} isSucces={isSuccess}>
-          <button type="submit"  className={`btn-submit ${formData.type.toLowerCase()}`} disabled={isPending}>
-            {isEdit ? "Actualizar" : "Crear"}
+
+      <div className="form-default-row">
+
+        {!fieldsDisabled?.all && <div className="form-default-row">
+          <SuccessToast successText={(formData.type ? "Gasto" : "Ingreso") + " guardado con exito."} isSucces={isSuccess}>
+            <button type="submit" className={`btn-submit ${formData.type.toLowerCase()}`} disabled={isPending}>
+              {isEdit ? "Actualizar" : "Crear"}
+            </button>
+          </SuccessToast>
+        </div>
+        }
+        {
+          (fieldsDisabled?.delete || isEdit) && transaction &&
+          <button onClick={() => deleteTransaction.mutate(transaction?.id)} className="btn-icon btn-icon-delete">
+            Eliminar
           </button>
-        </SuccessToast>
-      </div>
-      }
-    </form>
+        }
+      </div >
+    </form >
   );
 }

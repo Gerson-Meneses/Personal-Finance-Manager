@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_URL  ;
+const BASE_URL = import.meta.env.VITE_API_URL;
+console.log(BASE_URL)
 
 interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   body?: any; // Ahora aceptamos objetos, strings, etc.
@@ -12,6 +13,8 @@ export async function apiFetch<T>(
 
   const isJsonBody = options.body && typeof options.body === 'object' && !(options.body instanceof FormData);
   const url = `${BASE_URL}/${endpoint.startsWith('/') ? endpoint.slice(1) : endpoint}`;
+
+  console.log(token)
 
   const config: RequestInit = {
     ...options,

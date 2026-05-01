@@ -1,8 +1,9 @@
 import { z } from "zod"
 import { ExtraPaymentStrategy } from "../utils/Enums"
+import { amountSchema } from "./base.schema"
 
 export const loanPaymentSchema = z.object({
-    amount: z.number({ message: "Amount es requerido" }).positive({ message: "Amount debe ser un número positivo" }).transform(n => n * 100),
+    amount: amountSchema(),
     date: z
         .string({ message: "Date es requerido" })
         .refine((date) => !isNaN(Date.parse(date)), { message: "Invalid date format" }),
@@ -10,7 +11,7 @@ export const loanPaymentSchema = z.object({
     time: z
         .string({ message: "Time debe tener un formato válido(HH:mm)" })
         .optional(),
-        
+
     description: z
         .string({ message: "Description debe ser una cadena de texto." })
         .optional(),

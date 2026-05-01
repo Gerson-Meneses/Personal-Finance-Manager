@@ -1,28 +1,20 @@
 import { z } from "zod"
 import { TypeLoan } from "../utils/Enums"
+import { amountSchema, dateSchema, nameSchema, textSchema, timeSchema } from "./base.schema"
 
 export const loanSchema = z.object({
     type: z
         .enum(TypeLoan, { message: "Type debe ser 'RECEIVED' o 'GIVEN'" }),
 
-    lender: z
-        .string({ message: "Lender es requerido" })
-        .trim()
-        .min(3, { message: "Lender debe tener al menos 3 caracteres" }),
+    lender: nameSchema("Deudor/Acreedor"),
 
-    date: z
-        .string({ message: "Date es requerido" })
-        .refine((date) => !isNaN(Date.parse(date)), { message: "Invalid date format" }),
+    date: dateSchema(),
 
-    time: z
-        .string({ message: "Time debe tener un formato válido(HH:mm)" })
-        .optional(),
+    time: timeSchema().optional(),
 
-    description: z
-        .string({ message: "Description debe ser una cadena de texto." })
-        .optional(),
+    description: textSchema().optional(),
 
-    principalAmount: z.number({ message: "Principal amount es requerido" }).positive({ message: "Principal amount debe ser un número positivo" }).transform(n => n * 100),
+    amount: amountSchema(),
 
     startDate: z.string({ message: "Start date es requerido" }).refine((date) => !isNaN(Date.parse(date)), { message: "Invalid date format" }),
 

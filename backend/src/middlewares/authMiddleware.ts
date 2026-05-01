@@ -5,8 +5,8 @@ import 'dotenv/config'
 export const authMiddleware = async (c: Context, next: Next) => {
     const authHeader = c.req.header('Authorization')
     const JWT_SECRET = process.env.JWT_SECRET
-    if(!JWT_SECRET) {
-         return c.json({ error: 'JWT_SECRET requerido' }, 401)
+    if (!JWT_SECRET) {
+        return c.json({ error: 'JWT_SECRET requerido' }, 401)
     }
 
     if (!authHeader) {
@@ -16,7 +16,7 @@ export const authMiddleware = async (c: Context, next: Next) => {
     const token = authHeader.replace('Bearer ', '')
 
     try {
-        const payload = await verify(token, JWT_SECRET)
+        const payload = await verify(token, JWT_SECRET, "HS256")
         c.set('user', payload)
         await next()
     } catch {
