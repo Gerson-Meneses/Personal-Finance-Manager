@@ -1,80 +1,185 @@
 import { getIcon } from "../../utils/GetIcon";
-import './TypeToggle.css';
 
-interface ToggleOption {
-    label: string;
-    value: string;
-    color?: string; // Color cuando esta opción está activa
+import type { BaseInputProps } from "../types";
+
+import "./TypeToggle.css";
+
+interface ToggleOption<T = string> {
+  label: string;
+
+  value: T;
+
+  color?: string;
 }
 
-interface TypeToggleProps {
-    value: string;
-    onChange: (val: string) => void;
-    label?: string;
-    icon?: string | null;
-    disabled?: boolean;
-    error?: string | null;
-    // Props opcionales para personalizar los botones
-    leftOption?: ToggleOption;
-    rightOption?: ToggleOption;
+interface TypeToggleProps<T = string>
+  extends Omit<
+    BaseInputProps<T>,
+    "onChange"
+  > {
+  onChange: (value: T) => void;
+
+  leftOption?: ToggleOption<T>;
+
+  rightOption?: ToggleOption<T>;
+
+  icon?: string | null;
 }
 
-export const TypeToggle = ({
-    value,
-    onChange,
-    label = "Tipo",
-    icon = "ArrowLeftRight",
-    disabled = false,
-    error,
-    // Definimos valores por defecto (Rojo para gasto/débito, Verde para ingreso/crédito)
-    leftOption = { label: "Gasto", value: "EXPENSE", color: "#ef4444" },
-    rightOption = { label: "Ingreso", value: "INCOME", color: "#22c55e" }
-}: TypeToggleProps) => {
+export const TypeToggle = <
+  T extends string
+>({
+  value,
 
-    const handleSelect = (val: string) => {
-        if (!disabled) onChange(val);
-    };
+  onChange,
 
-    // Determinamos cuál es la opción activa actual para obtener su color
-    const activeOption = value === rightOption.value ? rightOption : leftOption;
+  label = "Tipo",
 
-    return (
-        <div className={`custom-form-group ${error ? 'has-error' : ''} ${disabled ? 'disabled' : ''}`}>
-            <label className="input-label">
-                {icon && getIcon(icon)} {label}
-            </label>
+  icon = "ArrowLeftRight",
 
-            <div 
-                className="toggle-wrapper"
-                // Pasamos el color dinámico como variable CSS al contenedor
-                style={{ 
-                    '--active-color': activeOption.color,
-                } as React.CSSProperties}
-            >
-                {/* ESTE ES EL INDICADOR QUE SE MUEVE (el fondo de color) */}
-                <div className={`toggle-slider ${value === rightOption.value ? 'is-right' : 'is-left'}`}></div>
+  disabled = false,
 
-                {/* BOTONES (ahora transparentes, solo contienen el texto) */}
-                <button
-                    type="button"
-                    className={`toggle-button ${value === leftOption.value ? 'active' : ''}`}
-                    onClick={() => handleSelect(leftOption.value)}
-                    disabled={disabled}
-                >
-                    {leftOption.label}
-                </button>
+  error,
 
-                <button
-                    type="button"
-                    className={`toggle-button ${value === rightOption.value ? 'active' : ''}`}
-                    onClick={() => handleSelect(rightOption.value)}
-                    disabled={disabled}
-                >
-                    {rightOption.label}
-                </button>
-            </div>
-            
-            {error && <span className="error-text">{error}</span>}
-        </div>
-    );
+  leftOption = {
+    label: "Gasto",
+    value: "EXPENSE" as T,
+    color: "#ef4444",
+  },
+
+  rightOption = {
+    label: "Ingreso",
+    value: "INCOME" as T,
+    color: "#22c55e",
+  },
+
+  id,
+  name,
+
+  className,
+}: TypeToggleProps<T>) => {
+  const inputId =
+    id ?? name ?? "type-toggle";
+
+  const isRightSelected =
+    value === rightOption.value;
+
+  const activeOption = isRightSelected
+    ? rightOption
+    : leftOption;
+
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLDivElement>
+  ) => {
+    if (disabled) return;
+
+    if (
+      e.key === "ArrowLeft" ||
+      e.key === "ArrowRight"
+    ) {
+      onChange(
+        isRightSelected
+          ? leftOption.value
+          : rightOption.value
+      );
+    }
+  };
+
+  return (
+    <div
+      className={`
+        custom-form-group
+        ${error ? "has-error" : ""}
+        ${disabled ? "disabled" : ""}
+        ${className ?? ""}
+      `}
+    >
+      {label && (
+        <label
+          className="input-label"
+          htmlFor={inputId}
+        >
+          {icon && getIcon(icon)}
+          {label}
+        </label>
+      )}
+
+      <div
+        id={inputId}
+        role="radiogroup"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled}
+        onKeyDown={handleKeyDown}
+        className="toggle-wrapper"
+        style={
+          {
+            "--active-color":
+              activeOption.color,
+          } as React.CSSProperties
+        }
+      >
+        <div
+          className={`
+            toggle-slider
+            ${
+              isRightSelected
+                ? "is-right"
+                : "is-left"
+            }
+          `}
+        />
+
+        <button
+          type="button"
+          role="radio"
+          aria-checked={
+            value === leftOption.value
+          }
+          disabled={disabled}
+          className={`
+            toggle-button
+            ${
+              value === leftOption.value
+                ? "active"
+                : ""
+            }
+          `}
+          onClick={() =>
+            onChange(leftOption.value)
+          }
+        >
+          {leftOption.label}
+        </button>
+
+        <button
+          type="button"
+          role="radio"
+          aria-checked={
+            value === rightOption.value
+          }
+          disabled={disabled}
+          className={`
+            toggle-button
+            ${
+              value ===
+              rightOption.value
+                ? "active"
+                : ""
+            }
+          `}
+          onClick={() =>
+            onChange(rightOption.value)
+          }
+        >
+          {rightOption.label}
+        </button>
+      </div>
+
+      {error && (
+        <span className="error-text">
+          {error}
+        </span>
+      )}
+    </div>
+  );
 };

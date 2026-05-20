@@ -22,10 +22,6 @@ export const sendEmail = async (mailOptions: MailOptions) => {
     });
 
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-
-    console.log('ID cargado:', process.env.CLIENT_ID?.substring(0, 10) + '...');
-    console.log('Secret cargado:', process.env.CLIENT_SECRET ? 'SÍ' : 'NO');
-
     // Construcción del mensaje simplificada para evitar errores de parseo
     const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
     const messageParts = [

@@ -5,24 +5,24 @@ import { uuidParamSchema } from "../schemas/uuid.schema";
 import { ZodError } from "zod";
 import { zodErrorResponse } from "../helpers/zodErrorResponse";
 import { loanSchema } from "../schemas/loan.schema";
-import { 
-    createLoan, 
-    getAllLoans, 
-    payLoan, 
-    getAllLoanSummary, 
-    getLoansByLender, 
-    getLoanById, 
-    quickPayLender 
+import {
+    createLoan,
+    getAllLoans,
+    payLoan,
+    getAllLoanSummary,
+    getLoanById,
+    quickPayLender
 } from "../controllers/loansController";
-import { paginationQuerySchema } from "../schemas/queryPagination.schema";
 import { quickPaymentSchema } from "../schemas/quickPayment.schema";
 import { loanPaymentSchema } from "../schemas/loanPayment.schema";
+import { loanQuerySchema } from "../schemas/Loanquery,schema";
+import { loanSummaryQuerySchema } from "../schemas/LoanSummaryQuery.schema";
 
 export const loanRouter = new Hono<AppEnv>
 
 // 1. Listado global paginado
 loanRouter.get('/',
-    zValidator('query', paginationQuerySchema, (result, c) => {
+    zValidator('query', loanQuerySchema, (result, c) => {
         if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
     }),
     async (c) => {
@@ -33,18 +33,15 @@ loanRouter.get('/',
 )
 
 // 2. Resumen agrupado por acreedor/deudor
-loanRouter.get('/summary', async (c) => {
-    const user = c.get('user');
-    return await getAllLoanSummary(c, user.sub);
-})
-
-// 3. Detalle por persona (Cuaderno de deuda)
-// Ejemplo: /loans/lender/Juan?type=GIVEN
-loanRouter.get('/lender/:lender', async (c) => {
-    const user = c.get('user');
-     const lender = c.req.param('lender');
-    return await getLoansByLender(c, user.sub, lender);
-})
+loanRouter.get('/summary',
+    zValidator('query', loanSummaryQuerySchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    async (c) => {
+        const filters = c.req.valid('query');
+        const user = c.get('user');
+        return await getAllLoanSummary(c, user.sub, filters);
+    })
 
 // 4. Obtener un préstamo específico por ID
 loanRouter.get('/:id',

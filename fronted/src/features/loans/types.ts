@@ -1,19 +1,34 @@
-export type LoanType = "RECEIVED" | "GIVEN"
+import type { Account } from "../accounts/types";
+import type { Transaction } from "../transactions/types";
+
+export const loanType = ["RECEIVED", "GIVEN"] as const
+export type LoanType = typeof loanType[number]
 export type StatusLoan = "PAID" | "PENDING"
+export type ExtraPaymentStrategy = 'REDUCE_TERM' | 'REDUCE_INSTALLMENT'
+
 
 export interface Loan {
     id: string;
     lender: string;
     type: LoanType;
     principalAmount: number;
+    status: StatusLoan;
+    startDate: string;
+    termInMonths?: number;
+    installmentAmount?: number;
+    disbursementAmount?: number;
+    extraCost?: number;
+    tea?: number;
+
     amountPaid: number;
     amountRemaining: number;
     percentagePaid: number;
-    status: StatusLoan;
-    startDate: Date;
     lastPaymentDate?: Date;
     paymentCount: number;
+    endPaymentDue?: string;
     description?: string;
+
+    transaction?: Transaction
     payments?: LoanPayment[]
 }
 
@@ -29,7 +44,7 @@ export interface LoanSummary {
 
 export interface CreateLoanDTO {
     lender: string
-    principalAmount: number
+    amount: number
     type: LoanType
     startDate: string
     date: string
@@ -39,10 +54,13 @@ export interface CreateLoanDTO {
 }
 
 export interface LoanPayment {
-    id: string
-    loan: Loan
-    amount: number
-    date: Date
+    id: string;
+    amount: number;
+    date: Date;
+    description?: string;
+    strategy?: ExtraPaymentStrategy;
+    transaction?: Transaction;
+    account?: Account
 }
 
 export interface CreateLoanPaymentDTO {
@@ -52,99 +70,69 @@ export interface CreateLoanPaymentDTO {
     amount: number
 }
 
+export interface LoanQueryFilters {
+    // Filtros por tipo y estado
+    type?: LoanType;
+    status?: StatusLoan;
+
+    // Búsqueda por acreedor
+    lender?: string;
+
+    // Búsqueda general (acreedor o ID)
+    search?: string;
+
+    // Filtros de fecha de inicio del préstamo
+    startDate?: string; // YYYY-MM-DD
+    from?: string;      // YYYY-MM-DD
+    to?: string;        // YYYY-MM-DD
+
+    // Filtros de rango de monto principal
+    minAmount?: number;
+    maxAmount?: number;
+
+    // Filtros de pagos
+    hasPayments?: boolean;
+    minPaymentAmount?: number;
+    maxPaymentAmount?: number;
+
+    // Filtros de fecha de pagos
+    paymentDateFrom?: string; // YYYY-MM-DD
+    paymentDateTo?: string;   // YYYY-MM-DD
+
+    // Ordenamiento y paginación
+    orderBy?: 'startDate' | 'createdAt' | 'principalAmount';
+    order?: 'ASC' | 'DESC';
+    page?: number;
+    limit?: number;
+}
+
+export interface LoanSummaryQuerySchema {
+    type?: LoanType,
+    status?: StatusLoan,
+    excludeCompleted?: boolean,
+    excludePaidOff?: boolean,
+    lender?: string,
+    minRemaining?: number,
+    orderBy?: 'totalRemaining' | 'totalAmount' | 'loanCount' | 'lender',
+    order?: 'ASC' | 'DESC',
+    groupByLender?: boolean,
+
+}
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Types for Loans Module
+export interface LoanSummaryDetail {
+    totalAmount: number;      // Total del principal
+    totalPaid: number;        // Total pagado
+    totalRemaining: number;   // Total pendiente
+    loanCount: number;        // Cantidad de préstamos
+    averageRemaining?: number; // Promedio pendiente por préstamo
+    progress?: number;        // % de progreso (totalPaid / totalAmount)
+}
 
-
-export interface LoanSummary {
+export interface LoanSummaryGrouped {
     lender: string;
-    type: LoanType;
-    totalAmount: number;
-    totalPaid: number;
-    totalRemaining: number;
-    loanCount: number;
-    status: StatusLoan;
-}
-
-export interface LoanWithProgress {
-    id: string;
-    lender: string;
-    type: LoanType;
-    principalAmount: number;
-    amountPaid: number;
-    amountRemaining: number;
-    percentagePaid: number;
-    status: StatusLoan;
-    startDate: Date;
-    lastPaymentDate?: Date;
-    paymentCount: number;
-    description?: string;
-}
-
-export interface CreateLoanDTO {
-    lender: string;
-    type: LoanType;
-    principalAmount: number;
-    startDate: string;
-    accountId: string;
-    description?: string;
-    time?: string;
-}
-
-export interface PayLoanDTO {
-    loanId: string;
-    amount: number;
-    date: string;
-    time: string;
-    accountId: string;
-    description?: string;
-}
-
-export interface QuickPayDTO {
-    lender: string;
-    type: LoanType;
-    amount: number;
-    date: string;
-    time: string;
-    accountId: string;
-    description?: string;
-}
-
-export interface LoanPayment {
-    id: string;
-    loanId: string;
-    amount: number;
-    date: Date;
-    time?: string;
-    description?: string;
-    transactionId: string;
-}
-
-// API Response Types
-export interface LoanResponse {
-    data: LoanWithProgress;
-    message: string;
-}
-
-export interface LoansListResponse {
-    data: LoanWithProgress[];
-    total: number;
-    page: number;
-    limit: number;
-}
-
-export interface LoanSummaryResponse {
-    data: LoanSummary[];
-}
-
-export interface PaymentResponse {
-    data: LoanPayment;
-    message: string;
-}
-
-export interface QuickPayResponse {
-    data: LoanPayment[];
-    message: string;
+    byType: {
+        [key in LoanType]?: LoanSummaryDetail;
+    };
+    total: LoanSummaryDetail;
 }

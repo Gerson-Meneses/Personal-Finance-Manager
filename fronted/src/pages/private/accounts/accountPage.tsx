@@ -27,7 +27,7 @@ export function AccountPage() {
   if (loading) return <LoadingScreen />;
 
   return (
-    <div className="page-container animate-fade-in">
+    <div className="page-container">
       {/* Cabecera con Resumen */}
       <header className="page-header card">
         <div>

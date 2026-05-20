@@ -44,9 +44,6 @@ export default function LoanPaymentForm({ loan }: Props) {
     };
 
     useEffect(() => {
-        console.log(isSuccess)
-    }, [isSuccess])
-    useEffect(() => {
         if (error?.details) {
             setErrors(error.details as DetailsError<CreateLoanPaymentDTO>);
         }

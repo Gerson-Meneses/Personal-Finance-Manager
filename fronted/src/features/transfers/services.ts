@@ -8,8 +8,5 @@ export const createTransfer = async (data: CreateTransferDto): Promise<Transacti
         method: "POST",
         body: data
     })
-
-    console.log(response)
-
     return response
 }

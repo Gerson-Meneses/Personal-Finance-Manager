@@ -37,9 +37,6 @@ export default function DashboardPage() {
 
     return (
         <div className="dashboard">
-            <div className="bg-red-500 text-white p-10">
-                SI VES ROJO, TAILWIND FUNCIONA
-            </div>
             {/* Fila 1: balance cards y Quick Stats */}
             <section className="grid-auto-tall">
                 <BalanceCards balances={balances} credit={credit} />

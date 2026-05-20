@@ -12,7 +12,9 @@ import { UuidSchema } from "../schemas/uuid.schema";
 import { TypeAccount, TypeTransaction } from "../utils/Enums";
 import { PaginatedResult } from "../types";
 import { TransactionQuerySchema } from "../schemas/querysTransaction.schema";
-import { In } from "typeorm";
+import { EntityManager, In, QueryRunner } from "typeorm";
+import { toTransactionResponse } from "../mappers/TransactionMapper";
+import { TransactionResponse } from "../ResponseInterfaces/TransactionInterface";
 
 export class TransactionService {
     private transactionRepo = AppDataSourceProd.getRepository(Transaction);
@@ -20,7 +22,7 @@ export class TransactionService {
     async getTransactions(
         userId: UuidSchema,
         filters: TransactionQuerySchema
-    ): Promise<PaginatedResult<Transaction>> {
+    ): Promise<PaginatedResult<TransactionResponse>> {
 
         const page = filters.page && filters.page > 0 ? filters.page : 1;
         const limit = filters.limit && filters.limit > 0 ? filters.limit : 20;
@@ -80,52 +82,52 @@ export class TransactionService {
 
         let [transactions, total] = await qb.getManyAndCount();
 
-        // Convertir centavos a unidades para respuesta
-        transactions = transactions.map(transaction => ({
-            ...transaction,
-            amount: transaction.amount / 100,
-            account: {
-                ...transaction.account,
-                balance: transaction.account.balance / 100
-            },
-            relatedAccount: transaction.relatedAccount ? {
-                ...transaction.relatedAccount,
-                balance: transaction.relatedAccount.balance / 100
-            } : undefined
-        }))
+
+        const transactionsResponse = transactions.map(tx => toTransactionResponse(tx))
 
         return {
-            items: transactions,
+            items: transactionsResponse,
             total,
             page,
             limit,
         };
     }
 
-   
-    async getTransactionById(id: UuidSchema, userId: UuidSchema): Promise<Transaction> {
+
+    async getTransactionById(id: UuidSchema, userId: UuidSchema): Promise<TransactionResponse> {
         const transaction = await this.transactionRepo.findOne({
             where: { id, user: { id: userId } },
             relations: ['account', 'relatedAccount', 'category']
         })
         if (!transaction) throw new NotFoundError("Transacción no encontrada para el usuario")
-        return { ...transaction, amount: transaction.amount / 100 }
+        return toTransactionResponse(transaction)
     }
 
-    async createTransaction(transaction: TransactionSchema, userId: UuidSchema): Promise<Transaction> {
-        const queryRunner = AppDataSourceProd.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
+    async createTransaction(transaction: TransactionSchema, userId: UuidSchema, entityManager?: EntityManager): Promise<TransactionResponse> {
+
+        let queryRunner: QueryRunner | undefined;
+        let manager: EntityManager;
+        let isOwnTransaction = false;
+
+        if (!entityManager) {
+            queryRunner = AppDataSourceProd.createQueryRunner();
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+            manager = queryRunner.manager;
+            isOwnTransaction = true;
+        } else {
+            manager = entityManager;
+        }
 
         try {
-        
-            const user = await queryRunner.manager.findOne(User, {
+
+            const user = await manager.findOne(User, {
                 where: { id: userId },
                 relations: ["credential"]
             });
             if (!user) throw new NotFoundError("Usuario no encontrado");
 
-            const category = await queryRunner.manager.findOne(Category, {
+            const category = await manager.findOne(Category, {
                 where: { id: transaction.categoryId, user: { id: userId } }
             });
             if (!category) throw new NotFoundError("Categoría no encontrada");
@@ -135,7 +137,7 @@ export class TransactionService {
                 });
             }
 
-            const account = await queryRunner.manager.findOne(Account, {
+            const account = await manager.findOne(Account, {
                 where: { id: transaction.accountId, user: { id: userId } }
             });
             if (!account) throw new NotFoundError("Cuenta no encontrada");
@@ -150,7 +152,7 @@ export class TransactionService {
                         type: ["No se pueden hacer ingresos directos a cuentas de crédito."]
                     });
                 }
-                account.balance += transaction.amount; 
+                account.balance += transaction.amount;
             } else if (transaction.type === TypeTransaction.EXPENSE) {
                 if (account.balance < transaction.amount) {
                     throw new ConflictError("Saldo insuficiente en la cuenta.", {
@@ -160,9 +162,9 @@ export class TransactionService {
                 account.balance -= transaction.amount;
             }
 
-            await queryRunner.manager.save(account);
+            await manager.save(account);
 
-            const newTransaction = queryRunner.manager.create(Transaction, {
+            const newTransaction = manager.create(Transaction, {
                 ...transaction,
                 user,
                 account,
@@ -170,19 +172,33 @@ export class TransactionService {
                 isRecurrent: transaction.isRecurrent ?? false
             });
 
-            const savedTransaction = await queryRunner.manager.save(newTransaction);
-            await queryRunner.commitTransaction();
+            const savedTransaction = await manager.save(newTransaction);
 
-            return { ...savedTransaction, amount: savedTransaction.amount / 100 };
+            if (isOwnTransaction && queryRunner) {
+                await queryRunner.commitTransaction();
+            }
+            return toTransactionResponse(savedTransaction);
         } catch (error) {
-            await queryRunner.rollbackTransaction();
-            throw error;
+            if (isOwnTransaction && queryRunner) {
+                await queryRunner.rollbackTransaction();
+            }
+            if (error instanceof NotFoundError || error instanceof ConflictError) {
+                throw error;
+            }
+            if (error instanceof BadRequestError) {
+                throw error;
+            }
+            const errorMessage =
+                error instanceof Error ? error.message : "Error desconocido";
+            throw new Error(`Error al registrar la transacción: ${errorMessage}`);
         } finally {
-            await queryRunner.release();
+            if (isOwnTransaction && queryRunner) {
+                await queryRunner.release();
+            }
         }
     }
 
-    async createTransfer(transaction: TransferSchema, userId: string): Promise<Transaction> {
+    async createTransfer(transaction: TransferSchema, userId: string): Promise<TransactionResponse> {
         const queryRunner = AppDataSourceProd.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -248,7 +264,7 @@ export class TransactionService {
 
             await queryRunner.commitTransaction();
 
-            return { ...savedTransaction, amount: savedTransaction.amount / 100 };
+            return toTransactionResponse(savedTransaction);
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw error;
@@ -257,7 +273,7 @@ export class TransactionService {
         }
     }
 
-    async makePayment(userId: string, creditCardId: string, payment: PaymentCreditCardSchema): Promise<Transaction> {
+    async makePayment(userId: string, creditCardId: string, payment: PaymentCreditCardSchema): Promise<TransactionResponse> {
         const queryRunner = AppDataSourceProd.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -328,7 +344,7 @@ export class TransactionService {
             const savedTransaction = await queryRunner.manager.save(newTransaction);
             await queryRunner.commitTransaction();
 
-            return { ...savedTransaction, amount: savedTransaction.amount / 100 };
+            return toTransactionResponse(savedTransaction);
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw error;
@@ -337,7 +353,7 @@ export class TransactionService {
         }
     }
 
-    async updateTransaction(id: UuidSchema, userId: UuidSchema, updateData: UpdateTransactionSchema): Promise<Transaction> {
+    async updateTransaction(id: UuidSchema, userId: UuidSchema, updateData: UpdateTransactionSchema): Promise<TransactionResponse> {
         const queryRunner = AppDataSourceProd.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -345,7 +361,7 @@ export class TransactionService {
         let updatedTransaction = {} as Transaction;
 
         try {
-    
+
             const transaction = await queryRunner.manager.findOne(Transaction, {
                 where: { id, user: { id: userId } },
                 relations: ['account', 'relatedAccount', 'category']
@@ -465,7 +481,7 @@ export class TransactionService {
             await queryRunner.release();
         }
 
-        return { ...updatedTransaction, amount: updatedTransaction.amount / 100 };
+        return toTransactionResponse(updatedTransaction);
     }
 
     async deleteTransaction(id: UuidSchema, userId: UuidSchema): Promise<void> {

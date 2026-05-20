@@ -7,13 +7,14 @@ import { AccountPage } from "./pages/private/accounts/accountPage";
 import { AccountDetail } from "./pages/private/accounts/AccountDetails/accountDetail";
 import { TransactionsPage } from "./pages/private/transactions/transactionsPage";
 import DashboardPage from "./pages/private/dashboard/dashboard";
-import LoansPage from "./pages/private/loans/loans";
+import { LoansPage } from "./pages/private/loans/loans";
 import CategoriesPage from "./pages/private/categories/categories";
 import NotFoundView from "./shared/components/NotFoundView/NotFoundView";
 import UnderConstructionView from "./shared/components/UnderConstruction/UnderConstruction";
 import { VerifyEmailPage } from "./pages/public/verifyEmail/VerifyEmail";
 import { ResetPasswordPage } from "./pages/public/ResetPassword/ResetPassword";
 import "./App.css"
+import { BookLender } from "./features/loans/components/BookLender/BookLender";
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
       <Route path="/transactions" element={<PrivateLayout> < TransactionsPage /> </PrivateLayout>} ></Route>
       <Route path="/categories" element={<PrivateLayout> < CategoriesPage /> </PrivateLayout>} ></Route>
       <Route path="/loans" element={<PrivateLayout> < LoansPage /> </PrivateLayout>} ></Route>
+      <Route path="/loans/:lender" element={<PrivateLayout> < BookLender /> </PrivateLayout>} ></Route>
       <Route path="/construction" element={<UnderConstructionView />}></Route>
       <Route path="/*" element={<NotFoundView></NotFoundView>} > </Route>
     </Routes>

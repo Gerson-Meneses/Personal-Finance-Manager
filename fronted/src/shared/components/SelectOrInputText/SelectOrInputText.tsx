@@ -1,77 +1,110 @@
+import { useState } from "react";
 import { getIcon } from "../../utils/GetIcon";
-import './SelectOrInputText.css';
-import { useState, useEffect } from "react";
 
-interface SelectInputProps {
-    value: string;
-    onChange: (val: string) => void;
+import type { BaseInputProps } from "../types";
+
+import "./SelectOrInputText.css";
+
+const CUSTOM_OPTION = "__custom__";
+
+interface SelectInputProps
+    extends BaseInputProps<string> {
     options: string[];
-    label?: string;
-    error?: string | null;
+
     placeholder?: string;
+
     icon?: string | null;
-    required?: boolean;
-    disabled?: boolean;
 }
 
-export const SelectInput = ({
-    label = "Seleccionar",
-    value,
+export const SelectOrInputText = ({
+    value = "",
+
     onChange,
+
     options = [],
-    placeholder = "Escribe un nombre...",
-    icon = "User",
+
+    label = "Seleccionar",
+
     error,
+
+    placeholder = "Escribe un nombre...",
+
+    icon = "User",
+
     required,
-    disabled
+    disabled,
+
+    name,
+    id,
+
+    className,
 }: SelectInputProps) => {
-    // Estado interno para saber si mostramos el input manual
-    // Si el valor actual no está en la lista de opciones y no está vacío, empezamos en modo manual
-    const [isCustom, setIsCustom] = useState(false);
+    const inputId =
+        id ?? name ?? "select-input";
 
-    useEffect(() => {
-        if (value && !options.includes(value) && value !== "") {
-            setIsCustom(true);
-        }
-    }, [options]);
+    const [isCustomMode, setIsCustomMode] =
+        useState(
+            value !== "" &&
+            !options.includes(value)
+        );
 
-    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleSelectChange = (
+        e: React.ChangeEvent<HTMLSelectElement>
+    ) => {
         const val = e.target.value;
-        if (val === "custom_option") {
-            setIsCustom(true);
-            onChange(""); // Limpiamos para que el usuario escriba
-        } else {
-            onChange(val);
+
+        if (val === CUSTOM_OPTION) {
+            setIsCustomMode(true);
+            onChange("");
+            return;
         }
+
+        onChange(val);
     };
 
     return (
-        <div className={`custom-form-group ${error ? 'has-error' : ''} ${disabled ? 'disabled' : ''}`}>
-            <label htmlFor={label} className="input-label">
-                {icon && getIcon(icon)}
-                {label}
-            </label>
+        <div
+            className={`
+        custom-form-group
+        ${error ? "has-error" : ""}
+        ${disabled ? "disabled" : ""}
+        ${className ?? ""}
+      `}
+        >
+            {label && (
+                <label
+                    htmlFor={inputId}
+                    className="input-label"
+                >
+                    {icon && getIcon(icon)}
+                    {label}
+                </label>
+            )}
 
             <div className="input-wrapper-select">
-                {isCustom || options.length === 0 ? (
+                {isCustomMode || options.length === 0 ? (
                     <div className="custom-input-container">
                         <input
-                            id={label}
+                            id={inputId}
+                            name={name}
                             type="text"
                             className="text-input"
                             value={value}
-                            onChange={(e) => onChange(e.target.value)}
-                            placeholder={placeholder}
-                            required={required}
                             disabled={disabled}
-                            autoFocus
+                            required={required}
+                            placeholder={placeholder}
+                            onChange={(e) =>
+                                onChange(e.target.value)
+                            }
                         />
+
                         {options.length > 0 && (
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 className="back-to-list-btn"
-                                onClick={() => setIsCustom(false)}
                                 title="Volver a la lista"
+                                disabled={disabled}
+                                onClick={() => setIsCustomMode(false)}
                             >
                                 {getIcon("List")}
                             </button>
@@ -79,27 +112,39 @@ export const SelectInput = ({
                     </div>
                 ) : (
                     <select
-                        id={label}
+                        id={inputId}
+                        name={name}
                         className="custom-select"
                         value={value}
-                        onChange={handleSelectChange}
-                        required={required}
                         disabled={disabled}
+                        required={required}
+                        onChange={handleSelectChange}
                     >
-                        <option value="" disabled hidden>{placeholder}</option>
-                        <option value="">-- Selecciona una opción --</option>
+                        <option value="">
+                            -- Selecciona una opción --
+                        </option>
+
                         {options.map((opt) => (
-                            <option key={opt} value={opt}>
+                            <option
+                                key={opt}
+                                value={opt}
+                            >
                                 {opt}
                             </option>
                         ))}
-                        <option value="custom_option" className="special-option">
+
+                        <option value={CUSTOM_OPTION}>
                             ➕ Otro (Escribir nombre)
                         </option>
                     </select>
                 )}
             </div>
-            {error && <span className="error-text">{error}</span>}
+
+            {error && (
+                <span className="error-text">
+                    {error}
+                </span>
+            )}
         </div>
     );
 };

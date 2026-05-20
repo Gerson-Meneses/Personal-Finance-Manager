@@ -1,70 +1,139 @@
 import { getIcon } from "../../utils/GetIcon";
-import './TextInput.css'
 
-interface TextInputProps {
-    value?: string
-    onChange: (val: string) => void;
-    name?: string
-    label?: string
-    error?: string | null
-    placeholder?: string
-    textarea?: boolean
-    icon?: string
-    required?: boolean
-    disabled?: boolean
-    minWidth?: string
-    width?: string
+import type { BaseInputProps } from "../types";
+
+import "./TextInput.css";
+
+interface TextInputProps
+  extends BaseInputProps<string> {
+  placeholder?: string;
+
+  textarea?: boolean;
+
+  icon?: string | null;
+
+  autoResize?: boolean;
+
+  autoSelect?: boolean;
+
+  rows?: number;
 }
 
 export const TextInput = ({
-    value = "",
-    onChange,
-    name = "Texto",
-    label = "Nombre",
-    error,
-    placeholder = "Ingresar Nombre",
-    textarea,
-    icon = "Type",
-    required,
-    minWidth = "5ch",
-    width,
-    disabled
+  value = "",
+
+  onChange,
+
+  label = "Texto",
+
+  error,
+
+  placeholder = "Ingresar texto",
+
+  textarea = false,
+
+  icon = "Type",
+
+  autoResize = false,
+
+  autoSelect = false,
+
+  rows = 2,
+
+  required,
+  disabled,
+
+  name,
+  id,
+
+  className,
 }: TextInputProps) => {
-    let inputWidth = value ? `${String(value).length + 2}ch` : minWidth;
-    if (width) inputWidth = width
-    return (
-        <div className={`custom-form-group ${error ? 'has-error' : ''}`}>
+  const displayValue = value ?? "";
 
-            <label htmlFor={name} className="input-label">
-                {getIcon(icon)} {label}
-            </label>
+  const inputId =
+    id ?? name ?? "text-input";
 
-            <div className="input-wrapper">
-                {!textarea ? <input
-                    style={{ width: inputWidth }}
-                    className="input-text"
-                    name={name}
-                    id={name}
-                    type="text"
-                    value={value.length === 0 ? "" : value} // Limpieza visual
-                    onChange={(e) => onChange(e.target.value)}
-                    onFocus={(e) => e.target.select()}
-                    placeholder={placeholder}
-                    required={required}
-                    disabled={disabled}
-                /> : <><textarea
-                    className="input-arealabel"
-                    name={name}
-                    placeholder={placeholder}
-                    value={value.length === 0 ? "" : value} // Limpieza visual
-                    onChange={(e) => onChange(e.target.value)}
-                    rows={2}
-                    onFocus={(e) => e.target.select()}
-                    required={required}
-                    disabled={disabled} /></>}
+  const inputWidth = autoResize
+    ? displayValue.length > 0
+      ? `${Math.max(
+          displayValue.length + 2,
+          5
+        )}ch`
+      : "5ch"
+    : undefined;
 
-            </div>
-            {error && <span className="error-text">{error}</span>}
-        </div>
-    )
-}
+  const handleFocus = (
+    e:
+      | React.FocusEvent<HTMLInputElement>
+      | React.FocusEvent<HTMLTextAreaElement>
+  ) => {
+    if (autoSelect) {
+      e.target.select();
+    }
+  };
+
+  return (
+    <div
+      className={`
+        custom-form-group
+        ${error ? "has-error" : ""}
+        ${className ?? ""}
+      `}
+    >
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="input-label"
+        >
+          {icon && getIcon(icon)}
+          {label}
+        </label>
+      )}
+
+      <div className="input-wrapper">
+        {!textarea ? (
+          <input
+            id={inputId}
+            name={name}
+            type="text"
+            className="input-text"
+            value={displayValue}
+            placeholder={placeholder}
+            required={required}
+            disabled={disabled}
+            style={
+              inputWidth
+                ? { width: inputWidth }
+                : undefined
+            }
+            onFocus={handleFocus}
+            onChange={(e) =>
+              onChange(e.target.value)
+            }
+          />
+        ) : (
+          <textarea
+            id={inputId}
+            name={name}
+            className="input-arealabel"
+            value={displayValue}
+            placeholder={placeholder}
+            required={required}
+            disabled={disabled}
+            rows={rows}
+            onFocus={handleFocus}
+            onChange={(e) =>
+              onChange(e.target.value)
+            }
+          />
+        )}
+      </div>
+
+      {error && (
+        <span className="error-text">
+          {error}
+        </span>
+      )}
+    </div>
+  );
+};

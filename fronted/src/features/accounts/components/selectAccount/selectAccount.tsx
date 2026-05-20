@@ -1,100 +1,228 @@
-import LoadingScreen from "../../../../shared/components/LoadingScreen/LoadingScreen"
-import { useAccounts } from "../../hooks"
-import type { Account, AccountType } from "../../types"
-import './selectAccount.css'
-import { getIcon } from '../../../../shared/utils/GetIcon'
-import { formatCurrency } from "../../../../shared/utils/formatCurrency"
-import { useState } from "react"
-import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal"
-import AccountForm from "../accountForm/accountForm"
+import { useMemo, useState } from "react";
+import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal";
+import { getIcon } from "../../../../shared/utils/GetIcon";
+import { formatCurrency } from "../../../../shared/utils/formatCurrency";
+import { useAccounts } from "../../hooks";
+import AccountForm from "../accountForm/accountForm";
+import type { Account, AccountType } from "../../types";
 
-interface Props {
-    onChange: (accountId: string) => void
-    value?: string
-    type?: AccountType
-    noCredit?: boolean
-    balance?: boolean
-    noRenderBalance?: boolean
-    placehoder?: string
-    noAccountId?: string
-    label?: string
-    icon?: string
-    error?: string | null
-    required?: boolean
-    disabled?: boolean
+
+import "./selectAccount.css";
+import type { BaseInputProps } from "../../../../shared/components/types";
+
+const CREATE_OPTION = "__CREATE_ACCOUNT__";
+
+interface SelectAccountProps
+    extends BaseInputProps<string> {
+    type?: AccountType;
+
+    noCredit?: boolean;
+
+    balance?: boolean;
+
+    noRenderBalance?: boolean;
+
+    noAccountId?: string;
+
+    placeholder?: string;
+
+    icon?: string | null;
+
+    allowCreate?: boolean;
+
+    defaultStyle?: boolean
 }
+
 export const SelectAccount = ({
+    value = "",
     onChange,
-    value,
     type,
-    balance,
-    label = "Cuenta",
-    noRenderBalance,
-    error,
-    placehoder = "Seleccionar Cuenta",
+    noCredit = false,
+    balance = false,
+    noRenderBalance = false,
     noAccountId,
+    placeholder = "Seleccionar cuenta",
+    label = "Cuenta",
     icon = "Wallet",
-    noCredit,
+    allowCreate = true,
+    defaultStyle = true,
+    error,
+    required,
     disabled,
-    required 
-}: Props) => {
+    id,
+    name,
+    className,
+}: SelectAccountProps) => {
+    const { accounts, loading, saveAccount } =
+        useAccounts();
 
-    const { accounts, loading, saveAccount } = useAccounts();
-    const [showForm, setShowForm] = useState(false);
+    const [showForm, setShowForm] =
+        useState(false);
 
-    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const val = e.target.value;
-        if (val === "Nueva") {
+    const inputId =
+        id ?? name ?? "select-account";
+
+    const filteredAccounts = useMemo(() => {
+        return accounts.filter((acc) => {
+            if (
+                type &&
+                acc.type !== type
+            ) {
+                return false;
+            }
+
+            if (
+                noCredit &&
+                acc.type === "CREDIT"
+            ) {
+                return false;
+            }
+
+            if (
+                balance &&
+                acc.balance <= 0
+            ) {
+                return false;
+            }
+
+            if (
+                noAccountId &&
+                acc.id === noAccountId
+            ) {
+                return false;
+            }
+
+            return true;
+        });
+    }, [
+        accounts,
+        type,
+        noCredit,
+        balance,
+        noAccountId,
+    ]);
+
+    const handleSelectChange = (
+        e: React.ChangeEvent<HTMLSelectElement>
+    ) => {
+        const selected =
+            e.target.value;
+
+        if (
+            selected === CREATE_OPTION
+        ) {
             setShowForm(true);
-        } else {
-            onChange(val);
+            return;
         }
+
+        onChange(selected);
     };
 
-    const handleSuccess = (newAccount: Account) => {
+    const handleSuccess = (
+        newAccount: Account
+    ) => {
         onChange(String(newAccount.id));
+
         setShowForm(false);
     };
 
-    if (loading) return <LoadingScreen />;
-
-    let filtered = type ? accounts.filter(acc => acc.type === type) : accounts;
-    filtered = noCredit ? filtered.filter(acc => acc.type !== "CREDIT") : filtered;
-    filtered = balance ? filtered.filter(acc => acc.balance > 0) : filtered;
-    filtered = noAccountId ? filtered.filter(acc => acc.id !== noAccountId) : filtered;
-
     return (
-        <div className={`custom-form-group ${error ? 'has-error' : ''}`}>
-            <label className="input-label">
-                {icon && getIcon(icon)} {label}
-            </label>
+        <>
+            <div
+                className={`
+          ${defaultStyle ? "custom-form-group" : ""}
+          ${error ? "has-error" : ""}
+          ${disabled ? "disabled" : ""}
+          ${className ?? ""}
+        `}
+            >
+                {label && (
+                    <label
+                        htmlFor={inputId}
+                        className="input-label"
+                    >
+                        {icon && getIcon(icon)}
+                        {label}
+                    </label>
+                )}
 
-            <div className="input-wrapper">
-                <select
-                    value={value ?? ""}
-                    onChange={handleSelectChange}
-                    required={required}
-                    disabled={disabled}
-                >
-                    <option value="">{placehoder}</option>
-                    <option value="Nueva">+ Nueva Cuenta</option>
-                    
-                    {filtered.map((acc: Account) => (
-                        <option key={acc.id} value={acc.id}>
-                            {acc.name} {!noRenderBalance && ` - ${formatCurrency(acc.balance)}`}
-                        </option>
-                    ))}
-                </select>
+                <div className={`${defaultStyle ? "input-wrapper" : ""}`}>
+                    {loading ? (
+                        <select
+                            disabled
+
+                        >
+                            <option>
+                                Cargando cuentas...
+                            </option>
+                        </select>
+                    ) : (
+                        <select
+                            id={inputId}
+                            name={name}
+                            value={value}
+                            onChange={
+                                handleSelectChange
+                            }
+                            required={required}
+                            disabled={disabled}
+
+                        >
+                            <option value="">
+                                {placeholder}
+                            </option>
+
+                            {allowCreate && (
+                                <option
+                                    value={
+                                        CREATE_OPTION
+                                    }
+                                >
+                                    + Nueva cuenta
+                                </option>
+                            )}
+
+                            {filteredAccounts.map(
+                                (acc) => (
+                                    <option
+                                        key={acc.id}
+                                        value={acc.id}
+                                    >
+                                        {acc.name}
+
+                                        {!noRenderBalance &&
+                                            `: ${formatCurrency(
+                                                acc.balance
+                                            )}`}
+                                    </option>
+                                )
+                            )}
+                        </select>
+                    )}
+                </div>
+
+                {error && (
+                    <span className="error-text">
+                        {error}
+                    </span>
+                )}
             </div>
-            
-            {error && <span className="error-text">{error}</span>}
 
-            <ModalPortal isOpen={showForm} onClose={() => setShowForm(false)}>
-                <AccountForm 
-                    mutation={saveAccount} 
-                    onSuccess={handleSuccess} // Pasamos la función manejadora
-                />
-            </ModalPortal>
-        </div>
+            {showForm && (
+                <ModalPortal
+                    isOpen={showForm}
+                    onClose={() =>
+                        setShowForm(false)
+                    }
+                >
+                    <AccountForm
+                        mutation={saveAccount}
+                        onSuccess={
+                            handleSuccess
+                        }
+                    />
+                </ModalPortal>
+            )}
+        </>
     );
 };

@@ -61,7 +61,6 @@ export default function AccountForm({ mutation, account, fieldsHidden, fieldsDis
             if (!isEdit) setFormData(initialStateForm);
             setErrors(null);
             reset();
-            console.log(newAccount)
             onSuccess && onSuccess(newAccount);
         }
     }, [isSuccess]);

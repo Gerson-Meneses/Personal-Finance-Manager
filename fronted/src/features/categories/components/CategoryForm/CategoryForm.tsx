@@ -81,16 +81,11 @@ export const CategoryForm = ({
         setErrors(null);
 
         try {
-            // Usamos mutateAsync para obtener la respuesta directamente
-            console.log(formData)
             const result = await mutateAsync(formData);
-
-            // Si todo sale bien, ejecutamos el callback con el objeto real
             if (onSuccess) {
                 onSuccess(result);
             }
         } catch (err) {
-            // El error ya lo maneja el useEffect de 'error' de React Query
             console.error("Error al guardar categoría:", err);
         }
     };

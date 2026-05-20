@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { TypeLoan } from "../utils/Enums"
-import { amountSchema, dateSchema, nameSchema, textSchema, timeSchema } from "./base.schema"
+import { amountSchema, dateSchema, descriptionSchema, nameSchema, textSchema, timeSchema } from "./base.schema"
 
 export const loanSchema = z.object({
     type: z
@@ -12,7 +12,7 @@ export const loanSchema = z.object({
 
     time: timeSchema().optional(),
 
-    description: textSchema().optional(),
+    description: descriptionSchema(),
 
     amount: amountSchema(),
 

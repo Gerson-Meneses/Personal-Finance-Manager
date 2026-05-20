@@ -31,6 +31,7 @@ export class LoanPayment {
   @ManyToOne("loan_installments", "loan_payments", { nullable: true })
   installment?: LoanInstallment;
 
-  @OneToOne("transactions", "loan_payments")
+  // En LoanPayment.entity.ts
+  @OneToOne("Transaction", "loanPayment") // El string "loanPayment" debe coincidir con el nombre de la propiedad en Transaction
   transaction: Transaction;
 }

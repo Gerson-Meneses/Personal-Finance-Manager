@@ -1,63 +1,69 @@
+import z from "zod";
 import type { Account } from "../accounts/types";
 import type { Category } from "../categories/types";
 import type { Loan, LoanPayment } from "../loans/types";
+import { amountSchema, dateSchema, descriptionSchema, nameSchema, numberSchema, stringSchema, timeSchema, uuidSchema } from "../../shared/Schemas/Base.schema";
 
-export type TransactionType = "INCOME" | "EXPENSE" | "CREDIT_PAYMENT" | "TRANSFER";
+export const TRANSACTION_TYPES = ["INCOME", "EXPENSE", "CREDIT_PAYMENT", "TRANSFER"] as const;
+export type TransactionType = typeof TRANSACTION_TYPES[number]
 
 export interface Transaction {
   id: string;
   name: string;
   type: TransactionType;
   amount: number;
-  date: string; // ISO String (YYYY-MM-DD)
+  date: string;
   time?: string;
+  postedAt?: Date;
   description?: string;
-  account: Account,
-  relatedAccount: Account,
-  category: Category,
+  isRecurrent: boolean;
+  account?: Account,
+  relatedAccount?: Account,
+  category?: Category,
   loan?: Loan,
   loanPayment?: LoanPayment
 }
 
-// Lo que envías al POST /transaction
-export interface CreateTransactionDTO {
-  name: string;
-  type: TransactionType;
-  amount: number; 
-  accountId: string;
-  categoryId: string;
-  date: string;
-  time?: string;
-  description?: string;
-  isRecurrent?: boolean;
-}
+export const transactionSchema = z.object({
+  name: nameSchema(),
+  type: z.enum(TRANSACTION_TYPES),
+  amount: amountSchema() as z.ZodType<number>,
+  date: dateSchema(),
+  time: timeSchema().optional(),
+  description: descriptionSchema().optional(),
+  accountId: uuidSchema(),
+  categoryId: uuidSchema()
+})
 
-export interface UpdateTransactionDTO {
-  transactionId: string;
-  name?: string;
-  type?: TransactionType;
-  amount?: number; 
-  accountId?: string;
-  categoryId?: string;
-  date?: string;
-  time?: string;
-  description?: string;
-  isRecurrent?: boolean;
-}
+export type TransactionFormInput = z.input<typeof transactionSchema>
+export type TransactionDTO = z.output<typeof transactionSchema>
 
-export interface TransactionQuerySchema {
-  type?: TransactionType;
-  accountId?: string;
-  categoryId?: string;
-  date?: string;
-  from?: string;
-  to?: string;
-  amount?: number;
-  minAmount?: number;
-  maxAmount?: number;
-  relatedAccountId?: string;
-  page?: number;
-  limit?: number;
-  order?: "ASC" | "DESC";
-  search?: string
-}
+export const updateTransactionSchema = z.object({
+  transactionId: uuidSchema(),
+  ...transactionSchema.shape,
+})
+
+export type UpdateTransactionDTO = z.output<typeof updateTransactionSchema>
+export type UpdateTransactionFormInput = z.input<typeof updateTransactionSchema>
+
+
+export const ORDER_VALUES = ["ASC", "DESC"] as const;
+export type Order_Type = typeof ORDER_VALUES
+
+export const transactionQuerySchema = z.object({
+  type: z.enum(TRANSACTION_TYPES).optional(),
+  accountId: uuidSchema("Id de Cuenta").optional(),
+  categoryId: uuidSchema("Id de Categoria").optional(),
+  date: dateSchema("Fecha exacta").optional(),
+  from: dateSchema("Fecha minima").optional(),
+  to: dateSchema("Fecha maxima").optional(),
+  minAmount: amountSchema("Monto minimo").optional(),
+  maxAmount: amountSchema("Monto maximo").optional(),
+  relatedAccountId: uuidSchema("Id de cuenta relacionada").optional(),
+  page: numberSchema("Pagina").optional(),
+  limit: numberSchema("Limite").optional(),
+  order: z.enum(ORDER_VALUES).optional(),
+  search: stringSchema("Busqueda").optional()
+})
+
+export type TransactioQuerySchema = z.infer<typeof transactionQuerySchema>

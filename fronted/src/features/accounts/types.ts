@@ -1,14 +1,21 @@
-export interface Account {
-    id: string,
-    name: string,
+import type { Transaction } from "../transactions/types"
+
+export interface BaseAccount {
+    id: string
+    name: string
+    icon: string
+    color: string
     type: AccountType,
+}
+
+export interface Account extends BaseAccount {
     balance: number,
-    color: string,
-    icon: string,
     creditLimit?: number,
     billingCloseDay?: number,
     paymentDueDay?: number,
-    overdraft?: number
+    overdraft?: number,
+    transactions?: Transaction[]
+    /* reccurentTransactions?: ReccurentTransaction[]; */
 }
 
 export interface CreateAccountDTO {
@@ -28,7 +35,7 @@ export interface UpdateAccountDTO {
     type?: AccountType,
     color?: string,
     icon?: string,
-    creditLimit?: number,   
+    creditLimit?: number,
     billingCloseDay?: number,
     paymentDueDay?: number,
     overdraft?: number

@@ -1,85 +1,155 @@
 import dayjs from "dayjs";
 import { Calendar, Clock } from "lucide-react";
-import './DateInput.css'
 
-interface InputProps {
-    value?: string;
-    onChange: (val: string) => void;
-    label?: string;
-    error?: string | null;
-    disableFuture?: boolean;
-    required?: boolean
-    disabled?: boolean
+import type { BaseInputProps } from "../types";
+
+import "./DateInput.css";
+
+interface DatePickerProps
+  extends BaseInputProps<string> {
+  disableFuture?: boolean;
 }
 
 export const DatePicker = ({
-    value = "",
-    onChange,
-    label = "Fecha",
-    error,
-    disableFuture = true,
-    required,
-    disabled
-}: InputProps) => {
-    const today = dayjs().format("YYYY-MM-DD");
+  value = "",
+  onChange,
 
-    return (
-        <div className={`custom-form-group ${error ? 'has-error' : ''}`}>
-            <label className="input-label">
-                <Calendar size={20} className="icon" /> {label}
-            </label>
-            <div className="input-wrapper">
-                <input
-                    type="date"
-                    value={value} 
-                    max={disableFuture ? today : undefined}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="custom-date-input"
-                    required={required}
-                    disabled={disabled}
-                />
-            </div>
-            {error && <span className="error-text">{error}</span>}
-        </div>
-    );
+  label = "Fecha",
+
+  error,
+
+  disableFuture = true,
+
+  required,
+  disabled,
+
+  name,
+  id,
+
+  className,
+}: DatePickerProps) => {
+  const today = dayjs().format("YYYY-MM-DD");
+
+  const inputId = id ?? name ?? "date-input";
+
+  return (
+    <div
+      className={`
+        custom-form-group
+        ${error ? "has-error" : ""}
+        ${className ?? ""}
+      `}
+    >
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="input-label"
+        >
+          <Calendar size={20} className="icon" />
+          {label}
+        </label>
+      )}
+
+      <div className="input-wrapper">
+        <input
+          id={inputId}
+          name={name}
+          type="date"
+          value={value}
+          max={disableFuture ? today : undefined}
+          onChange={(e) => onChange(e.target.value)}
+          className="custom-date-input"
+          required={required}
+          disabled={disabled}
+        />
+      </div>
+
+      {error && (
+        <span className="error-text">
+          {error}
+        </span>
+      )}
+    </div>
+  );
 };
 
-interface TimePickerProps extends InputProps {
-    selectedDate?: string; // Formato YYYY-MM-DD
+
+interface TimePickerProps
+  extends BaseInputProps<string> {
+  selectedDate?: string;
+  disableFuture?: boolean;
 }
 
 export const TimePicker = ({
-    value = "",
-    onChange,
-    label = "Hora",
-    error,
-    disableFuture = true,
-    selectedDate,
-    disabled,
-    required
-}: TimePickerProps) => {
-    const now = dayjs();
-    const currentTime = now.format("HH:mm");
-    const isToday = selectedDate === now.format("YYYY-MM-DD");
+  value = "",
+  onChange,
 
-    return (
-        <div className={`custom-form-group ${error ? 'has-error' : ''}`}>
-            <label className="input-label">
-                <Clock size={20} className="icon" /> {label}
-            </label>
-            <div className="input-wrapper">
-                <input
-                    type="time"
-                    value={value}
-                    // Solo bloquea si disableFuture es true Y la fecha es hoy
-                    max={disableFuture && isToday ? currentTime : undefined}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="custom-date-input"
-                    required={required}
-                    disabled={disabled}
-                />
-            </div>
-            {error && <span className="error-text">{error}</span>}
-        </div>
-    );
+  label = "Hora",
+
+  error,
+
+  disableFuture = true,
+
+  selectedDate,
+
+  required,
+  disabled,
+
+  name,
+  id,
+
+  className,
+}: TimePickerProps) => {
+  const now = dayjs();
+
+  const currentTime = now.format("HH:mm");
+
+  const isToday =
+    selectedDate === now.format("YYYY-MM-DD");
+
+  const inputId = id ?? name ?? "time-input";
+
+  return (
+    <div
+      className={`
+        custom-form-group
+        ${error ? "has-error" : ""}
+        ${className ?? ""}
+      `}
+    >
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="input-label"
+        >
+          <Clock size={20} className="icon" />
+          {label}
+        </label>
+      )}
+
+      <div className="input-wrapper">
+        <input
+          id={inputId}
+          name={name}
+          type="time"
+          value={value}
+          max={
+            disableFuture && isToday
+              ? currentTime
+              : undefined
+          }
+          onChange={(e) => onChange(e.target.value)}
+          className="custom-date-input"
+          required={required}
+          disabled={disabled}
+        />
+      </div>
+
+      {error && (
+        <span className="error-text">
+          {error}
+        </span>
+      )}
+    </div>
+  );
 };

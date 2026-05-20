@@ -7,6 +7,7 @@ import { Transaction } from "../entities/Transaction.entity"
 import { DashboardQuerySchema } from "../schemas/dashboardQuerySchema"
 import { money } from "../utils/normalizarMoney"
 import { getMaxBalance } from "../utils/getBalanceToCreditCard"
+import { StatusLoan } from "../utils/Enums"
 
 
 
@@ -103,7 +104,7 @@ export class DashboardService {
         /* -------------------------------- */
 
         const loans = await this.loanRepo.find({
-            where: { user: { id: userId } },
+            where: { user: { id: userId }, status: StatusLoan.PENDING },
             order: { createdAt: "DESC" }
         })
 

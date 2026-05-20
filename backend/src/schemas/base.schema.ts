@@ -21,7 +21,11 @@ export const nameSchema = (label: string = "Nombre") =>
         .max(99, `${label} no puede exceder los 99 caracteres`)
 
 export const textSchema = (label: string = "Descripción") =>
-    stringSchema(label, 10, 1000);
+    stringSchema(label, 3, 1000);
+
+export const descriptionSchema = (label: string = "Descripción") =>
+    z.string({ message: `${label} debe ser una cadena de texto.` })
+        .optional()
 
 export const uuidSchema = (label: string = "ID") =>
     z.string().uuid({ message: `${label} no tiene un formato válido` });

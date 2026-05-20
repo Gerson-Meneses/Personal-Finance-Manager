@@ -2,6 +2,8 @@ import { AppDataSourceProd } from "../database/dataBaseDev";
 import { Account } from "../entities/Account.entity";
 import { User } from "../entities/User.entity";
 import { BadRequestError, ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
+import { AccountResponse } from "../ResponseInterfaces/AccountResponse";
+import { toAccountResponse } from "../mappers/AccountMapper";
 import { AccountSchema, UpdateAccountSchema } from "../schemas/account.schema";
 import { PaginationQuerySchema } from "../schemas/queryPagination.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
@@ -14,7 +16,7 @@ export class AccountService {
     private accountRepo = AppDataSourceProd.getRepository(Account);
     private userRepo = AppDataSourceProd.getRepository(User);
 
-    async getAllAccountsByUser(userId: UuidSchema, filters: PaginationQuerySchema): Promise<PaginatedResult<Account>> {
+    async getAllAccountsByUser(userId: UuidSchema, filters: PaginationQuerySchema): Promise<PaginatedResult<AccountResponse>> {
 
         const page = filters.page && filters.page > 0 ? filters.page : 1;
         const limit = filters.limit && filters.limit > 0 ? filters.limit : 20;
@@ -30,17 +32,17 @@ export class AccountService {
 
         let [accounts, total] = await qb.getManyAndCount();
 
-        accounts = accounts.map(account => { account.balance = account.balance / 100, account.creditLimit = account.creditLimit / 100; return account })
+        const accountsInfo = accounts.map(account => toAccountResponse(account));
 
         return {
-            items: accounts,
+            items: accountsInfo,
             total,
             page,
             limit,
         };
     }
 
-    async createAccount(userId: string, account: AccountSchema): Promise<Account> {
+    async createAccount(userId: string, account: AccountSchema): Promise<AccountResponse> {
         let newAccount: Account = {} as Account
 
         const { name, type, color, icon } = account
@@ -52,7 +54,6 @@ export class AccountService {
 
         let accountExist = await this.accountRepo.findOne({ where: { name, user: { id: userId }, type } })
         if (accountExist) throw new ConflictError("El usuario ya tiene una cuenta con este nombre y tipo.", { name: ["El usuario ya tiene una cuenta con este nombre y tipo."] })
-
 
         if (type === TypeAccount.CREDIT) {
             const { billingCloseDay, paymentDueDay, overdraft } = account
@@ -88,7 +89,7 @@ export class AccountService {
             })
             await this.accountRepo.save(newAccount)
         }
-        return { ...newAccount, balance: newAccount.balance / 100 }
+        return toAccountResponse(newAccount);
     }
 
     async getAccountById(accountId: string, userId: string): Promise<Account> {

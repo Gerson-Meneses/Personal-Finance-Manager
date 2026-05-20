@@ -124,7 +124,6 @@ export class AuthService {
 	private readonly GENERIC_EMAIL_MSG = "Si el correo coincide con una cuenta activa, recibirás un código en unos instantes.";
 
 	async verifyMailGenerate(email: string, ip: string) {
-		console.log("Verificando Email")
 		const user = await this.userRepo.findOne({
 			where: { credential: { email } }
 		});
@@ -149,7 +148,6 @@ export class AuthService {
 
 		await this.codesRepo.save(newCode);
 
-		console.log("Intentando enviar email")
 		sendEmail({
 			to: email,
 			subject: "Verificación de Cuenta",

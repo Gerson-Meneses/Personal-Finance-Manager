@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as service from "./services";
-import type { Transaction, TransactionQuerySchema, CreateTransactionDTO, UpdateTransactionDTO } from "./types";
+import type { Transaction,TransactionDTO,TransactioQuerySchema,UpdateTransactionDTO } from "./types";
 import type { DataError, Meta } from "../../shared/dataApiInterface";
 
-export const useTransactions = (filters?: TransactionQuerySchema) => {
+export const useTransactions = (filters?: TransactioQuerySchema) => {
   const queryClient = useQueryClient();
 
   // 1. Consulta de transacciones (con filtros dinámicos)
@@ -20,8 +20,8 @@ export const useTransactions = (filters?: TransactionQuerySchema) => {
     queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // Crucial para actualizar balances
   };
   
-  const createMutation = useMutation<Transaction, DataError<CreateTransactionDTO>, CreateTransactionDTO>({
-    mutationFn: (data: CreateTransactionDTO) => service.createTransaction(data),
+  const createMutation = useMutation<Transaction, DataError<TransactionDTO>, TransactionDTO>({
+    mutationFn: (data: TransactionDTO) => service.createTransaction(data),
     onSuccess: invalidateAll,
   });
 
@@ -31,12 +31,12 @@ export const useTransactions = (filters?: TransactionQuerySchema) => {
     onSuccess: invalidateAll,
   });
 
-  const saveTransaction = useMutation<Transaction, DataError<CreateTransactionDTO>, CreateTransactionDTO | UpdateTransactionDTO>({
-    mutationFn: (data: CreateTransactionDTO | UpdateTransactionDTO) => {
+  const saveTransaction = useMutation<Transaction, DataError<TransactionDTO>, TransactionDTO | UpdateTransactionDTO>({
+    mutationFn: (data: TransactionDTO | UpdateTransactionDTO) => {
       if ('transactionId' in data && data.transactionId) {
         return updateMutation.mutateAsync(data as UpdateTransactionDTO);
       }
-      return createMutation.mutateAsync(data as CreateTransactionDTO);
+      return createMutation.mutateAsync(data as TransactionDTO);
     },
   });
 
