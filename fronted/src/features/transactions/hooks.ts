@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as service from "./services";
-import type { Transaction,TransactionDTO,TransactioQuerySchema,UpdateTransactionDTO } from "./types";
+import type { Transaction,TransactionDTO,TransactionQuerySchema,UpdateTransactionDTO } from "./types";
 import type { DataError, Meta } from "../../shared/dataApiInterface";
 
-export const useTransactions = (filters?: TransactioQuerySchema) => {
+export const useTransactions = (filters?: TransactionQuerySchema) => {
   const queryClient = useQueryClient();
 
   // 1. Consulta de transacciones (con filtros dinámicos)
