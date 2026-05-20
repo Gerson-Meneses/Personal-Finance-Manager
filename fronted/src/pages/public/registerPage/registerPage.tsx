@@ -150,7 +150,6 @@ export const RegisterPage = () => {
                     error={getError("email")}
                     placeholder="correo@email.com"
                     required
-                    width="300px"
                     disabled={register.isPending}
                 />
             </div>

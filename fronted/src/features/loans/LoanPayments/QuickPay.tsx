@@ -63,8 +63,8 @@ export const QuickPayForm = ({ lender, type }: { lender: string; type?: LoanType
                     label="Monto"
                     icon={"CircleDollarSign"}
                     symbol="S/"
-                    value={formData.amount}
-                    onChange={(val) => onChange("amount", val)}
+                    value={formData.amount.toString()}
+                    onChange={(val) => onChange("amount", Number(val))}
                     disabled={isPending}
                     required
                     error={getErrorMessage("amount")}

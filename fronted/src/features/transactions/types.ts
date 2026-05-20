@@ -57,6 +57,7 @@ export const transactionQuerySchema = z.object({
   date: dateSchema("Fecha exacta").optional(),
   from: dateSchema("Fecha minima").optional(),
   to: dateSchema("Fecha maxima").optional(),
+  amount: amountSchema().optional(),
   minAmount: amountSchema("Monto minimo").optional(),
   maxAmount: amountSchema("Monto maximo").optional(),
   relatedAccountId: uuidSchema("Id de cuenta relacionada").optional(),
@@ -66,4 +67,4 @@ export const transactionQuerySchema = z.object({
   search: stringSchema("Busqueda").optional()
 })
 
-export type TransactioQuerySchema = z.infer<typeof transactionQuerySchema>
+export type TransactionQuerySchema = z.infer<typeof transactionQuerySchema>

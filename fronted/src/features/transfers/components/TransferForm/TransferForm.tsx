@@ -111,8 +111,8 @@ export default function TransferForm({ mutation, account }: Props) {
             <div className="form-default-row">
                 <NumericInput
                     label="Monto"
-                    value={formData.amount}
-                    onChange={(val) => onChange("amount", val)}
+                    value={formData.amount.toString()}
+                    onChange={(val) => onChange("amount", Number(val))}
                     error={getErrorMessage("amount")}
                     disabled={isPending}
                     icon="CircleDollarSign"

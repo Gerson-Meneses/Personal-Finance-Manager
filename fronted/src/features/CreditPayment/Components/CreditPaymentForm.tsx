@@ -75,7 +75,7 @@ export default function PaymentCreditCardForm({ cardId, cardName, onSuccess }: P
             <div className="form-default-row">
                 <NumericInput
                     label="Monto a Pagar"
-                    value={formData.amount}
+                    value={formData.amount.toString()}
                     onChange={(val) => onChange("amount", val)}
                     error={localErrors?.amount?.[0]}
                     disabled={isPending}

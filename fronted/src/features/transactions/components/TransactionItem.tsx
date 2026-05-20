@@ -43,18 +43,18 @@ export default function TransactionItem({ transaction, currentAccountId, hideFie
   const [modalEditOpen, setModalEditOpen] = useState(false);
 
   return (
-    <div onClick={() => setModalEditOpen(true)} className={`tx-item-card animate-fade-in ${type.toLowerCase()}`} style={{ borderLeft: `3px solid ${category.color}` }}>
+    <div onClick={() => setModalEditOpen(true)} className={`tx-item-card animate-fade-in ${type.toLowerCase()}`} style={{ borderLeft: `3px solid ${category?.color}` }}>
       <div className="tx-main-content">
         {/* ICONO CON COLOR DINÁMICO */}
         <div
           className="tx-icon-container"
           style={{
-            backgroundColor: `${category.color}20`,
-            color: category.color
+            backgroundColor: `${category?.color}20`,
+            color: category?.color
           }}
 
         >
-          {category.icon && getIcon(category.icon)}
+          {category?.icon && getIcon(category.icon)}
         </div>
 
         <div className="tx-details-wrapper">
@@ -88,7 +88,7 @@ export default function TransactionItem({ transaction, currentAccountId, hideFie
               {!hideFields?.category && (
                 <>
                   <span className="tx-divider" >•</span>
-                  <span className="tx-category-name tx-account-badge" style={{ borderColor: category.color }}>{category.name}</span>
+                  <span className="tx-category-name tx-account-badge" style={{ borderColor: category?.color }}>{category?.name}</span>
                 </>
               )}
 

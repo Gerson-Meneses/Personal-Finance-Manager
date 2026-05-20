@@ -60,7 +60,6 @@ export const LoginPage = () => {
                     placeholder="correo@email.com"
                     required
                     disabled={login.isPending}
-                    width="220px"
                 />
             </div>
 

@@ -2,8 +2,9 @@ import { useState } from "react"
 import { getIcon } from "../../../../shared/utils/GetIcon"
 import { useCategories } from "../../../categories/hooks"
 import { useAccounts } from "../../../accounts/hooks"
-import type { TransactionQuerySchema } from "../../types"
+
 import "./TransactionsFilters.css"
+import type { TransactionQuerySchema } from "../../types"
 
 interface Props {
     query: TransactionQuerySchema

@@ -171,10 +171,10 @@ export default function AccountForm({ mutation, account, fieldsHidden, fieldsDis
                         {!fieldsHidden?.creditLimit && (
                             <NumericInput
                                 label="Límite de crédito"
-                                value={formData.creditLimit}
+                                value={formData.creditLimit?.toString()}
                                 placeholder="0"
                                 icon={"ArrowUpRightFromCircle"}
-                                onChange={(val) => onChange("creditLimit", val)}
+                                onChange={(val) => onChange("creditLimit", Number(val))}
                                 error={getErrorMessage("creditLimit")}
                             />
                         )}
@@ -182,11 +182,11 @@ export default function AccountForm({ mutation, account, fieldsHidden, fieldsDis
                         {!fieldsHidden?.overdraft && (
                             <NumericInput
                                 label="Sobregiro permitido"
-                                value={formData.overdraft}
+                                value={formData.overdraft?.toString()}
                                 placeholder="0"
                                 symbol="%"
                                 icon={"TrendingUp"}
-                                onChange={(val) => onChange("overdraft", val)}
+                                onChange={(val) => onChange("overdraft", Number(val))}
                                 error={getErrorMessage("overdraft")}
                             />
                         )}
@@ -195,10 +195,10 @@ export default function AccountForm({ mutation, account, fieldsHidden, fieldsDis
                         {!fieldsHidden?.billingCloseDay && (
                             <NumericInput
                                 label="Día de cierre"
-                                value={formData.billingCloseDay}
+                                value={formData.billingCloseDay?.toString()}
                                 placeholder="1-28"
                                 icon={"CalendarRange"}
-                                onChange={(val) => onChange("billingCloseDay", val)}
+                                onChange={(val) => onChange("billingCloseDay", Number(val))}
                                 error={getErrorMessage("billingCloseDay")}
                             />
                         )}
@@ -206,10 +206,10 @@ export default function AccountForm({ mutation, account, fieldsHidden, fieldsDis
                         {!fieldsHidden?.paymentDueDay && (
                             <NumericInput
                                 label="Día de vencimiento"
-                                value={formData.paymentDueDay}
+                                value={formData.paymentDueDay?.toString()}
                                 placeholder="1-28"
                                 icon={"CalendarCheck"}
-                                onChange={(val) => onChange("paymentDueDay", val)}
+                                onChange={(val) => onChange("paymentDueDay", Number(val))}
                                 error={getErrorMessage("paymentDueDay")}
                             />
                         )}

@@ -23,7 +23,7 @@ export const LoanFiltersAdvanced = ({
     control,
     handleSubmit,
     reset,
-    formState: { isDirty, isValid },
+    formState: { isDirty },
   } = useForm<LoanQueryFiltersFormInput>({
     resolver: zodResolver(LoanQueryFiltersSchema),
     mode: "onChange",
@@ -114,7 +114,7 @@ export const LoanFiltersAdvanced = ({
           <Controller
             control={control}
             name="from"
-            render={({ field, fieldState }) => (
+            render={({ field }) => (
               <DatePicker
                 label="Desde"
                 value={field.value || ""}
@@ -126,7 +126,7 @@ export const LoanFiltersAdvanced = ({
           <Controller
             control={control}
             name="to"
-            render={({ field, fieldState }) => (
+            render={({ field }) => (
               <DatePicker
                 label="Hasta"
                 value={field.value || ""}

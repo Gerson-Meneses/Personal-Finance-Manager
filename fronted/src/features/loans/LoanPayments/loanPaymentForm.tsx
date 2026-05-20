@@ -62,8 +62,8 @@ export default function LoanPaymentForm({ loan }: Props) {
                     label="Monto del pago"
                     icon="CircleDollarSign"
                     symbol="S/"
-                    value={formData.amount}
-                    onChange={(val) => onChange("amount", val)}
+                    value={formData.amount.toString()}
+                    onChange={(val) => onChange("amount", Number(val))}
                     error={getErrorMessage("amount")}
                     required
                 />
