@@ -5,7 +5,7 @@ import { SelectInput } from "../../../../../shared/components/SelectInput/Select
 import { NumericInput } from "../../../../../shared/components/NumericInput/NumericInput";
 import { DatePicker } from "../../../../../shared/components/DateInput/DateInput";
 
-import "./LoanFiltersAdvanced.css";
+import "./Loanfiltersadvanced.css";
 import { defaultLoanQueryFilters, LoanQueryFiltersSchema, type LoanQueryFiltersFormInput } from "../../../LoanPayments/types";
 
 interface LoanFiltersAdvancedProps {
