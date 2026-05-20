@@ -6,12 +6,13 @@ import { PaginationQuerySchema } from "../schemas/queryPagination.schema";
 import { ApiPaginated } from "../typesResponseHttp/apiResponses";
 import { Account } from "../entities/Account.entity";
 import { paginated } from "../helpers/responses";
+import { AccountResponse } from "../ResponseInterfaces/AccountResponse";
 
 const accountService = new AccountService();
 
 export const getAllAccountsByUser = async (c: Context, user: UuidSchema, filters: PaginationQuerySchema) => {
     const result = await accountService.getAllAccountsByUser(user, filters);
-    return c.json<ApiPaginated<Account>>(paginated(result.items, result.total, result.page, result.limit), 200)
+    return c.json<ApiPaginated<AccountResponse>>(paginated(result.items, result.total, result.page, result.limit), 200)
 }
 
 export const createAccount = async (c: Context, userId: UuidSchema, account: AccountSchema) => {
