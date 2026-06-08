@@ -51,7 +51,7 @@ export const loanQuerySchema = z.object({
     ),
     limit: z.preprocess(
         (val) => (val === undefined || val === null || val === '' ? undefined : Number(val)),
-        z.number().int().min(1, "Límite debe ser al menos 1").max(100, "Límite no puede exceder 100").nullish()
+        z.number().int().min(1, "Límite debe ser al menos 1").max(9999, "Límite no puede exceder 9999").nullish()
     ),
 }).strict(); // Rechaza propiedades no definidas
 

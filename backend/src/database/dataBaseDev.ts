@@ -36,5 +36,5 @@ import { Codes } from '../entities/Codes.entity'
     synchronize: true, // ❗ solo en desarrollo
     logging: ["error"],
     entities: [Account, Category, Credential, Loan, LoanInstallment, LoanPayment, ReccurentTransaction, Transaction, User, Codes],
-}) */
-
+})
+ */

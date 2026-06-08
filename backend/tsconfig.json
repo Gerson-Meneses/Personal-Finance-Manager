@@ -14,14 +14,14 @@
     "strictPropertyInitialization": false,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    /* "ignoreDeprecations": "6.0", */
+   /*  "ignoreDeprecations": "6.0", */
     "types": [
       "bun"
     ]
   },
   "include": [
     "src/**/*"
-  ], // ESTO ES LO QUE FALTA: Indica dónde está tu código
+  ],
   "exclude": [
     "node_modules",
     "**/*.test.ts"

@@ -93,5 +93,5 @@ export const booleanSchema = (label: string = "Campo") =>
 
 export const paginationSchema = () => z.object({
     page: rangeSchema(1, 1000, "Página").default(1),
-    limit: rangeSchema(1, 100, "Límite").default(10),
+    limit: rangeSchema(1, 9999, "Límite").default(10),
 });

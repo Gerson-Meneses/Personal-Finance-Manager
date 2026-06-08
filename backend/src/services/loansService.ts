@@ -58,6 +58,7 @@ export class LoansService {
         .leftJoinAndSelect("paymentTransaction.account", "paymentAccount")
         .leftJoinAndSelect("loan.transactionReference", "transaction")
         .leftJoinAndSelect("transaction.account", "account")
+        .leftJoinAndSelect("transaction.category", "category")
         .where("loan.userId = :userId", { userId });
 
       // ============ FILTROS BÁSICOS ============
@@ -182,7 +183,7 @@ export class LoansService {
 
       // Transformar a LoanResponse (asumiendo que tienes esta función)
       const items = await Promise.all(
-        loans.map((loan) => toLoanResponse(loan, { moneyTransaction: false }))
+        loans.map((loan) => toLoanResponse(loan, { moneyTransaction: true }))
       );
 
       return { items, total, page, limit };
@@ -509,105 +510,105 @@ export class LoansService {
     }
   }
 
-  
-  async createLoan(userId: UuidSchema, loanData: LoanSchema): Promise < LoanResponse > {
-  const queryRunner = AppDataSourceProd.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
 
-  try {
-    const user = await this.userService.getUserById(userId);
+  async createLoan(userId: UuidSchema, loanData: LoanSchema): Promise<LoanResponse> {
+    const queryRunner = AppDataSourceProd.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if(!user) {
-      throw new NotFoundError("Usuario no encontrado");
-    }
+    try {
+      const user = await this.userService.getUserById(userId);
 
-      if(loanData.tea) {
-  throw new ConflictError(
-    "Préstamos con tasa de interés bancaria no están implementados aún",
-    { tea: ["Esta funcionalidad será disponible próximamente"] }
-  );
-}
+      if (!user) {
+        throw new NotFoundError("Usuario no encontrado");
+      }
 
-const transactionType =
-  loanData.type === TypeLoan.GIVEN ? TypeTransaction.EXPENSE : TypeTransaction.INCOME;
+      if (loanData.tea) {
+        throw new ConflictError(
+          "Préstamos con tasa de interés bancaria no están implementados aún",
+          { tea: ["Esta funcionalidad será disponible próximamente"] }
+        );
+      }
 
-const category = user.categories.find(
-  (cat) => cat.name === "PRÉSTAMOS" && cat.type === transactionType
-);
+      const transactionType =
+        loanData.type === TypeLoan.GIVEN ? TypeTransaction.EXPENSE : TypeTransaction.INCOME;
 
-if (!category) {
-  throw new NotFoundError(
-    `Categoría de préstamos no encontrada. Asegúrese de que existe una categoría "PRÉSTAMOS" de tipo ${transactionType}`
-  );
-}
+      const category = user.categories.find(
+        (cat) => cat.name === "PRÉSTAMOS" && cat.type === transactionType
+      );
 
-// Crear transacción
-const transactionReferenceData = await this.transactionService.createTransaction(
-  {
-    name:
-      loanData.type === TypeLoan.GIVEN
-        ? `Préstamo a ${loanData.lender}`
-        : `Préstamo de ${loanData.lender}`,
-    type: transactionType,
-    amount: loanData.amount,
-    date: loanData.startDate,
-    time: loanData.time,
-    categoryId: category.id,
-    description: loanData.description,
-    accountId: loanData.accountId,
-  },
-  userId
-);
+      if (!category) {
+        throw new NotFoundError(
+          `Categoría de préstamos no encontrada. Asegúrese de que existe una categoría "PRÉSTAMOS" de tipo ${transactionType}`
+        );
+      }
 
-const transactionReference = queryRunner.manager.create(Transaction, transactionReferenceData);
+      // Crear transacción
+      const transactionReferenceData = await this.transactionService.createTransaction(
+        {
+          name:
+            loanData.type === TypeLoan.GIVEN
+              ? `Préstamo a ${loanData.lender}`
+              : `Préstamo de ${loanData.lender}`,
+          type: transactionType,
+          amount: loanData.amount,
+          date: loanData.startDate,
+          time: loanData.time,
+          categoryId: category.id,
+          description: loanData.description,
+          accountId: loanData.accountId,
+        },
+        userId
+      );
 
-// Crear préstamo
-const loan = queryRunner.manager.create(Loan, {
-  user,
-  ...loanData,
-  principalAmount: loanData.amount,
-  transactionReference,
-});
+      const transactionReference = queryRunner.manager.create(Transaction, transactionReferenceData);
 
-const savedLoan = await queryRunner.manager.save(Loan, loan);
+      // Crear préstamo
+      const loan = queryRunner.manager.create(Loan, {
+        user,
+        ...loanData,
+        principalAmount: loanData.amount,
+        transactionReference,
+      });
 
-// Actualizar referencia de transacción
-transactionReference.loan = savedLoan;
+      const savedLoan = await queryRunner.manager.save(Loan, loan);
 
-await queryRunner.manager.save(Transaction, transactionReference);
+      // Actualizar referencia de transacción
+      transactionReference.loan = savedLoan;
 
-await queryRunner.commitTransaction();
+      await queryRunner.manager.save(Transaction, transactionReference);
 
-return toLoanResponse(savedLoan, { moneyTransaction: false })
+      await queryRunner.commitTransaction();
+
+      return toLoanResponse(savedLoan, { moneyTransaction: false })
 
     } catch (error) {
-  await queryRunner.rollbackTransaction();
+      await queryRunner.rollbackTransaction();
 
-  if (error instanceof NotFoundError || error instanceof ConflictError) {
-    throw error;
-  }
+      if (error instanceof NotFoundError || error instanceof ConflictError) {
+        throw error;
+      }
 
-  throw new Error(
-    "Error al crear préstamo: " + (error instanceof Error ? error.message : "Error desconocido")
-  );
-} finally {
-  await queryRunner.release();
-}
+      throw new Error(
+        "Error al crear préstamo: " + (error instanceof Error ? error.message : "Error desconocido")
+      );
+    } finally {
+      await queryRunner.release();
+    }
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   async payLoan(
-  userId: UuidSchema,
-  loanId: UuidSchema,
-  data: LoanPaymentSchema,
-  entityManager ?: EntityManager): Promise < LoanPaymentResponse > {
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    data: LoanPaymentSchema,
+    entityManager?: EntityManager): Promise<LoanPaymentResponse> {
 
     let queryRunner: QueryRunner | undefined;
     let manager: EntityManager;
     let isOwnTransaction = false;
 
     try {
-      if(!entityManager) {
+      if (!entityManager) {
         queryRunner = AppDataSourceProd.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -622,7 +623,7 @@ return toLoanResponse(savedLoan, { moneyTransaction: false })
         relations: ["categories"],
       });
 
-      if(!user) {
+      if (!user) {
         throw new NotFoundError("Usuario no encontrado");
       }
 
@@ -631,330 +632,330 @@ return toLoanResponse(savedLoan, { moneyTransaction: false })
         where: { userId, id: loanId },
       });
 
-      if(!loan) {
+      if (!loan) {
         throw new NotFoundError(
           `Préstamo con ID ${loanId} no encontrado para este usuario`
         );
       }
 
-      if(loan.status === StatusLoan.PAID) {
-  throw new ConflictError(
-    `No se puede realizar un pago a un préstamo pagado`,
-    {
-      loan: ["Este préstamo ya fue pagado."],
-    }
-  );
-}
+      if (loan.status === StatusLoan.PAID) {
+        throw new ConflictError(
+          `No se puede realizar un pago a un préstamo pagado`,
+          {
+            loan: ["Este préstamo ya fue pagado."],
+          }
+        );
+      }
 
-const payment = calculateLoanPaymentStatus(loan);
-const remainingInCents = loan.principalAmount - payment.totalPaidInCents;
+      const payment = calculateLoanPaymentStatus(loan);
+      const remainingInCents = loan.principalAmount - payment.totalPaidInCents;
 
-if (remainingInCents <= 0) {
-  throw new ConflictError("El préstamo ya está completamente pagado", {
-    loan: ["No hay saldo pendiente para pagar"],
-  });
-}
+      if (remainingInCents <= 0) {
+        throw new ConflictError("El préstamo ya está completamente pagado", {
+          loan: ["No hay saldo pendiente para pagar"],
+        });
+      }
 
-if (data.amount > remainingInCents) {
-  const remainingInDollars = remainingInCents / 100;
-  throw new ConflictError(
-    `El monto del pago excede la deuda restante. Monto máximo: ${round(remainingInDollars)}`,
-    {
-      amount: [
-        `No puede pagar más de ${round(remainingInDollars)}. Deuda actual: ${round(remainingInDollars)}`,
-      ],
-    }
-  );
-}
+      if (data.amount > remainingInCents) {
+        const remainingInDollars = remainingInCents / 100;
+        throw new ConflictError(
+          `El monto del pago excede la deuda restante. Monto máximo: ${round(remainingInDollars)}`,
+          {
+            amount: [
+              `No puede pagar más de ${round(remainingInDollars)}. Deuda actual: ${round(remainingInDollars)}`,
+            ],
+          }
+        );
+      }
 
-const transactionType =
-  loan.type === TypeLoan.GIVEN
-    ? TypeTransaction.INCOME
-    : TypeTransaction.EXPENSE;
+      const transactionType =
+        loan.type === TypeLoan.GIVEN
+          ? TypeTransaction.INCOME
+          : TypeTransaction.EXPENSE;
 
-const category = await manager.findOne(Category, {
-  where: { name: "DEVOLUCIÓN DE PRÉSTAMO", type: transactionType, user: { id: userId } },
-});
+      const category = await manager.findOne(Category, {
+        where: { name: "DEVOLUCIÓN DE PRÉSTAMO", type: transactionType, user: { id: userId } },
+      });
 
-if (!category) {
-  throw new NotFoundError(
-    `Categoría de devolución no encontrada. Asegúrese de que existe una categoría "DEVOLUCIÓN DE PRÉSTAMO" de tipo ${transactionType}`
-  );
-}
+      if (!category) {
+        throw new NotFoundError(
+          `Categoría de devolución no encontrada. Asegúrese de que existe una categoría "DEVOLUCIÓN DE PRÉSTAMO" de tipo ${transactionType}`
+        );
+      }
 
-const createTransaction: TransactionSchema = {
-  ...data,
-  name: `Pago ${loan.type == TypeLoan.GIVEN ? "de" : "a"} ${loan.lender}.`,
-  type: transactionType,
-  categoryId: category.id
-}
+      const createTransaction: TransactionSchema = {
+        ...data,
+        name: `Pago ${loan.type == TypeLoan.GIVEN ? "de" : "a"} ${loan.lender}.`,
+        type: transactionType,
+        categoryId: category.id
+      }
 
-const referenceTransaction = await this.transactionService.createTransaction(createTransaction, userId, manager)
+      const referenceTransaction = await this.transactionService.createTransaction(createTransaction, userId, manager)
 
-const savedTransaction = manager.create(Transaction, referenceTransaction)
+      const savedTransaction = manager.create(Transaction, referenceTransaction)
 
-// Crear registro de pago del préstamo
-const loanPayment = manager.create(LoanPayment, {
-  amount: data.amount,
-  date: data.date,
-  time: data.time,
-  description: data.description,
-  loan,
-  transaction: savedTransaction,
-});
+      // Crear registro de pago del préstamo
+      const loanPayment = manager.create(LoanPayment, {
+        amount: data.amount,
+        date: data.date,
+        time: data.time,
+        description: data.description,
+        loan,
+        transaction: savedTransaction,
+      });
 
-const savedPayment = await manager.save(loanPayment);
+      const savedPayment = await manager.save(loanPayment);
 
-// Recalcular total pagado para este préstamo
-const updatedTotalPaidInCents =
-  (await manager.sum(LoanPayment, "amount", {
-    loan: { id: loanId },
-  })) || 0;
+      // Recalcular total pagado para este préstamo
+      const updatedTotalPaidInCents =
+        (await manager.sum(LoanPayment, "amount", {
+          loan: { id: loanId },
+        })) || 0;
 
-// Actualizar estado del préstamo si está completamente pagado
-if (updatedTotalPaidInCents >= loan.principalAmount) {
-  loan.status = StatusLoan.PAID;
-  loan.payments.push(savedPayment)
-  await manager.save(loan);
-}
+      // Actualizar estado del préstamo si está completamente pagado
+      if (updatedTotalPaidInCents >= loan.principalAmount) {
+        loan.status = StatusLoan.PAID;
+        loan.payments.push(savedPayment)
+        await manager.save(loan);
+      }
 
-// Confirmar transacción si es propia
-if (isOwnTransaction && queryRunner) {
-  await queryRunner.commitTransaction();
-}
+      // Confirmar transacción si es propia
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.commitTransaction();
+      }
 
-return toLoanPaymentResponse(savedPayment, { transactionAmount: false });
+      return toLoanPaymentResponse(savedPayment, { transactionAmount: false });
 
     } catch (error) {
-  // Revertir transacción si es propia
-  if (isOwnTransaction && queryRunner) {
-    await queryRunner.rollbackTransaction();
-  }
+      // Revertir transacción si es propia
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.rollbackTransaction();
+      }
 
-  if (error instanceof NotFoundError || error instanceof ConflictError) {
-    throw error;
-  }
+      if (error instanceof NotFoundError || error instanceof ConflictError) {
+        throw error;
+      }
 
-  if (error instanceof BadRequestError) {
-    throw error;
-  }
-  const errorMessage =
-    error instanceof Error ? error.message : "Error desconocido";
-  throw new Error(`Error al registrar pago: ${errorMessage}`);
-} finally {
-  if (isOwnTransaction && queryRunner) {
-    await queryRunner.release();
-  }
-}
+      if (error instanceof BadRequestError) {
+        throw error;
+      }
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      throw new Error(`Error al registrar pago: ${errorMessage}`);
+    } finally {
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.release();
+      }
+    }
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   async quickPayMultipleLoans(
-  userId: UuidSchema,
-  data: QuickPaymentSchema,
-): Promise < any > {
+    userId: UuidSchema,
+    data: QuickPaymentSchema,
+  ): Promise<any> {
 
-  const queryRunner = AppDataSourceProd.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
+    const queryRunner = AppDataSourceProd.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-  let isError = false;
+    let isError = false;
 
-  const { lender, type, amount } = data;
+    const { lender, type, amount } = data;
 
-  try {
-    const loans = await queryRunner.manager.find(Loan, {
-      relations: ["payments"],
-      where: {
-        userId,
-        lender,
-        type,
-        status: StatusLoan.PENDING,
-      },
-      order: {
-        startDate: "ASC",
-      },
-    });
+    try {
+      const loans = await queryRunner.manager.find(Loan, {
+        relations: ["payments"],
+        where: {
+          userId,
+          lender,
+          type,
+          status: StatusLoan.PENDING,
+        },
+        order: {
+          startDate: "ASC",
+        },
+      });
 
-    if(loans.length === 0) {
-  throw new NotFoundError(
-    `No hay préstamos pendientes con ${lender} de tipo ${type}`
-  );
-}
+      if (loans.length === 0) {
+        throw new NotFoundError(
+          `No hay préstamos pendientes con ${lender} de tipo ${type}`
+        );
+      }
 
-let remainingAmount = amount;
-const payments: LoanPaymentResponse[] = [];
-const errors: PaymentError[] = [];
+      let remainingAmount = amount;
+      const payments: LoanPaymentResponse[] = [];
+      const errors: PaymentError[] = [];
 
-for (const loan of loans) {
+      for (const loan of loans) {
 
-  if (remainingAmount <= 0) break;
+        if (remainingAmount <= 0) break;
 
-  try {
-    const payment = calculateLoanPaymentStatus(loan);
-    const loanRemainingInCents =
-      loan.principalAmount - payment.totalPaidInCents;
+        try {
+          const payment = calculateLoanPaymentStatus(loan);
+          const loanRemainingInCents =
+            loan.principalAmount - payment.totalPaidInCents;
 
-    if (loanRemainingInCents <= 0) {
-      continue;
-    }
+          if (loanRemainingInCents <= 0) {
+            continue;
+          }
 
-    const paymentAmount = Math.min(remainingAmount, loanRemainingInCents);
+          const paymentAmount = Math.min(remainingAmount, loanRemainingInCents);
 
-    const paymentData: LoanPaymentSchema = {
-      ...data,
-      amount: paymentAmount,
-    };
+          const paymentData: LoanPaymentSchema = {
+            ...data,
+            amount: paymentAmount,
+          };
 
-    const result = await this.payLoan(
-      userId,
-      loan.id,
-      paymentData,
-      queryRunner.manager
-    );
+          const result = await this.payLoan(
+            userId,
+            loan.id,
+            paymentData,
+            queryRunner.manager
+          );
 
-    payments.push(result);
-    remainingAmount -= paymentAmount;
+          payments.push(result);
+          remainingAmount -= paymentAmount;
 
-  } catch (error: any) {
-    errors.push({
-      loanId: loan.id,
-      error:
-        error instanceof Error ? error.message : "Error desconocido",
-      statusCode: error.statusCode || "INTERNAL_ERROR",
-    });
-    continue;
-  }
-}
+        } catch (error: any) {
+          errors.push({
+            loanId: loan.id,
+            error:
+              error instanceof Error ? error.message : "Error desconocido",
+            statusCode: error.statusCode || "INTERNAL_ERROR",
+          });
+          continue;
+        }
+      }
 
-if (payments.length === 0) {
-  isError = true
-  const errorDetails = errors
-    .map((e) => `${e.loanId}: ${e.error}`)
-    .join("; ");
-  throw new ConflictError(
-    `No se pudo procesar ningún pago. Detalles: ${errorDetails}`,
-    {
-      payments: errors.map((e) => e.error),
-    }
-  );
-}
+      if (payments.length === 0) {
+        isError = true
+        const errorDetails = errors
+          .map((e) => `${e.loanId}: ${e.error}`)
+          .join("; ");
+        throw new ConflictError(
+          `No se pudo procesar ningún pago. Detalles: ${errorDetails}`,
+          {
+            payments: errors.map((e) => e.error),
+          }
+        );
+      }
 
-if (errors.length > 0) {
-  isError = true
-  const errorDetails = errors.map((e) => `${e.loanId}: ${e.error}`).join("; ");
-  console.warn(
-    `Algunos pagos no se pudieron procesar. Detalles: ${errorDetails}`
-  );
-  throw new ConflictError(
-    `Algunos pagos no se pudieron procesar. Detalles: ${errorDetails}`,
-    {
-      payments: errors.map((e) => e.error),
-    }
-  );
-}
+      if (errors.length > 0) {
+        isError = true
+        const errorDetails = errors.map((e) => `${e.loanId}: ${e.error}`).join("; ");
+        console.warn(
+          `Algunos pagos no se pudieron procesar. Detalles: ${errorDetails}`
+        );
+        throw new ConflictError(
+          `Algunos pagos no se pudieron procesar. Detalles: ${errorDetails}`,
+          {
+            payments: errors.map((e) => e.error),
+          }
+        );
+      }
 
-if (isError) await queryRunner.rollbackTransaction();
+      if (isError) await queryRunner.rollbackTransaction();
 
-await queryRunner.commitTransaction();
+      await queryRunner.commitTransaction();
 
-return {
-  success: true,
-  totalPayments: payments.length,
-  totalAmount: money(amount - remainingAmount),
-  payments,
-  notes: remainingAmount > 0 ? `Dinero Sobrante: S/ ${money(remainingAmount)}` : "Todos los fondos fueron utilizados",
-  errors:
-    errors.length > 0
-      ? errors.map((e) => ({
-        loanId: e.loanId,
-        message: e.error,
-      }))
-      : [],
-};
+      return {
+        success: true,
+        totalPayments: payments.length,
+        totalAmount: money(amount - remainingAmount),
+        payments,
+        notes: remainingAmount > 0 ? `Dinero Sobrante: S/ ${money(remainingAmount)}` : "Todos los fondos fueron utilizados",
+        errors:
+          errors.length > 0
+            ? errors.map((e) => ({
+              loanId: e.loanId,
+              message: e.error,
+            }))
+            : [],
+      };
     } catch (error) {
-  await queryRunner.rollbackTransaction();
+      await queryRunner.rollbackTransaction();
 
-  if (error instanceof NotFoundError || error instanceof ConflictError) {
-    throw error;
-  }
-
-  if (error instanceof BadRequestError) {
-    throw error;
-  }
-
-  const errorMessage =
-    error instanceof Error ? error.message : "Error desconocido";
-  throw new Error(
-    `Error al realizar pagos múltiples: ${errorMessage}`
-  );
-} finally {
-  await queryRunner.release();
-}
-  }
-
-  async getLoanStatistics(userId: UuidSchema): Promise < {
-  totalLoansGiven: number;
-  totalLoansReceived: number;
-  totalAmountGiven: number;
-  totalAmountReceived: number;
-  totalPaidGiven: number;
-  totalPaidReceived: number;
-  completedLoans: number;
-  pendingLoans: number;
-  averageLoanAmount: number;
-} > {
-  try {
-    const loans = await this.loanRepo.find({
-      relations: ["payments"],
-      where: { userId },
-    });
-
-    let stats = {
-      totalLoansGiven: 0,
-      totalLoansReceived: 0,
-      totalAmountGiven: 0,
-      totalAmountReceived: 0,
-      totalPaidGiven: 0,
-      totalPaidReceived: 0,
-      completedLoans: 0,
-      pendingLoans: 0,
-      averageLoanAmount: 0,
-    };
-
-    loans.forEach((loan) => {
-      const payment = calculateLoanPaymentStatus(loan);
-      const isGiven = loan.type === TypeLoan.GIVEN;
-
-      if (isGiven) {
-        stats.totalLoansGiven++;
-        stats.totalAmountGiven += loan.principalAmount / 100;
-        stats.totalPaidGiven += payment.totalPaid;
-      } else {
-        stats.totalLoansReceived++;
-        stats.totalAmountReceived += loan.principalAmount / 100;
-        stats.totalPaidReceived += payment.totalPaid;
+      if (error instanceof NotFoundError || error instanceof ConflictError) {
+        throw error;
       }
 
-      if (loan.status === StatusLoan.PAID) {
-        stats.completedLoans++;
-      } else {
-        stats.pendingLoans++;
+      if (error instanceof BadRequestError) {
+        throw error;
       }
-    });
 
-    stats.totalAmountGiven = round(stats.totalAmountGiven);
-    stats.totalAmountReceived = round(stats.totalAmountReceived);
-    stats.totalPaidGiven = round(stats.totalPaidGiven);
-    stats.totalPaidReceived = round(stats.totalPaidReceived);
-    stats.averageLoanAmount = loans.length > 0 ? round((stats.totalAmountGiven + stats.totalAmountReceived) / loans.length) : 0;
-
-    return stats;
-  } catch(error) {
-    throw new Error(
-      "Error al obtener estadísticas: " + (error instanceof Error ? error.message : "Error desconocido")
-    );
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      throw new Error(
+        `Error al realizar pagos múltiples: ${errorMessage}`
+      );
+    } finally {
+      await queryRunner.release();
+    }
   }
-}
+
+  async getLoanStatistics(userId: UuidSchema): Promise<{
+    totalLoansGiven: number;
+    totalLoansReceived: number;
+    totalAmountGiven: number;
+    totalAmountReceived: number;
+    totalPaidGiven: number;
+    totalPaidReceived: number;
+    completedLoans: number;
+    pendingLoans: number;
+    averageLoanAmount: number;
+  }> {
+    try {
+      const loans = await this.loanRepo.find({
+        relations: ["payments"],
+        where: { userId },
+      });
+
+      let stats = {
+        totalLoansGiven: 0,
+        totalLoansReceived: 0,
+        totalAmountGiven: 0,
+        totalAmountReceived: 0,
+        totalPaidGiven: 0,
+        totalPaidReceived: 0,
+        completedLoans: 0,
+        pendingLoans: 0,
+        averageLoanAmount: 0,
+      };
+
+      loans.forEach((loan) => {
+        const payment = calculateLoanPaymentStatus(loan);
+        const isGiven = loan.type === TypeLoan.GIVEN;
+
+        if (isGiven) {
+          stats.totalLoansGiven++;
+          stats.totalAmountGiven += loan.principalAmount / 100;
+          stats.totalPaidGiven += payment.totalPaid;
+        } else {
+          stats.totalLoansReceived++;
+          stats.totalAmountReceived += loan.principalAmount / 100;
+          stats.totalPaidReceived += payment.totalPaid;
+        }
+
+        if (loan.status === StatusLoan.PAID) {
+          stats.completedLoans++;
+        } else {
+          stats.pendingLoans++;
+        }
+      });
+
+      stats.totalAmountGiven = round(stats.totalAmountGiven);
+      stats.totalAmountReceived = round(stats.totalAmountReceived);
+      stats.totalPaidGiven = round(stats.totalPaidGiven);
+      stats.totalPaidReceived = round(stats.totalPaidReceived);
+      stats.averageLoanAmount = loans.length > 0 ? round((stats.totalAmountGiven + stats.totalAmountReceived) / loans.length) : 0;
+
+      return stats;
+    } catch (error) {
+      throw new Error(
+        "Error al obtener estadísticas: " + (error instanceof Error ? error.message : "Error desconocido")
+      );
+    }
+  }
 }

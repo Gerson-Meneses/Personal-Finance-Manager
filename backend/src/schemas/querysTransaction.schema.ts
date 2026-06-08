@@ -21,7 +21,7 @@ export const transactionQuerySchema = z.object({
 
     // Paginación limpia
     page: z.coerce.number().positive().nullish(),
-    limit: z.coerce.number().min(1).max(100).nullish(),
+    limit: z.coerce.number().min(1).max(9999).nullish(),
 
     order: z.enum(['ASC', 'DESC']).nullish(),
 });

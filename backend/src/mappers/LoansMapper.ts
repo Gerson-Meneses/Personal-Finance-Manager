@@ -102,7 +102,7 @@ export const toLoanResponse = (loan: Loan, { moneyAmount = true, moneyTransactio
 
     if (payments) {
         loanResponse.lastPaymentDate = getLastPaymentDate(loan)
-        loanResponse.payments = payments.map(payment => toLoanPaymentResponse(payment))
+        loanResponse.payments = payments.map(payment => toLoanPaymentResponse(payment, { moneyAmount: moneyTransaction }))
     }
 
     return loanResponse

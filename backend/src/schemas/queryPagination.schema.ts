@@ -10,7 +10,7 @@ export const paginationQuerySchema = z.object({
     limit: z
         .string()
         .transform(Number)
-        .refine((v) => v > 0 && v <= 100, 'limit must be between 1 and 100')
+        .refine((v) => v > 0 && v <= 9999, 'limit must be between 1 and 9999')
         .optional(),
 
     order: z.enum(['ASC', 'DESC']).optional(),
