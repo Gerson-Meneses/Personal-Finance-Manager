@@ -17,7 +17,7 @@ import { FormContainer } from "../../../../shared/components/FormContainer/FormC
 import { useCategories } from "../../hooks";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import "./categoryForm.css";
+import "./CategoryForm.css";
 import {
     TrendingUp,
     TrendingDown,
