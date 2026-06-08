@@ -1,4 +1,4 @@
-import "./HighlightText.css";
+import "./Highlighttext.css";
 
 interface Props {
     text: string;
