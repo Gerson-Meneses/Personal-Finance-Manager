@@ -61,7 +61,7 @@ export const ColorPicker = ({
           <div
             className="color-circle"
             style={{
-              backgroundColor: value,
+              backgroundColor: value ?? "#000",
             }}
           />
 
@@ -74,7 +74,7 @@ export const ColorPicker = ({
           id={inputId}
           name={name}
           type="color"
-          value={value}
+          value={value ?? "#000"}
           disabled={disabled}
           required={required}
           className="color-input-hidden"

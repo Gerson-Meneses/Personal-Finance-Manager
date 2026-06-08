@@ -64,7 +64,7 @@ export const SelectInput = ({
                     <select
                         id={inputId}
                         name={name}
-                        value={value}
+                        value={value ?? ""}
                         onChange={
                             handleSelectChange
                         }

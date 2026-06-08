@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import type { RegisterDTO } from "../../../features/auth/types"
 import { useRegister } from "../../../features/auth/useRegister"
 import { PasswordInput } from "../../../shared/components/PasswordInput/PasswordInput"
 import { BirthDateInput } from "../../../shared/components/BirthDateInput/BithrDateInput"
 import { TextInput } from "../../../shared/components/TextInput/TextInput"
 import { handleFieldChange } from "../../../shared/utils/handleFieldChange"
 import type { DetailsError } from "../../../shared/dataApiInterface"
+import type { RegisterOotput } from "../../../features/auth/types"
 
 const ADMIN_EMAIL = "gersonmeneses1612@gmail.com"
 
-const initialForm: Omit<RegisterDTO, "birthDate"> = {
+const initialForm: Omit<RegisterOotput, "birthDate"> = {
     name: "",
     phone: "",
     country: "",
@@ -27,12 +27,12 @@ export const RegisterPage = () => {
     const [birthDate, setBirthDate] = useState({ day: "", month: "", year: "" })
     const [confirmPassword, setConfirmPassword] = useState("")
     const [passwordMatch, setPasswordMatch] = useState(true)
-    const [errors, setErrors] = useState<DetailsError<RegisterDTO> | null>(null)
+    const [errors, setErrors] = useState<DetailsError<RegisterOotput> | null>(null)
 
     // Sincroniza errores del servidor con el estado local
     useEffect(() => {
         if (register.error?.details) {
-            setErrors(register.error.details as DetailsError<RegisterDTO>)
+            setErrors(register.error.details as DetailsError<RegisterOotput>)
         }
     }, [register.error])
 
@@ -49,7 +49,7 @@ export const RegisterPage = () => {
         }
     }
 
-    const getError = (field: keyof RegisterDTO) => errors?.[field]?.[0] ?? null
+    const getError = (field: keyof RegisterOotput) => errors?.[field]?.[0] ?? null
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -207,7 +207,7 @@ export const RegisterPage = () => {
                     <label className="input-label" style={{ cursor: "pointer" }}>
                         <input
                             type="checkbox"
-                            checked={formData.isAdmin}
+                            checked={formData.isAdmin ?? false}
                             onChange={(e) =>
                                 setFormData(prev => ({ ...prev, isAdmin: e.target.checked }))
                             }

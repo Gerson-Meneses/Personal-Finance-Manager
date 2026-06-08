@@ -143,7 +143,7 @@ export const IconPicker = ({
             setIsOpen((prev) => !prev)
           }
         >
-          {getIcon(value, {
+          {value && getIcon(value, {
             defaultIcon: "HelpCircle",
           })}
 
@@ -174,10 +174,9 @@ export const IconPicker = ({
                   type="button"
                   className={`
                     icon-grid-item
-                    ${
-                      value === iconName
-                        ? "active"
-                        : ""
+                    ${value === iconName
+                      ? "active"
+                      : ""
                     }
                   `}
                   onClick={() => {

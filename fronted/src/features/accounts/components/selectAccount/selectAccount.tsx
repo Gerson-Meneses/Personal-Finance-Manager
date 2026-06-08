@@ -119,10 +119,9 @@ export const SelectAccount = ({
     };
 
     const handleSuccess = (
-        newAccount: Account
+        newAccount?: Account
     ) => {
-        onChange(String(newAccount.id));
-
+        if (newAccount) onChange(String(newAccount.id));
         setShowForm(false);
     };
 
@@ -160,7 +159,7 @@ export const SelectAccount = ({
                         <select
                             id={inputId}
                             name={name}
-                            value={value}
+                            value={value ?? ""}
                             onChange={
                                 handleSelectChange
                             }

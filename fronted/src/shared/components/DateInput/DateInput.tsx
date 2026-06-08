@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { Calendar, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 
 import type { BaseInputProps } from "../types";
 

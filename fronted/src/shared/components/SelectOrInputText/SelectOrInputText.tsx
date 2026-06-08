@@ -45,7 +45,7 @@ export const SelectOrInputText = ({
     const [isCustomMode, setIsCustomMode] =
         useState(
             value !== "" &&
-            !options.includes(value)
+            !options.includes(value ?? "")
         );
 
     const handleSelectChange = (
@@ -89,7 +89,7 @@ export const SelectOrInputText = ({
                             name={name}
                             type="text"
                             className="text-input"
-                            value={value}
+                            value={value ?? ""}
                             disabled={disabled}
                             required={required}
                             placeholder={placeholder}
@@ -115,7 +115,7 @@ export const SelectOrInputText = ({
                         id={inputId}
                         name={name}
                         className="custom-select"
-                        value={value}
+                        value={value ?? ""}
                         disabled={disabled}
                         required={required}
                         onChange={handleSelectChange}

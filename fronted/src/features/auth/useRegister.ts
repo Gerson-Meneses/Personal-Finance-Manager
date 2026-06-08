@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { register } from "./services";
 import { useAuthContext } from "./authContext";
 import type { DataError } from "../../shared/dataApiInterface";
-import type { DataAuth, RegisterDTO } from "./types";
+import type { DataAuth, RegisterOotput } from "./types";
 
 export function useRegister() {
   const { setToken } = useAuthContext();
   const navigate = useNavigate();
 
-  return useMutation<DataAuth, DataError<RegisterDTO>, RegisterDTO>({
+  return useMutation<DataAuth, DataError<RegisterOotput>, RegisterOotput>({
     mutationFn: register,
     onSuccess: (data) => {
       setToken(data.token);
