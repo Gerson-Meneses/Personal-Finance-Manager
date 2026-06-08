@@ -19,24 +19,24 @@ export const useTransactions = (filters?: TransactionQuerySchemaOutput) => {
     queryClient.invalidateQueries({ queryKey: ["accounts"] }); // Para actualizar balances en la vista de cuentas
     queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // Crucial para actualizar balances
   };
-  
-  const createMutation = useMutation<Transaction, DataError<TransactionQuerySchemaOutput>, TransactionQuerySchemaOutput>({
-    mutationFn: (data: TransactionQuerySchemaOutput) => service.createTransaction(data),
+
+  const createMutation = useMutation<Transaction, DataError<TransactionOutput>, TransactionOutput>({
+    mutationFn: (data: TransactionOutput) => service.createTransaction(data),
     onSuccess: invalidateAll,
   });
 
-  
+
   const updateMutation = useMutation<Transaction, DataError<UpdateTransactionOutput>, UpdateTransactionOutput>({
     mutationFn: (data: UpdateTransactionOutput) => service.updateTransaction(data.transactionId, data),
     onSuccess: invalidateAll,
   });
 
   const saveTransaction = useMutation<Transaction, DataError<TransactionOutput>, TransactionOutput | UpdateTransactionOutput>({
-    mutationFn: (data: TransactionQuerySchemaOutput | UpdateTransactionOutput) => {
+    mutationFn: (data: TransactionOutput | UpdateTransactionOutput) => {
       if ('transactionId' in data && data.transactionId) {
         return updateMutation.mutateAsync(data as UpdateTransactionOutput);
       }
-      return createMutation.mutateAsync(data as TransactionQuerySchemaOutput);
+      return createMutation.mutateAsync(data as TransactionOutput);
     },
   });
 

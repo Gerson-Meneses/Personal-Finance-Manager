@@ -36,7 +36,7 @@ export const verifyEmailCode = async (data: VerifyEmailCodeOutput): Promise<void
     await apiFetch("/auth/verifyAccount/code", { method: "POST", body: data })
 }
 
-export const resetPasswordRequest = async (data: ResetPasswordOutput): Promise<void> => {
+export const resetPasswordRequest = async (data: VerifyEmailRequestOutput): Promise<void> => {
     await apiFetch("/auth/resetPassword/code", { method: "POST", body: data })
 }
 

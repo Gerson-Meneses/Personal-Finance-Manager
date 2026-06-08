@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query"
 import { resetPasswordRequest, resetPasswordConfirm } from "./services"
-import type { ResetPasswordOutput } from "./types"
+import type { ResetPasswordOutput, VerifyEmailRequestOutput } from "./types"
 
 
 export function useResetPassword() {
     const request = useMutation({
-        mutationFn: (data: ResetPasswordOutput) => resetPasswordRequest(data)
+        mutationFn: (data: VerifyEmailRequestOutput) => resetPasswordRequest(data)
     })
 
     const confirm = useMutation({

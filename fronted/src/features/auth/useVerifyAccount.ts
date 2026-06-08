@@ -1,14 +1,14 @@
 import { useMutation } from "@tanstack/react-query"
 import { verifyEmailRequest, verifyEmailCode } from "./services"
-import type { VerifyEmailRequestDTO, VerifyEmailCodeDTO } from "./types"
+import type { VerifyEmailCodeOutput, VerifyEmailRequestOutput } from "./types"
 
 export function useVerifyEmail() {
     const request = useMutation({
-        mutationFn: (data: VerifyEmailRequestDTO) => verifyEmailRequest(data)
+        mutationFn: (data: VerifyEmailRequestOutput) => verifyEmailRequest(data)
     })
 
     const verify = useMutation({
-        mutationFn: (data: VerifyEmailCodeDTO) => verifyEmailCode(data)
+        mutationFn: (data: VerifyEmailCodeOutput) => verifyEmailCode(data)
     })
 
     return { request, verify }
