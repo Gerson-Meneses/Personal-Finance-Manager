@@ -1,0 +1,192 @@
+/* ============================================================
+   LOAN FORM — Design System
+   Misma paleta que QuickPayForm para coherencia semántica:
+   GIVEN    (presté dinero)  → Violet  (#7C3AED)
+   RECEIVED (me prestaron)  → Cyan    (#0891B2)
+
+   Nota: aunque son formularios distintos (crear vs pago rápido),
+   ambos crean préstamos y comparten la misma lógica de color.
+   ============================================================ */
+
+/* ---------- Re-usa tokens de QuickPayForm si ya están cargados,
+   los redeclara si este CSS se carga solo                        ---------- */
+:root {
+    --loan-give-50:  #F5F3FF;
+    --loan-give-100: #DDD6FE;
+    --loan-give-200: #C4B5FD;
+    --loan-give-400: #8B5CF6;
+    --loan-give-600: #7C3AED;
+    --loan-give-800: #5B21B6;
+
+    --loan-recv-50:  #ECFEFF;
+    --loan-recv-100: #CFFAFE;
+    --loan-recv-200: #A5F3FC;
+    --loan-recv-400: #22D3EE;
+    --loan-recv-600: #0891B2;
+    --loan-recv-800: #155E75;
+}
+
+
+/* ============================================================
+   TYPE TOGGLE overrides — scoped al form
+   ============================================================ */
+.loan-form .type-toggle-option.active-GIVEN,
+.loan-form .type-toggle-option.active-given {
+    background:  var(--loan-give-600);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.30);
+}
+
+.loan-form .type-toggle-option.active-RECEIVED,
+.loan-form .type-toggle-option.active-received {
+    background:  var(--loan-recv-600);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(8, 145, 178, 0.28);
+}
+
+
+/* ============================================================
+   SECTION LABEL — separador entre bloques de fecha
+   ============================================================ */
+.loan-form-section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--neutral-400, #888780);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: -4px;   /* reduce el gap visual con los campos de abajo */
+}
+
+.loan-form-section-label::before,
+.loan-form-section-label::after {
+    content: "";
+    flex: 1;
+    height: 0.5px;
+    background: var(--color-border-tertiary, rgba(0,0,0,0.08));
+}
+
+/* Colorea el separador según el tipo activo */
+.loan-form.given .loan-form-section-label {
+    color: var(--loan-give-400);
+}
+.loan-form.given .loan-form-section-label::before,
+.loan-form.given .loan-form-section-label::after {
+    background: var(--loan-give-200);
+}
+
+.loan-form.received .loan-form-section-label {
+    color: var(--loan-recv-600);
+}
+.loan-form.received .loan-form-section-label::before,
+.loan-form.received .loan-form-section-label::after {
+    background: var(--loan-recv-200);
+}
+
+
+/* ============================================================
+   SUBMIT BUTTON — Loan variants
+   ============================================================ */
+.btn-submit.loan {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #fff;
+    width: 100%;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition:
+        background  150ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow  150ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform   150ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity     150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-submit.loan::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 150ms ease;
+}
+
+.btn-submit.loan:hover:not(:disabled)::after { background: rgba(255,255,255,0.11); }
+.btn-submit.loan:active                       { transform: scale(0.97); }
+.btn-submit.loan:disabled                     { opacity: 0.44; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-submit.loan.given {
+    background: linear-gradient(135deg, var(--loan-give-600) 0%, var(--loan-give-800) 100%);
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.28);
+}
+.btn-submit.loan.given:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--loan-give-400) 0%, var(--loan-give-600) 100%);
+    box-shadow: 0 6px 22px rgba(124, 58, 237, 0.38);
+}
+
+.btn-submit.loan.received {
+    background: linear-gradient(135deg, var(--loan-recv-600) 0%, var(--loan-recv-800) 100%);
+    box-shadow: 0 4px 16px rgba(8, 145, 178, 0.26);
+}
+.btn-submit.loan.received:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--loan-recv-400) 0%, var(--loan-recv-600) 100%);
+    box-shadow: 0 6px 22px rgba(8, 145, 178, 0.36);
+}
+
+
+/* ============================================================
+   INPUT FOCUS — scoped al form para no contaminar otros
+   ============================================================ */
+.loan-form.given input:focus,
+.loan-form.given select:focus,
+.loan-form.given textarea:focus {
+    border-color: var(--loan-give-400) !important;
+    box-shadow:   0 0 0 3px rgba(139, 92, 246, 0.13) !important;
+    outline: none;
+}
+
+.loan-form.received input:focus,
+.loan-form.received select:focus,
+.loan-form.received textarea:focus {
+    border-color: var(--loan-recv-400) !important;
+    box-shadow:   0 0 0 3px rgba(34, 211, 238, 0.13) !important;
+    outline: none;
+}
+
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.loan-form {
+    gap: 14px;
+}
+
+.form-actions-container {
+    padding-top: 4px;
+    display: flex;
+    justify-content: stretch;
+}
+
+.form-actions-container > * {
+    flex: 1;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 480px) {
+    .form-default-grid-2col {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}

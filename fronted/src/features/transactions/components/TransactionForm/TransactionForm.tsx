@@ -1,43 +1,40 @@
 import { useEffect } from "react";
-import {
-  Controller,
-  useForm,
-  useWatch,
-} from "react-hook-form";
-
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dayjs from "dayjs";
-
 import {
-  DatePicker,
-  TimePicker,
-} from "../../../../shared/components/DateInput/DateInput";
+  TrendingDown,
+  TrendingUp,
+  Trash2,
+} from "lucide-react";
 
+import { DatePicker, TimePicker } from "../../../../shared/components/DateInput/DateInput";
 import { SelectAccount } from "../../../accounts/components/selectAccount/selectAccount";
 import SelectCategory from "../../../categories/components/selectCategory";
-
 import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
 import { TextInput } from "../../../../shared/components/TextInput/TextInput";
 import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle";
 import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
+import { FormContainer } from "../../../../shared/components/FormContainer/FormContainer";
 
-import type {
-  TransactionFormInput,
-  TransactionDTO,
-  Transaction,
-  UpdateTransactionDTO,
-  TransactionType,
+import {
+  TransactionSchema,
+  type TransactionInput,
+  type TransactionOutput,
+  type Transaction,
+  type TransactionType,
+  type UpdateTransactionOutput,
 } from "../../types";
 
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { DataError } from "../../../../shared/dataApiInterface";
-
 import { useTransactions } from "../../hooks";
-
-import { transactionSchema } from "../../types";
 
 import "./TransactionForm.css";
 
+/* ------------------------------------------------------------------ */
+/*  Field visibility / disabled control                                 */
+/* ------------------------------------------------------------------ */
 interface Fields {
   name?: boolean;
   type?: boolean;
@@ -54,21 +51,21 @@ interface Fields {
 interface PropsTransactionForm {
   mutation: UseMutationResult<
     Transaction,
-    DataError<TransactionDTO>,
-    TransactionDTO | UpdateTransactionDTO
+    DataError<TransactionOutput>,
+    TransactionOutput | UpdateTransactionOutput
   >;
-
   transaction?: Transaction;
-
   fieldsHidden?: Fields;
   fieldsDisabled?: Fields;
-
   isEdit?: boolean;
-
-  onSuccess?: () => void;
+  onSuccess?: (transaction?: Transaction) => void;
+  onClose?: () => void;
 }
 
-const defaultValues: TransactionFormInput = {
+/* ------------------------------------------------------------------ */
+/*  Defaults                                                            */
+/* ------------------------------------------------------------------ */
+const defaultValues: TransactionInput = {
   name: "",
   type: "EXPENSE",
   categoryId: "",
@@ -79,6 +76,9 @@ const defaultValues: TransactionFormInput = {
   description: "",
 };
 
+/* ------------------------------------------------------------------ */
+/*  Component                                                           */
+/* ------------------------------------------------------------------ */
 export default function TransactionForm({
   mutation,
   transaction,
@@ -86,44 +86,32 @@ export default function TransactionForm({
   fieldsDisabled,
   isEdit,
   onSuccess,
+  onClose,
 }: PropsTransactionForm) {
-  const { mutate, isPending, error } = mutation;
-
+  const { mutate, isPending, error, isSuccess } = mutation;
   const { deleteTransaction } = useTransactions();
 
   const {
     control,
     handleSubmit,
     reset,
-    formState: {
-      isDirty,
-      isValid,
-    },
-  } = useForm<
-    TransactionFormInput,
-    unknown,
-    TransactionDTO
-  >({
-    resolver: zodResolver(transactionSchema),
+    formState: { isDirty, isValid },
+  } = useForm<TransactionInput, unknown, TransactionOutput>({
+    resolver: zodResolver(TransactionSchema),
     mode: "onChange",
     defaultValues,
   });
 
-  const transactionType = useWatch({
-    control,
-    name: "type",
-  });
+  const transactionType = useWatch({ control, name: "type" });
+  const selectedDate = useWatch({ control, name: "date" });
 
-  const selectedDate = useWatch({
-    control,
-    name: "date",
-  });
+  const isExpense = transactionType === "EXPENSE";
+  const typeClass = isExpense ? "expense" : "income";
+  const typeLabel = isExpense ? "Gasto" : "Ingreso";
 
-  console.log(mutation.isSuccess)
-
+  /* ---------- populate on edit ---------- */
   useEffect(() => {
     if (!isEdit || !transaction) return;
-
     reset({
       name: transaction.name,
       type: transaction.type,
@@ -131,32 +119,22 @@ export default function TransactionForm({
       accountId: transaction.account?.id || "",
       amount: String(transaction.amount),
       date: dayjs(transaction.date).format("YYYY-MM-DD"),
-      time:
-        transaction.time ||
-        dayjs(transaction.date).format("HH:mm"),
+      time: transaction.time || dayjs(transaction.date).format("HH:mm"),
       description: transaction.description || "",
     });
-
-    mutation.reset()
-
+    mutation.reset();
   }, [isEdit, transaction, reset]);
 
-  const onSubmit = (data: TransactionDTO) => {
+  /* ---------- submit ---------- */
+  const onSubmit = (data: TransactionOutput) => {
     if (isEdit && transaction) {
-      const updateData: UpdateTransactionDTO = {
+      const updateData: UpdateTransactionOutput = {
         ...data,
         transactionId: transaction.id,
       };
-
-      mutate(updateData, {
-        onSuccess: () => {
-          onSuccess?.();
-        },
-      });
-
+      mutate(updateData, { onSuccess: () => onSuccess?.() });
       return;
     }
-
     mutate(data, {
       onSuccess: () => {
         reset(defaultValues);
@@ -165,21 +143,31 @@ export default function TransactionForm({
     });
   };
 
+  /* ---------- delete ---------- */
+  const handleDelete = () => {
+    if (!transaction) return;
+    if (window.confirm("¿Seguro que deseas eliminar esta transacción?")) {
+      deleteTransaction.mutate(transaction.id, {
+        onSuccess: () => onClose?.(),
+      });
+    }
+  };
+
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="form-default-container"
+    <FormContainer
+      title={isEdit ? "Editar transacción" : "Nueva transacción"}
+      icon={isExpense ? <TrendingDown size={20} /> : <TrendingUp size={20} />}
+      error={error && !error.details ? (error.message || "Ocurrió un error inesperado") : null}
+      className="max-w-2xl mx-auto"
+      onClose={onClose}
     >
-      <h2>
-        {isEdit
-          ? "Editar transacción"
-          : "Crear nueva transacción"}
-      </h2>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className={`form-default-container tx-form ${typeClass}`}
+      >
 
-      {/* ================= TYPE ================= */}
-
-      {!fieldsHidden?.type && (
-        <div className="form-default-row">
+        {/* ── TYPE TOGGLE ──────────────────────────────────────────── */}
+        {!fieldsHidden?.type && (
           <Controller
             control={control}
             name="type"
@@ -188,152 +176,136 @@ export default function TransactionForm({
                 value={field.value}
                 onChange={field.onChange}
                 error={fieldState.error?.message}
-                disabled={
-                  isPending ||
-                  fieldsDisabled?.type ||
-                  fieldsDisabled?.all
-                }
+                disabled={isPending || fieldsDisabled?.type || fieldsDisabled?.all}
+                leftOption={{
+                  value: "EXPENSE",
+                  label: "Gasto",
+                  color: "#993C1D",
+                  icon: "TrendingDown",
+                }}
+                rightOption={{
+                  value: "INCOME",
+                  label: "Ingreso",
+                  color: "#0F6E56",
+                  icon: "TrendingUp",
+                }}
               />
             )}
           />
+        )}
+
+        {/* ── NOMBRE + MONTO ───────────────────────────────────────── */}
+        <div className="form-default-grid-2col">
+          {!fieldsHidden?.name && (
+            <Controller
+              control={control}
+              name="name"
+              render={({ field, fieldState }) => (
+                <TextInput
+                  label="Nombre"
+                  icon="PencilLine"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                  placeholder="Ej. Almuerzo, Nómina…"
+                  disabled={isPending || fieldsDisabled?.name || fieldsDisabled?.all}
+                  required
+                />
+              )}
+            />
+          )}
+
+          {!fieldsHidden?.amount && (
+            <Controller
+              control={control}
+              name="amount"
+              render={({ field, fieldState }) => (
+                <NumericInput
+                  label="Monto"
+                  icon="CircleDollarSign"
+                  symbol="S/"
+                  value={field.value?.toString() ?? ""}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                  disabled={isPending || fieldsDisabled?.amount || fieldsDisabled?.all}
+                  required
+                />
+              )}
+            />
+          )}
         </div>
-      )}
 
-      {/* ================= NAME / AMOUNT ================= */}
+        {/* ── CATEGORÍA + CUENTA ───────────────────────────────────── */}
+        <div className="form-default-grid-2col">
+          {!fieldsHidden?.category && (
+            <Controller
+              control={control}
+              name="categoryId"
+              render={({ field, fieldState }) => (
+                <SelectCategory
+                  value={field.value}
+                  onChange={field.onChange}
+                  type={transactionType}
+                  error={fieldState.error?.message}
+                  disabled={isPending || fieldsDisabled?.category || fieldsDisabled?.all}
+                  noLoan
+                  required
+                />
+              )}
+            />
+          )}
 
-      <div className="form-default-row">
-        {!fieldsHidden?.name && (
-          <Controller
-            control={control}
-            name="name"
-            render={({ field, fieldState }) => (
-              <TextInput
-                label="Nombre"
-                icon="PencilLine"
-                value={field.value}
-                onChange={field.onChange}
-                error={fieldState.error?.message}
-                disabled={
-                  isPending ||
-                  fieldsDisabled?.name ||
-                  fieldsDisabled?.all
-                }
-                required
-              />
-            )}
-          />
-        )}
+          {!fieldsHidden?.account && (
+            <Controller
+              control={control}
+              name="accountId"
+              render={({ field, fieldState }) => (
+                <SelectAccount
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                  disabled={isPending || fieldsDisabled?.account || fieldsDisabled?.all}
+                />
+              )}
+            />
+          )}
+        </div>
 
-        {!fieldsHidden?.amount && (
-          <Controller
-            control={control}
-            name="amount"
-            render={({ field, fieldState }) => (
-              <NumericInput
-                label="Monto"
-                icon="CircleDollarSign"
-                symbol="S/"
-                value={field.value?.toString() ?? ""}
-                onChange={field.onChange}
-                error={fieldState.error?.message}
-                disabled={
-                  isPending ||
-                  fieldsDisabled?.amount ||
-                  fieldsDisabled?.all
-                }
-                required
-              />
-            )}
-          />
-        )}
-      </div>
+        {/* ── FECHA + HORA ──────────────────────────────────────────── */}
+        <div className="form-default-grid-2col">
+          {!fieldsHidden?.date && (
+            <Controller
+              control={control}
+              name="date"
+              render={({ field, fieldState }) => (
+                <DatePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                  disabled={isPending || fieldsDisabled?.date || fieldsDisabled?.all}
+                />
+              )}
+            />
+          )}
 
-      {/* ================= CATEGORY / ACCOUNT ================= */}
+          {!fieldsHidden?.time && (
+            <Controller
+              control={control}
+              name="time"
+              render={({ field, fieldState }) => (
+                <TimePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                  selectedDate={selectedDate}
+                  disabled={isPending || fieldsDisabled?.time || fieldsDisabled?.all}
+                />
+              )}
+            />
+          )}
+        </div>
 
-      <div className="form-default-row">
-        {!fieldsHidden?.category && (
-          <Controller
-            control={control}
-            name="categoryId"
-            render={({ field, fieldState }) => (
-              <SelectCategory
-                value={field.value}
-                onChange={field.onChange}
-                type={transactionType}
-                error={fieldState.error?.message}
-                disabled={
-                  isPending ||
-                  fieldsDisabled?.category ||
-                  fieldsDisabled?.all
-                }
-                noLoan
-                required
-              />
-            )}
-          />
-        )}
-
-        {!fieldsHidden?.account && (
-          <Controller
-            control={control}
-            name="accountId"
-            render={({ field, fieldState }) => (
-              <SelectAccount
-              
-                value={field.value}
-                onChange={field.onChange}
-                error={fieldState.error?.message}
-                disabled={
-                  isPending ||
-                  fieldsDisabled?.account ||
-                  fieldsDisabled?.all
-                }
-              />
-            )}
-          />
-        )}
-      </div>
-
-      {/* ================= DATE / TIME ================= */}
-
-      <div className="form-default-row">
-        {!fieldsHidden?.date && (
-          <Controller
-            control={control}
-            name="date"
-            render={({ field, fieldState }) => (
-              <DatePicker
-                {...field}
-                error={fieldState.error?.message}
-              />
-            )}
-          />
-        )}
-
-        {!fieldsHidden?.time && (
-          <Controller
-            control={control}
-            name="time"
-            render={({ field, fieldState }) => (
-              <TimePicker
-                value={field.value}
-                onChange={field.onChange}
-                error={fieldState.error?.message}
-                selectedDate={selectedDate}
-                disabled={
-                  isPending ||
-                  fieldsDisabled?.time ||
-                  fieldsDisabled?.all
-                }
-              />
-            )}
-          />
-        )}
-      </div>
-
-      {/* ================= DESCRIPTION ================= */}
-
-      <div className="form-default-row">
+        {/* ── DESCRIPCIÓN ───────────────────────────────────────────── */}
         {!fieldsHidden?.description && (
           <Controller
             control={control}
@@ -345,68 +317,49 @@ export default function TransactionForm({
                 value={field.value}
                 onChange={field.onChange}
                 error={fieldState.error?.message}
-                placeholder="Notas adicionales..."
+                placeholder="Notas adicionales…"
                 textarea
-                disabled={
-                  isPending ||
-                  fieldsDisabled?.description ||
-                  fieldsDisabled?.all
-                }
+                disabled={isPending || fieldsDisabled?.description || fieldsDisabled?.all}
               />
             )}
           />
         )}
-      </div>
 
-      {/* ================= GLOBAL ERROR ================= */}
-
-      {error && !error.details && (
+        {/* ── ACTIONS ──────────────────────────────────────────────── */}
         <div className="form-default-row">
-          <div className="error-banner">
-            {error.message ||
-              "Ocurrió un error inesperado"}
-          </div>
-        </div>
-      )}
-
-      {/* ================= ACTIONS ================= */}
-
-      <div className="form-default-row">
-        {!fieldsDisabled?.all && (
-          <SuccessToast
-            successText={`${transactionType === "EXPENSE"
-              ? "Gasto"
-              : "Ingreso"
-              } guardado con éxito.`}
-            isSucces={mutation.isSuccess}
-          >
-            <button
-              type="submit"
-              className={`btn-submit ${transactionType.toLowerCase()}`}
-              disabled={
-                isPending ||
-                !isDirty ||
-                !isValid
-              }
+          {!fieldsDisabled?.all && (
+            <SuccessToast
+              successText={`${typeLabel} guardado con éxito.`}
+              isSucces={isSuccess}
             >
-              {isEdit ? "Actualizar" : "Crear"}
-            </button>
-          </SuccessToast>
-        )}
+              <button
+                type="submit"
+                className={`btn-submit tx ${typeClass}`}
+                disabled={isPending || !isDirty || !isValid}
+              >
+                {isExpense
+                  ? <TrendingDown size={14} />
+                  : <TrendingUp size={14} />
+                }
+                {isEdit ? "Actualizar" : `Crear ${typeLabel.toLowerCase()}`}
+              </button>
+            </SuccessToast>
+          )}
 
-        {(fieldsDisabled?.delete || isEdit) &&
-          transaction && (
+          {(fieldsDisabled?.delete || isEdit) && transaction && (
             <button
               type="button"
               className="btn-icon btn-icon-delete"
-              onClick={() =>
-                deleteTransaction.mutate(transaction.id)
-              }
+              disabled={deleteTransaction.isPending}
+              onClick={handleDelete}
             >
-              Eliminar
+              <Trash2 size={14} />
+              {deleteTransaction.isPending ? "Eliminando…" : "Eliminar"}
             </button>
           )}
-      </div>
-    </form>
+        </div>
+
+      </form>
+    </FormContainer>
   );
 }

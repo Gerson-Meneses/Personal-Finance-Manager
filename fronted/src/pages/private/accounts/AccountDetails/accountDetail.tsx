@@ -15,6 +15,7 @@ import { getIcon } from "../../../../shared/utils/GetIcon";
 import AccountForm from "../../../../features/accounts/components/accountForm/accountForm";
 import InfoModal from "../../../../shared/components/InfoModal/InfoModal";
 import PaymentCreditCardForm from "../../../../features/CreditPayment/Components/CreditPaymentForm";
+import NotFoundView from "../../../../shared/components/NotFoundView/NotFoundView";
 
 export function AccountDetail() {
     const { id } = useParams();
@@ -60,7 +61,7 @@ export function AccountDetail() {
     }, [isSuccess])
 
     if (loading || tx2Loading || txLoading) return <LoadingScreen />;
-    if (!account || error) return <div className="error-view">Hubo un error al cargar la cuenta.</div>;
+    if (!account || error) return <NotFoundView></NotFoundView>;
 
     const isCredit = account.type === "CREDIT";
 
@@ -73,7 +74,7 @@ export function AccountDetail() {
                     <AccountCard account={account} />
 
                     <div className="card action-card mt-6">
-                        <h3>Acciones Rápidas</h3>
+                        <h3>• Acciones Rápidas</h3>
                         <div className="action-buttons">
                             <button onClick={() => setShowModal(true)} className="btn-primary ">
                                 {isCredit ? "Pagar Tarjeta" : "Transferir Dinero"}
@@ -122,7 +123,7 @@ export function AccountDetail() {
 
             {/* Modales */}
             <ModalPortal isOpen={editModal} onClose={() => setEditModal(false)}>
-                <AccountForm fieldsHidden={{ "type": true }} fieldsDisabled={{ "balance": true }} account={account} isEdit mutation={saveAccount} ></AccountForm>
+                <AccountForm fieldsHidden={{ "type": true, "delete": true }} account={account} isEdit mutation={saveAccount} ></AccountForm>
             </ModalPortal>
 
             {/* Modal Dinámico */}

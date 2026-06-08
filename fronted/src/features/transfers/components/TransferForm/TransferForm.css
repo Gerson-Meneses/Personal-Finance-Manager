@@ -2,7 +2,187 @@
   margin-top: 24px;
 }
 
+/* ============================================================
+   TRANSFER FORM — Design System
+   Accent → Indigo / Violet  (#5B50E8)
+   Neutral warm palette
+   ============================================================ */
 
+/* ---------- Tokens (Transfer-specific) ---------- */
+:root {
+    --tf-50:  #EDEEFF;
+    --tf-100: #C8CAFC;
+    --tf-200: #A3A6F8;
+    --tf-400: #6D69F0;
+    --tf-600: #5B50E8;   /* primary accent */
+    --tf-800: #3B31BF;
+
+    /* Re-use shared neutrals if already loaded, else define locally */
+    --tf-n50:  #F1EFE8;
+    --tf-n100: #D3D1C7;
+    --tf-n400: #888780;
+    --tf-n600: #5F5E5A;
+    --tf-n800: #444441;
+
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 16px;
+    --r-xl: 22px;
+
+    --transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-med:    260ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+
+/* ============================================================
+   ACCOUNTS ROW  (origen → flecha → destino)
+   ============================================================ */
+.transfer-accounts-row {
+    display: flex;
+    align-items: flex-start;    /* alinea los labels en el top */
+    gap: 10px;
+    animation: tfRowIn 380ms cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+@keyframes tfRowIn {
+    from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* Los dos selectores crecen por igual */
+.transfer-accounts-row > *:not(.transfer-arrow-badge) {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ── Flecha central ── */
+.transfer-arrow-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--tf-50);
+    border: 0.5px solid var(--tf-200);
+    color: var(--tf-600);
+    flex-shrink: 0;
+    /* alinea visualmente con el centro del input (label ~20px + input ~36px) */
+    margin-top: 26px;
+    transition:
+        background    var(--transition-med),
+        border-color  var(--transition-med),
+        transform     var(--transition-spring);
+}
+
+/* Anima cuando fromAccount tiene valor (clase añadida si quieres JS, o queda estática) */
+.transfer-accounts-row:focus-within .transfer-arrow-badge {
+    background:    var(--tf-100);
+    border-color:  var(--tf-400);
+    transform: rotate(180deg) scale(1.08);
+}
+
+
+/* ============================================================
+   SUBMIT BUTTON — Transfer variant
+   ============================================================ */
+.btn-submit.transfer {
+    background: linear-gradient(135deg, var(--tf-600) 0%, var(--tf-800) 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(91, 80, 232, 0.30);
+    width: 100%;
+    justify-content: center;
+    padding: 13px 28px;
+    font-size: 14px;
+}
+
+.btn-submit.transfer:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--tf-400) 0%, var(--tf-600) 100%);
+    box-shadow: 0 6px 22px rgba(91, 80, 232, 0.40);
+}
+
+.btn-submit.transfer:disabled {
+    opacity: 0.44;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+
+/* ============================================================
+   INPUT FOCUS — indigo ring
+   ============================================================ */
+.form-default-container input:focus,
+.form-default-container select:focus,
+.form-default-container textarea:focus {
+    border-color: var(--tf-400) !important;
+    box-shadow:   0 0 0 3px rgba(109, 105, 240, 0.13) !important;
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+
+/* ============================================================
+   LAYOUT  (complementa el shared form-default-*)
+   ============================================================ */
+.form-default-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0;
+}
+
+.form-default-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.form-default-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-actions-container {
+    padding-top: 4px;
+    justify-content: stretch;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 520px) {
+    /* Las cuentas se apilan verticalmente en mobile con la flecha girando */
+    .transfer-accounts-row {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .transfer-accounts-row > *:not(.transfer-arrow-badge) {
+        width: 100%;
+    }
+
+    .transfer-arrow-badge {
+        margin-top: 0;
+        margin-left: auto;
+        margin-right: auto;
+        /* Apunta hacia abajo en layout vertical */
+        transform: rotate(90deg);
+    }
+
+    .transfer-accounts-row:focus-within .transfer-arrow-badge {
+        transform: rotate(90deg) scale(1.08);
+    }
+
+    .form-default-grid-2col {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
 /* ////////////////////////////////////////////////////////////////////////////////// */
 
 

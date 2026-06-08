@@ -45,7 +45,7 @@ export const LoginPage = () => {
     }
 
     return (
-        <form className="form-default-container login-form" onSubmit={handleSubmit}>
+        <form className="form-default-container p-4 login-form" onSubmit={handleSubmit}>
 
             <h1>Iniciar sesión</h1>
 

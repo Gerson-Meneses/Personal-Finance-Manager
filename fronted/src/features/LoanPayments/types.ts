@@ -1,21 +1,39 @@
 import { z } from "zod"
-import { amountSchema, dateSchema, descriptionSchema, nameSchema, timeSchema, uuidSchema } from "../../../shared/Schemas/Base.schema"
+import { amountSchema, dateSchema, descriptionSchema, nameSchema, timeSchema, uuidSchema } from "../../shared/Schemas/Base.schema"
 import dayjs from "dayjs"
+import type { Account } from "../accounts/types";
+import type { Transaction } from "../transactions/types";
+import type { ExtraPaymentStrategy } from "../loans/types";
 
-export const CreatePaymentSchema = z.object({
+export interface LoanPayment {
+    id: string;
+    amount: number;
+    date: string;
+    description?: string;
+    strategy?: ExtraPaymentStrategy;
+    transaction?: Transaction;
+    account?: Account
+}
+
+export const CreateLoanPaymentSchema = z.object({
     id: uuidSchema(),
     date: dateSchema(),
+    time: timeSchema().optional(),
     accountId: uuidSchema(),
-    amount: amountSchema()
+    amount: amountSchema(),
+    description: descriptionSchema().optional()
 })
 
-export type CreatePaymentDTO = z.infer<typeof CreatePaymentSchema>
+export type CreateLoanPaymentInput = z.input<typeof CreateLoanPaymentSchema>;
+export type CreateLoanPaymentOutput = z.output<typeof CreateLoanPaymentSchema>;
 
-export const initialLoanPayment: CreatePaymentDTO = {
+export const initialLoanPayment: CreateLoanPaymentInput = {
     id: '',
     date: dayjs().format("YYYY-MM-DD"),
+    time: dayjs().format("HH:mm"),
     accountId: '',
-    amount: 0
+    amount: 0,
+    description: ''
 }
 
 export const QuickPaySchema = z.object({
@@ -28,13 +46,16 @@ export const QuickPaySchema = z.object({
     description: descriptionSchema().optional()
 })
 
-export type QuickPayDTO = z.infer<typeof QuickPaySchema>
+export type QuickpayInput = z.input<typeof QuickPaySchema>
+export type QuickpayOutput = z.output<typeof QuickPaySchema>
 
-export const initialQuickPay: QuickPayDTO = {
+
+export const initialQuickPay: QuickpayInput = {
     lender: '',
     type: "GIVEN",
     amount: 0,
     date: dayjs().format("YYYY-MM-DD"),
+    time: dayjs().format("HH:mm"),
     accountId: '',
     description: ''
 }
@@ -99,20 +120,6 @@ export type LoanSummaryFiltersFormInput = z.infer<typeof LoanSummaryFiltersSchem
 
 // ============ VALORES POR DEFECTO ============
 export const defaultLoanQueryFilters: LoanQueryFiltersFormInput = {
-    type: undefined,
-    status: undefined,
-    lender: undefined,
-    search: undefined,
-    startDate: undefined,
-    from: undefined,
-    to: undefined,
-    minAmount: undefined,
-    maxAmount: undefined,
-    hasPayments: undefined,
-    minPaymentAmount: undefined,
-    maxPaymentAmount: undefined,
-    paymentDateFrom: undefined,
-    paymentDateTo: undefined,
     orderBy: 'startDate',
     order: 'DESC',
     page: 1,

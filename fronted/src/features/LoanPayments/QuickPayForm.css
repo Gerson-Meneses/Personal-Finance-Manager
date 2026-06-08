@@ -1,0 +1,153 @@
+/* ============================================================
+   QUICK PAY FORM — Design System
+   GIVEN    (presté dinero)  → Violet  (#7C3AED)
+   RECEIVED (me prestaron)  → Cyan    (#0891B2)
+   Paleta distinta de LoanPaymentForm para diferenciar
+   "crear préstamo" de "registrar pago de uno existente"
+   ============================================================ */
+
+/* ---------- Tokens ---------- */
+:root {
+    /* GIVEN — Violet */
+    --qp-give-50:  #F5F3FF;
+    --qp-give-100: #DDD6FE;
+    --qp-give-200: #C4B5FD;
+    --qp-give-400: #8B5CF6;
+    --qp-give-600: #7C3AED;
+    --qp-give-800: #5B21B6;
+
+    /* RECEIVED — Cyan */
+    --qp-recv-50:  #ECFEFF;
+    --qp-recv-100: #CFFAFE;
+    --qp-recv-200: #A5F3FC;
+    --qp-recv-400: #22D3EE;
+    --qp-recv-600: #0891B2;
+    --qp-recv-800: #155E75;
+}
+
+
+/* ============================================================
+   TYPE TOGGLE — GIVEN vs RECEIVED
+   ============================================================ */
+.quickpay-form .type-toggle-option.active-given,
+.quickpay-form .type-toggle-option.active-GIVEN {
+    background:  var(--qp-give-600);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.30);
+}
+
+.quickpay-form .type-toggle-option.active-received,
+.quickpay-form .type-toggle-option.active-RECEIVED {
+    background:  var(--qp-recv-600);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(8, 145, 178, 0.28);
+}
+
+
+/* ============================================================
+   SUBMIT BUTTON — QuickPay variants
+   ============================================================ */
+.btn-submit.quickpay {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #fff;
+    width: 100%;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition:
+        background  150ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow  150ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform   150ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity     150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-submit.quickpay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 150ms ease;
+}
+
+.btn-submit.quickpay:hover:not(:disabled)::after { background: rgba(255,255,255,0.11); }
+.btn-submit.quickpay:active                       { transform: scale(0.97); }
+.btn-submit.quickpay:disabled                     { opacity: 0.44; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-submit.quickpay.given {
+    background: linear-gradient(135deg, var(--qp-give-600) 0%, var(--qp-give-800) 100%);
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.28);
+}
+
+.btn-submit.quickpay.given:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--qp-give-400) 0%, var(--qp-give-600) 100%);
+    box-shadow: 0 6px 22px rgba(124, 58, 237, 0.38);
+}
+
+.btn-submit.quickpay.received {
+    background: linear-gradient(135deg, var(--qp-recv-600) 0%, var(--qp-recv-800) 100%);
+    box-shadow: 0 4px 16px rgba(8, 145, 178, 0.26);
+}
+
+.btn-submit.quickpay.received:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--qp-recv-400) 0%, var(--qp-recv-600) 100%);
+    box-shadow: 0 6px 22px rgba(8, 145, 178, 0.36);
+}
+
+
+/* ============================================================
+   INPUT FOCUS — tinted by loan direction
+   Scoped al form para no afectar otros forms en la misma página
+   ============================================================ */
+.quickpay-form.given input:focus,
+.quickpay-form.given select:focus,
+.quickpay-form.given textarea:focus {
+    border-color: var(--qp-give-400) !important;
+    box-shadow:   0 0 0 3px rgba(139, 92, 246, 0.13) !important;
+    outline: none;
+}
+
+.quickpay-form.received input:focus,
+.quickpay-form.received select:focus,
+.quickpay-form.received textarea:focus {
+    border-color: var(--qp-recv-400) !important;
+    box-shadow:   0 0 0 3px rgba(34, 211, 238, 0.13) !important;
+    outline: none;
+}
+
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.quickpay-form {
+    gap: 14px;
+}
+
+.form-actions-container {
+    padding-top: 4px;
+    display: flex;
+    justify-content: stretch;
+}
+
+.form-actions-container > * {
+    flex: 1;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 480px) {
+    .form-default-grid-2col {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}

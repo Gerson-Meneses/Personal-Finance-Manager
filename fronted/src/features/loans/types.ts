@@ -1,12 +1,20 @@
-import type { Account } from "../accounts/types";
+import z from "zod";
 import type { Transaction } from "../transactions/types";
+import { amountSchema, dateSchema, descriptionSchema, nameSchema, timeSchema, uuidSchema } from "../../shared/Schemas/Base.schema";
+import type { LoanPayment } from "../LoanPayments/types";
 
-export const loanType = ["RECEIVED", "GIVEN"] as const
-export type LoanType = typeof loanType[number]
-export type StatusLoan = "PAID" | "PENDING"
+export const LoanTypeValues = ["RECEIVED", "GIVEN"] as const
+export type LoanType = typeof LoanTypeValues[number]
+
+export const StatusLoanValues = ["PAID", "PENDING"] as const
+export type StatusLoan = typeof StatusLoanValues[number]
+
 export type ExtraPaymentStrategy = 'REDUCE_TERM' | 'REDUCE_INSTALLMENT'
 
+/* ___ Respuesta del Backend _________________________________________________________ */
 
+
+/* Prestamo */
 export interface Loan {
     id: string;
     lender: string;
@@ -30,7 +38,12 @@ export interface Loan {
 
     transaction?: Transaction
     payments?: LoanPayment[]
+
+   date?: string; // Campo temporal para unificar fecha en la lista de historia
+   amount?: number; // Campo temporal para unificar monto en la lista de historia
 }
+
+/* Resumen de préstamos */
 
 export interface LoanSummary {
     lender: string,
@@ -42,33 +55,22 @@ export interface LoanSummary {
     status: StatusLoan
 }
 
-export interface CreateLoanDTO {
-    lender: string
-    amount: number
-    type: LoanType
-    startDate: string
-    date: string
-    time?: string
-    accountId: string
-    description?: string
-}
+/* ___ Estructutura para crear un préstamo ______________________________________________  */
 
-export interface LoanPayment {
-    id: string;
-    amount: number;
-    date: Date;
-    description?: string;
-    strategy?: ExtraPaymentStrategy;
-    transaction?: Transaction;
-    account?: Account
-}
+export const CreateLoanSchema = z.object({
+    date: dateSchema().optional(),
+    time: timeSchema().optional(),
+    startDate: dateSchema(),
+    lender: nameSchema("Acreedor/Deudor"),
+    type: z.enum(LoanTypeValues),
+    description: descriptionSchema().optional(),
+    accountId: uuidSchema(),
+    amount: amountSchema(),
+});
 
-export interface CreateLoanPaymentDTO {
-    id: string
-    date: string
-    accountId: string
-    amount: number
-}
+export type CreateLoanInput = z.input<typeof CreateLoanSchema>;
+export type CreateLoanOutput = z.output<typeof CreateLoanSchema>;
+
 
 export interface LoanQueryFilters {
     // Filtros por tipo y estado
@@ -106,6 +108,12 @@ export interface LoanQueryFilters {
     limit?: number;
 }
 
+export const initialQuery: LoanQueryFilters = {
+    order: "DESC",
+    page: 1,
+    limit: 20
+}
+
 export interface LoanSummaryQuerySchema {
     type?: LoanType,
     status?: StatusLoan,
@@ -118,7 +126,6 @@ export interface LoanSummaryQuerySchema {
     groupByLender?: boolean,
 
 }
-
 
 export interface LoanSummaryDetail {
     totalAmount: number;      // Total del principal

@@ -1,11 +1,12 @@
 import z from "zod";
 import type { Account } from "../accounts/types";
 import type { Category } from "../categories/types";
-import type { Loan, LoanPayment } from "../loans/types";
+import type { Loan } from "../loans/types";
 import { amountSchema, dateSchema, descriptionSchema, nameSchema, numberSchema, stringSchema, timeSchema, uuidSchema } from "../../shared/Schemas/Base.schema";
+import type { LoanPayment } from "../LoanPayments/types";
 
-export const TRANSACTION_TYPES = ["INCOME", "EXPENSE", "CREDIT_PAYMENT", "TRANSFER"] as const;
-export type TransactionType = typeof TRANSACTION_TYPES[number]
+export const TransactionTypeValues = ["INCOME", "EXPENSE", "CREDIT_PAYMENT", "TRANSFER"] as const;
+export type TransactionType = typeof TransactionTypeValues[number]
 
 export interface Transaction {
   id: string;
@@ -24,9 +25,9 @@ export interface Transaction {
   loanPayment?: LoanPayment
 }
 
-export const transactionSchema = z.object({
+export const TransactionSchema = z.object({
   name: nameSchema(),
-  type: z.enum(TRANSACTION_TYPES),
+  type: z.enum(TransactionTypeValues),
   amount: amountSchema() as z.ZodType<number>,
   date: dateSchema(),
   time: timeSchema().optional(),
@@ -35,23 +36,23 @@ export const transactionSchema = z.object({
   categoryId: uuidSchema()
 })
 
-export type TransactionFormInput = z.input<typeof transactionSchema>
-export type TransactionDTO = z.output<typeof transactionSchema>
+export type TransactionInput = z.input<typeof TransactionSchema>
+export type TransactionOutput = z.output<typeof TransactionSchema>
 
-export const updateTransactionSchema = z.object({
+export const UpdateTransactionSchema = z.object({
   transactionId: uuidSchema(),
-  ...transactionSchema.shape,
+  ...TransactionSchema.shape,
 })
 
-export type UpdateTransactionDTO = z.output<typeof updateTransactionSchema>
-export type UpdateTransactionFormInput = z.input<typeof updateTransactionSchema>
+export type UpdateTransactionInput = z.input<typeof UpdateTransactionSchema>
+export type UpdateTransactionOutput = z.output<typeof UpdateTransactionSchema>
 
 
 export const ORDER_VALUES = ["ASC", "DESC"] as const;
-export type Order_Type = typeof ORDER_VALUES
+export type Order_Type = typeof ORDER_VALUES[number]
 
-export const transactionQuerySchema = z.object({
-  type: z.enum(TRANSACTION_TYPES).optional(),
+export const TransactionQuerySchema = z.object({
+  type: z.enum(TransactionTypeValues).optional(),
   accountId: uuidSchema("Id de Cuenta").optional(),
   categoryId: uuidSchema("Id de Categoria").optional(),
   date: dateSchema("Fecha exacta").optional(),
@@ -67,4 +68,13 @@ export const transactionQuerySchema = z.object({
   search: stringSchema("Busqueda").optional()
 })
 
-export type TransactionQuerySchema = z.infer<typeof transactionQuerySchema>
+export type TransactionQuerySchemaInput = z.input<typeof TransactionQuerySchema>
+export type TransactionQuerySchemaOutput = z.output<typeof TransactionQuerySchema>
+
+
+
+export const defaultTransactionsQueryFilters: TransactionQuerySchemaOutput = {
+  order: 'DESC',
+  page: 1,
+  limit: 20
+}

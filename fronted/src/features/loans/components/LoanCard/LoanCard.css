@@ -1,0 +1,296 @@
+
+
+.loan-card--expanded {
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Header Reset */
+.loan-card__header {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 14px 20px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font-family: inherit;
+}
+
+.loan-card__main-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.loan-card__icon-container {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.loan-card__details-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.loan-card__top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.loan-card__name-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loan-card__title {
+  font-weight: 600;
+  color: #f8fafc;
+  font-size: 1rem;
+}
+
+/* Badges del Top Row */
+.loan-card__badge {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.loan-card__badge.given { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.loan-card__badge.received { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+/* Montos e Idioma fuentes idénticos a .amount-font */
+.loan-card__amount {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* Fila de Metadatos (Igual a la imagen proporcionada) */
+.loan-card__bottom-row {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.loan-card__meta-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+}
+
+.loan-card__date::first-letter {
+  text-transform: uppercase;
+}
+
+.loan-card__divider {
+  opacity: 0.3;
+}
+
+.loan-card__meta-badge {
+  border-left: 2px solid;
+  padding-left: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.loan-card__meta-badge--account {
+  color: #64748b;
+}
+
+/* Barra de progreso sutil integrada debajo de los metas */
+.loan-card__progress-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.loan-card__progress-bar {
+  width: 120px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.loan-card__progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.loan-card__progress-text {
+  font-size: 0.7rem;
+  color: #475569;
+}
+
+/* Colapso Avanzado CSS Grid */
+.loan-card__collapse-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.loan-card--expanded .loan-card__collapse-wrapper {
+  grid-template-rows: 1fr;
+}
+
+.loan-card__body {
+  overflow: hidden;
+  border-top: 1px dashed rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Grid de detalles */
+.loan-card__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.loan-card__grid-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.loan-card__grid-label {
+  font-size: 0.7rem;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.loan-card__grid-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  margin-top: 2px;
+}
+
+
+.loan-card__description {
+  font-size: 0.8rem;
+  margin-top: 8px;
+  padding-top: 8px;
+  font-style: italic;
+}
+
+.loan-card__desc-toggle {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-weight: 600;
+  margin-left: 6px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* Listado de Pagos internos */
+.loan-payments-section {
+  padding: 0 20px 20px 20px;
+}
+
+.loan-payments__title {
+  font-size: 0.8rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 10px;
+}
+
+.loan-payments__empty {
+  font-size: 0.8rem;
+  color: #475569;
+  font-style: italic;
+}
+
+.loan-payments__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Filas de abonos de pagos individuales */
+.payment-row-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+
+.payment-row-item__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.payment-row-item__icon {
+  color: #475569;
+  display: flex;
+  align-items: center;
+}
+
+.payment-row-item__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-row-item__name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #e2e8f0;
+}
+
+.payment-row-item__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.payment-row-item__date::first-letter {
+  text-transform: capitalize;
+}
+
+.payment-row-item__divider {
+  opacity: 0.3;
+}
+
+.payment-row-item__account {
+  border-left: 2px solid;
+  padding-left: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.payment-row-item__amount {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Clases de Utilidad de Colores Globales */
+.text-success { color: #22c55e !important; }
+.text-danger { color: #ef4444 !important; }
+
+.description-section {
+ padding: 12px;
+}

@@ -55,15 +55,20 @@
     background: transparent; /* Importante: fondo transparente */
     border: none;
     outline: none;
-    padding: 0.6rem;
+    padding: 0.9rem;
     border-radius: 8px;
     color: #94a3b8; /* Color texto inactivo */
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
     transition: color 0.3s ease;
     z-index: 1; /* Por encima del slider para recibir clicks y que se vea el texto */
     position: relative;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;;
 }
 
 /* Hover en botones inactivos */

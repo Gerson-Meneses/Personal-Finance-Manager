@@ -14,24 +14,36 @@ import UnderConstructionView from "./shared/components/UnderConstruction/UnderCo
 import { VerifyEmailPage } from "./pages/public/verifyEmail/VerifyEmail";
 import { ResetPasswordPage } from "./pages/public/ResetPassword/ResetPassword";
 import "./App.css"
-import { BookLender } from "./features/loans/components/BookLender/BookLender";
+import { LoansByLender } from "./pages/private/loans/LoansByLender/LoansByLender";
+
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<PrivateLayout> < DashboardPage /> </PrivateLayout>} ></Route>
-      <Route path="/accounts" element={<PrivateLayout> < AccountPage /> </PrivateLayout>}></Route>
-      <Route path="/accounts/:id" element={<PrivateLayout> < AccountDetail /> </PrivateLayout>}></Route>
-      <Route path="/login" element={<PublicLayout> <LoginPage /> </PublicLayout>} />
-      <Route path="/register" element={<PublicLayout> <RegisterPage /></PublicLayout>} ></Route>
-      <Route path="/verify-email" element={<PublicLayout> <VerifyEmailPage /></PublicLayout>} />
-      <Route path="/reset-password" element={<PublicLayout> <ResetPasswordPage /></PublicLayout>} />
-      <Route path="/transactions" element={<PrivateLayout> < TransactionsPage /> </PrivateLayout>} ></Route>
-      <Route path="/categories" element={<PrivateLayout> < CategoriesPage /> </PrivateLayout>} ></Route>
-      <Route path="/loans" element={<PrivateLayout> < LoansPage /> </PrivateLayout>} ></Route>
-      <Route path="/loans/:lender" element={<PrivateLayout> < BookLender /> </PrivateLayout>} ></Route>
+
+      <Route element={<PublicLayout />}>
+
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/register" element={<RegisterPage />} ></Route>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+
+      </Route>
+
+      <Route element={<PrivateLayout />} >
+
+        <Route path="/" element={< DashboardPage />} ></Route>
+        <Route path="/accounts" element={< AccountPage />}></Route>
+        <Route path="/accounts/:id" element={< AccountDetail />}></Route>
+        <Route path="/categories" element={< CategoriesPage />} ></Route>
+        <Route path="/loans" element={< LoansPage />} ></Route>
+        <Route path="/loans/:lender" element={< LoansByLender />} ></Route>
+        <Route path="/transactions" element={< TransactionsPage />} ></Route>
+
+      </Route>
+
       <Route path="/construction" element={<UnderConstructionView />}></Route>
       <Route path="/*" element={<NotFoundView></NotFoundView>} > </Route>
-    </Routes>
+    </Routes >
   );
 }

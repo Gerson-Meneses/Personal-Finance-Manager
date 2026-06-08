@@ -1,5 +1,5 @@
 export interface BaseInputProps<T> {
-  value?: T;
+  value?: T | null;
   onChange: (value: T) => void;
 
   label?: string;

@@ -1,0 +1,40 @@
+.lqh-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.lqh-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.lqh-order-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    height: 32px;
+    background: transparent;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+}
+
+.lqh-order-btn:hover {
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+}
+
+.lqh-order-btn svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}

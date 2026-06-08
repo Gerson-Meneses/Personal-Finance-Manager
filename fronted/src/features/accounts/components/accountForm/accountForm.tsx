@@ -1,233 +1,381 @@
-import { useEffect, useState } from "react";
-import type { Account, AccountType, CreateAccountDTO, UpdateAccountDTO } from "../../types";
+import { useEffect } from "react";
+import {
+    AccountSchema,
+    type Account,
+    type AccountSchemaInput,
+    type AccountSchemaOutput,
+    type AccountType,
+    type UpdateAccountOutput,
+} from "../../types";
 import type { UseMutationResult } from "@tanstack/react-query";
-import type { DataError, DetailsError } from "../../../../shared/dataApiInterface";
-import { handleFieldChange } from "../../../../shared/utils/handleFieldChange";
+import type { DataError } from "../../../../shared/dataApiInterface";
 import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle";
 import { TextInput } from "../../../../shared/components/TextInput/TextInput";
 import { ColorPicker } from "../../../../shared/components/ColorPicker/ColorPicker";
 import { IconPicker } from "../../../../shared/components/IconPicker/IconPicker";
-import "./accountForm.css"
+import "./accountForm.css";
 import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
 import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
+import { useAccounts } from "../../hooks";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FormContainer } from "../../../../shared/components/FormContainer/FormContainer";
+import {
+    ArrowDownCircle,
+    ArrowUpCircle,
+    Wallet,
+    CreditCard,
+    Trash2,
+} from "lucide-react";
 
+/* ------------------------------------------------------------------ */
+/*  Types                                                               */
+/* ------------------------------------------------------------------ */
 interface Fields {
-    name?: boolean
-    balance?: boolean
-    type?: boolean
-    color?: boolean
-    icon?: boolean
-    creditLimit?: boolean
-    billingCloseDay?: boolean
-    paymentDueDay?: boolean
-    overdraft?: boolean
+    name?: boolean;
+    balance?: boolean;
+    type?: boolean;
+    color?: boolean;
+    icon?: boolean;
+    creditLimit?: boolean;
+    billingCloseDay?: boolean;
+    paymentDueDay?: boolean;
+    overdraft?: boolean;
+    all?: boolean;
+    delete?: boolean;
 }
 
 interface PropsAccountForm {
-    mutation: UseMutationResult<Account, DataError<CreateAccountDTO>, CreateAccountDTO | UpdateAccountDTO>
-    account?: Account
-    fieldsHidden?: Fields
-    fieldsDisabled?: Fields
-    isEdit?: boolean
-    onSuccess?: (account: Account) => void
+    mutation: UseMutationResult<
+        Account,
+        DataError<AccountSchemaOutput>,
+        AccountSchemaOutput | UpdateAccountOutput
+    >;
+    account?: Account;
+    fieldsHidden?: Fields;
+    fieldsDisabled?: Fields;
+    isEdit?: boolean;
+    onSuccess?: (account?: Account) => void;
+    onClose?: () => void;
 }
 
-/* function generarColorHex() {
-    const hex = Math.floor(Math.random() * 16777215).toString(16);
-    return "#" + hex.padStart(6, '0');
-} */
+/* ------------------------------------------------------------------ */
+/*  Default values                                                      */
+/* ------------------------------------------------------------------ */
+const defaultDebitValues: AccountSchemaInput = {
+    type: "DEBIT",
+    name: "",
+    color: "#000",
+    icon: "landmark",
+};
 
-export default function AccountForm({ mutation, account, fieldsHidden, fieldsDisabled, isEdit, onSuccess }: PropsAccountForm) {
+/* ------------------------------------------------------------------ */
+/*  Component                                                           */
+/* ------------------------------------------------------------------ */
+export default function AccountForm({
+    mutation,
+    account,
+    fieldsHidden,
+    fieldsDisabled,
+    isEdit,
+    onSuccess,
+    onClose,
+}: PropsAccountForm) {
+    const { mutateAsync, isPending, error, isSuccess } = mutation;
+    const { deleteAccount } = useAccounts();
 
-    const { mutateAsync, isPending, error, reset, isSuccess } = mutation;
-    const [newAccount, setNewAccount] = useState<Account>({} as Account)
+    const {
+        control,
+        handleSubmit,
+        reset,
+        setValue,
+        formState: { isDirty, isValid },
+    } = useForm<AccountSchemaInput, unknown, AccountSchemaOutput>({
+        resolver: zodResolver(AccountSchema),
+        mode: "onChange",
+        defaultValues: defaultDebitValues,
+    });
 
-    const initialStateForm: CreateAccountDTO = {
-        type: "DEBIT",
-        name: "",
-        color: "#000000",
-        icon: "Banknote",
-        creditLimit: 0,
-        billingCloseDay: 0,
-        paymentDueDay: 0,
-        overdraft: 0
-    }
+    const accountType = useWatch({ control, name: "type" });
+    const isCredit = accountType === "CREDIT";
 
-    const [formData, setFormData] = useState<CreateAccountDTO>(initialStateForm);
-    const [errors, setErrors] = useState<DetailsError<CreateAccountDTO> | null>(null);
-
+    /* ---------- populate on edit ---------- */
     useEffect(() => {
-        if (isSuccess) {
-            if (!isEdit) setFormData(initialStateForm);
-            setErrors(null);
-            reset();
-            onSuccess && onSuccess(newAccount);
-        }
-    }, [isSuccess]);
+        if (!isEdit || !account) return;
 
+        const credit = account.type === "CREDIT";
+        reset({
+            type: account.type as any,
+            name: account.name,
+            color: account.color,
+            icon: account.icon,
+            creditLimit: credit ? account.creditLimit : undefined,
+            overdraft: credit ? account.overdraft : undefined,
+            paymentDueDay: credit ? account.paymentDueDay : undefined,
+            billingCloseDay: credit ? account.billingCloseDay : undefined,
+        });
+        mutation.reset();
+    }, [isEdit, account, reset]);
+
+    /* ---------- toggle type ---------- */
     useEffect(() => {
-        if (isEdit && account) {
-            setFormData({
-                type: account.type,
-                name: account.name,
-                color: account.color,
-                icon: account.icon,
-                creditLimit: account.creditLimit,
-                billingCloseDay: account.billingCloseDay,
-                paymentDueDay: account.paymentDueDay,
-                overdraft: account.overdraft
-            });
-        }
-    }, [isEdit, account]);
-
-
-    useEffect(() => {
-        if (error?.details) {
-            setErrors(error.details as DetailsError<CreateAccountDTO>);
-        }
-    }, [error]);
-
-    useEffect(() => {
-        reset();
-        setErrors(null);
-    }, [])
-
-
-    const onChange = <K extends keyof CreateAccountDTO>(
-        field: K,
-        value: CreateAccountDTO[K]
-    ) => {
-        handleFieldChange(field, value, setFormData, setErrors);
-    };
-
-    const getErrorMessage = (field: keyof CreateAccountDTO) => {
-        return errors?.[field] ? errors[field][0] : null;
-    };
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        e.stopPropagation()
-        setErrors(null);
-
-        if (isEdit && account) {
-            const updateData: UpdateAccountDTO = {
-                ...formData,
-                accountId: account.id
-            };
-            setNewAccount(await mutateAsync(updateData))
+        if (isEdit) return;
+        if (isCredit) {
+            setValue("creditLimit", 0);
+            setValue("overdraft", 0);
+            setValue("paymentDueDay", 0);
+            setValue("billingCloseDay", 0);
         } else {
-
-            setNewAccount(await mutateAsync(formData))
+            reset(defaultDebitValues, { keepValues: true });
         }
+    }, [accountType, isEdit, setValue, reset]);
+
+    /* ---------- submit ---------- */
+    const onSubmit = async (data: AccountSchemaOutput) => {
+        let newAccount: Account;
+        if (isEdit && account) {
+            const updateData: UpdateAccountOutput = { ...data, accountId: account.id };
+            newAccount = await mutateAsync(updateData, {
+                onSuccess: () => onSuccess?.(newAccount),
+            });
+            return;
+        }
+        newAccount = await mutateAsync(data, {
+            onSuccess: () => {
+                reset(defaultDebitValues);
+                onSuccess?.(newAccount);
+            },
+        });
     };
+
+    /* ---------- helpers ---------- */
+    const headerIcon = isCredit
+        ? <ArrowUpCircle size={20} />
+        : <ArrowDownCircle size={20} />;
+
+    const successText = isCredit
+        ? "Cuenta de Crédito guardada con éxito."
+        : "Cuenta de Débito guardada con éxito.";
 
     return (
-        <form onSubmit={handleSubmit} className="form-default-container">
-            <h2>{isEdit ? "Editar cuenta" : "Crear nueva cuenta"}</h2>
+        <FormContainer
+            title={isEdit ? "Editar Cuenta" : "Nueva Cuenta"}
+            icon={headerIcon}
+            error={error && !error.details ? (error.message || "Ocurrió un error inesperado") : null}
+            className="max-w-2xl mx-auto"
+            onClose={onClose}
+        >
+            <form onSubmit={handleSubmit(onSubmit)} className="form-default-container">
 
-            <div className="form-default-row">
+                {/* ── TYPE TOGGLE ─────────────────────────────────────────── */}
                 {!fieldsHidden?.type && (
-                    <TypeToggle
-                        label="Tipo de cuenta"
-                        value={formData.type}
-                        onChange={(val) => {
-                            onChange("type", val as AccountType);
-                        }}
-                        disabled={fieldsDisabled?.type}
-                        error={getErrorMessage("type")}
-                        leftOption={{ label: "Débito", value: "DEBIT", color: "#59f" }}
-                        rightOption={{ label: "Credito", value: "CREDIT", color: "#f2f" }}
+                    <Controller
+                        control={control}
+                        name="type"
+                        render={({ field, fieldState }) => (
+                            <TypeToggle<AccountType>
+                                value={field.value}
+                                onChange={field.onChange}
+                                error={fieldState.error?.message}
+                                disabled={isPending || fieldsDisabled?.type || fieldsDisabled?.all}
+                                leftOption={{
+                                    color: "#378ADD",
+                                    value: "DEBIT",
+                                    label: "DÉBITO",
+                                    icon: "wallet",
+                                }}
+                                rightOption={{
+                                    color: "#993C1D",
+                                    value: "CREDIT",
+                                    label: "CRÉDITO",
+                                    icon: "CreditCard",
+                                }}
+                            />
+                        )}
                     />
                 )}
-            </div>
 
-            <div className="form-default-row">
+                {/* ── NOMBRE ──────────────────────────────────────────────── */}
                 {!fieldsHidden?.name && (
-                    <TextInput
-                        label="Nombre de la cuenta"
-                        value={formData.name}
-                        onChange={(val) => onChange("name", val)}
-                        error={getErrorMessage("name")}
-                    />)}
-            </div>
-            <div className="form-default-row">
-                {!fieldsHidden?.color && (
-                    <ColorPicker
-                        value={formData.color}
-                        onChange={(val) => onChange("color", val)}
-                    />)}
-                {!fieldsHidden?.icon && (
-                    <IconPicker
-                        label="Icono"
-                        value={formData.icon}
-                        onChange={(val) => onChange("icon", val)}
-                        error={getErrorMessage("icon")}
-                    />)}
-            </div>
+                    <Controller
+                        control={control}
+                        name="name"
+                        render={({ field, fieldState }) => (
+                            <TextInput
+                                label="Nombre de la cuenta"
+                                placeholder="Ej. Nómina, Tarjeta Platinum…"
+                                icon={isCredit ? "CreditCard" : "Wallet"}
+                                value={field.value}
+                                onChange={field.onChange}
+                                error={fieldState.error?.message}
+                                disabled={isPending || fieldsDisabled?.name || fieldsDisabled?.all}
+                            />
+                        )}
+                    />
+                )}
 
-            {formData.type === "CREDIT" && (
-                <div className="form-credit-section">
-                    <div className="form-default-row">
-                        {!fieldsHidden?.creditLimit && (
-                            <NumericInput
-                                label="Límite de crédito"
-                                value={formData.creditLimit?.toString()}
-                                placeholder="0"
-                                icon={"ArrowUpRightFromCircle"}
-                                onChange={(val) => onChange("creditLimit", Number(val))}
-                                error={getErrorMessage("creditLimit")}
-                            />
-                        )}
+                {/* ── COLOR + ICONO ────────────────────────────────────────── */}
+                <div className="form-default-grid-2col">
+                    {!fieldsHidden?.color && (
+                        <Controller
+                            control={control}
+                            name="color"
+                            render={({ field, fieldState }) => (
+                                <ColorPicker
+                                    label="Color"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    error={fieldState.error?.message}
+                                    disabled={isPending || fieldsDisabled?.color || fieldsDisabled?.all}
+                                />
+                            )}
+                        />
+                    )}
 
-                        {!fieldsHidden?.overdraft && (
-                            <NumericInput
-                                label="Sobregiro permitido"
-                                value={formData.overdraft?.toString()}
-                                placeholder="0"
-                                symbol="%"
-                                icon={"TrendingUp"}
-                                onChange={(val) => onChange("overdraft", Number(val))}
-                                error={getErrorMessage("overdraft")}
-                            />
-                        )}
-                    </div>
-                    <div className="form-default-row">
-                        {!fieldsHidden?.billingCloseDay && (
-                            <NumericInput
-                                label="Día de cierre"
-                                value={formData.billingCloseDay?.toString()}
-                                placeholder="1-28"
-                                icon={"CalendarRange"}
-                                onChange={(val) => onChange("billingCloseDay", Number(val))}
-                                error={getErrorMessage("billingCloseDay")}
-                            />
-                        )}
-
-                        {!fieldsHidden?.paymentDueDay && (
-                            <NumericInput
-                                label="Día de vencimiento"
-                                value={formData.paymentDueDay?.toString()}
-                                placeholder="1-28"
-                                icon={"CalendarCheck"}
-                                onChange={(val) => onChange("paymentDueDay", Number(val))}
-                                error={getErrorMessage("paymentDueDay")}
-                            />
-                        )}
-                    </div>
+                    {!fieldsHidden?.icon && (
+                        <Controller
+                            control={control}
+                            name="icon"
+                            render={({ field, fieldState }) => (
+                                <IconPicker
+                                    label="Icono"
+                                    icon="LayoutGrid"
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    error={fieldState.error?.message}
+                                    disabled={isPending || fieldsDisabled?.icon || fieldsDisabled?.all}
+                                />
+                            )}
+                        />
+                    )}
                 </div>
-            )}
-            {error && !error.details && (
-                <div className="error-banner">
-                    {error.message || "Ocurrió un error inesperado"}
-                </div>
-            )}
-            <div className="form-default-row"></div>
-            <SuccessToast isSucces={isSuccess} successText={"Cuenta " + (isEdit ? "actulizada" : "creada") + " con exito."}>
-                <button className="btn-submit" style={{ '--button-color': "#0e20a9" } as React.CSSProperties} type="submit" disabled={isPending}>
-                    {isPending ? "Guardando..." : isEdit ? "Actualizar" : "Crear"}
-                </button>
-            </SuccessToast>
-        </form>
-    )
 
+                {/* ── CAMPOS EXCLUSIVOS DE CRÉDITO ────────────────────────── */}
+                {isCredit && (
+                    <div className="form-credit-section">
+
+                        {/* Separador decorativo */}
+                        <div className="form-credit-divider">Datos de crédito</div>
+
+                        {/* Límite + Sobregiro */}
+                        <div className="form-default-grid-2col">
+                            {!fieldsHidden?.creditLimit && (
+                                <Controller
+                                    control={control}
+                                    name="creditLimit"
+                                    render={({ field, fieldState }) => (
+                                        <NumericInput
+                                            label="Límite de crédito"
+                                            value={field.value as string | undefined}
+                                            icon="dollarSign"
+                                            symbol="S/"
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.creditLimit || fieldsDisabled?.all}
+                                        />
+                                    )}
+                                />
+                            )}
+
+                            {!fieldsHidden?.overdraft && (
+                                <Controller
+                                    control={control}
+                                    name="overdraft"
+                                    render={({ field, fieldState }) => (
+                                        <NumericInput
+                                            label="Sobregiro permitido"
+                                            value={field.value as string | undefined}
+                                            icon="percent"
+                                            symbol="%"
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.overdraft || fieldsDisabled?.all}
+                                        />
+                                    )}
+                                />
+                            )}
+                        </div>
+
+                        {/* Cierre + Vencimiento */}
+                        <div className="form-default-grid-2col">
+                            {!fieldsHidden?.billingCloseDay && (
+                                <Controller
+                                    control={control}
+                                    name="billingCloseDay"
+                                    render={({ field, fieldState }) => (
+                                        <NumericInput
+                                            label="Día de cierre"
+                                            placeholder="1 – 31"
+                                            value={field.value as string | undefined}
+                                            icon="calendarCheck"
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.billingCloseDay || fieldsDisabled?.all}
+                                        />
+                                    )}
+                                />
+                            )}
+
+                            {!fieldsHidden?.paymentDueDay && (
+                                <Controller
+                                    control={control}
+                                    name="paymentDueDay"
+                                    render={({ field, fieldState }) => (
+                                        <NumericInput
+                                            label="Día límite de pago"
+                                            placeholder="1 – 31"
+                                            value={field.value as string | undefined}
+                                            icon="calendarClock"
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.paymentDueDay || fieldsDisabled?.all}
+                                        />
+                                    )}
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* ── ACTIONS ─────────────────────────────────────────────── */}
+                <div className="form-default-row">
+
+                    {!fieldsDisabled?.all && (
+                        <SuccessToast successText={successText} isSucces={isSuccess}>
+                            <button
+                                type="submit"
+                                className={`btn-submit ${accountType.toLowerCase()}`}
+                                disabled={isPending || !isDirty || !isValid}
+                            >
+                                {isCredit
+                                    ? <CreditCard size={15} />
+                                    : <Wallet size={15} />
+                                }
+                                {isEdit ? "Actualizar" : "Crear cuenta"}
+                            </button>
+                        </SuccessToast>
+                    )}
+
+                    {(!fieldsHidden?.delete && account) && (
+                        <button
+                            type="button"
+                            className="btn-icon btn-icon-delete"
+                            disabled={deleteAccount.isPending}
+                            onClick={() => {
+                                if (window.confirm("¿Seguro que deseas eliminar esta cuenta?")) {
+                                    deleteAccount.mutate(account.id, {
+                                        onSuccess: () => onClose?.(),
+                                    });
+                                }
+                            }}
+                        >
+                            <Trash2 size={15} />
+                            {deleteAccount.isPending ? "Eliminando…" : "Eliminar"}
+                        </button>
+                    )}
+                </div>
+
+            </form>
+        </FormContainer>
+    );
 }

@@ -19,7 +19,7 @@ export const nullable = <T extends z.ZodTypeAny>(schema: T) =>
 
 // --- Schemas Base ---
 
-export const stringSchema = (label: string, min = 1, max = 255) =>
+export const stringSchema = (label: string = "Nombre", min = 1, max = 255) =>
     z.preprocess(
         emptyToUndefined,
         z.string({ message: `${label} es requerido` })
@@ -40,9 +40,10 @@ export const nameSchema = (label: string = "Nombre") =>
         .min(3, `${label} debe tener al menos 3 caracteres`)
         .max(99, `${label} no puede exceder los 99 caracteres`)
         .refine(
-            (val) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-']+$/.test(val),
-            `${label} solo puede contener letras, espacios, guiones y apóstrofes`
+            (val) => /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-']+$/.test(val),
+            `${label} solo puede contener letras, números, espacios, guiones y apóstrofes`
         );
+
 
 export const optionalNameSchema = (label: string = "Nombre") =>
     optional(nameSchema(label));
@@ -168,8 +169,7 @@ export const optionalPhoneSchema = (label: string = "Teléfono") =>
     optional(phoneSchema(label));
 
 export const emailSchema = (label: string = "Email") =>
-    z.string()
-        .email({ message: `${label} no tiene un formato válido` })
+    z.email({ message: `${label} no tiene un formato válido` })
         .trim()
         .toLowerCase()
         .transform((val) => val.toUpperCase()); // Asegurar mayúsculas

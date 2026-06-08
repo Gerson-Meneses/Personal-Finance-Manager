@@ -1,0 +1,76 @@
+/* Extensiones específicas para el historial mezclado de Préstamos */
+.loan-history-item {
+  cursor: pointer;
+}
+
+/* Badge para identificar si es el documento madre o un pago */
+.badge-main-loan {
+  background: rgba(124, 58, 237, 0.15) !important;
+  color: #a78bfa !important;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+}
+
+.badge-payment-sub {
+  background: rgba(14, 116, 144, 0.15) !important;
+  color: #22d3ee !important;
+  border: 1px solid rgba(14, 116, 144, 0.3);
+}
+
+/* Ajustes de alineación interna */
+.tx-name-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Cambios de fondo sutiles opcionales para diferenciar las filas */
+.loan-history-item.mode-payment {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.loan-history-item.mode-loan {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Base e interacción de la tarjeta del historial de préstamos */
+.loan-history-item {
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.loan-history-item:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  transform: translateX(2px);
+}
+
+/* Badge para identificar si es el documento base o un abono */
+.badge-main-loan {
+  background: rgba(124, 58, 237, 0.12) !important;
+  color: #c084fc !important; /* Púrpura un poco más brillante para modo oscuro */
+  border: 1px solid rgba(124, 58, 237, 0.25) !important;
+}
+
+.badge-payment-sub {
+  background: rgba(14, 116, 144, 0.12) !important;
+  color: #22d3ee !important; /* Cyan claro */
+  border: 1px solid rgba(14, 116, 144, 0.25) !important;
+}
+
+/* Flexbox y contención de badges en la fila del título */
+.tx-name-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Fondos sutiles diferenciadores para alternar la jerarquía visual */
+.loan-history-item.mode-loan {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.loan-history-item.mode-payment {
+  background: rgba(255, 255, 255, 0.008);
+  border-left-style: dashed; /* Opcional: le da un look de "sub-item" o "línea de puntos" al abono */
+}

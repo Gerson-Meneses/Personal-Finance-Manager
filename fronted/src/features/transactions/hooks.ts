@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as service from "./services";
-import type { Transaction,TransactionDTO,TransactionQuerySchema,UpdateTransactionDTO } from "./types";
+import type { Transaction, TransactionOutput, TransactionQuerySchemaOutput, UpdateTransactionOutput } from "./types";
 import type { DataError, Meta } from "../../shared/dataApiInterface";
 
-export const useTransactions = (filters?: TransactionQuerySchema) => {
+export const useTransactions = (filters?: TransactionQuerySchemaOutput) => {
   const queryClient = useQueryClient();
 
   // 1. Consulta de transacciones (con filtros dinámicos)
@@ -20,23 +20,23 @@ export const useTransactions = (filters?: TransactionQuerySchema) => {
     queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // Crucial para actualizar balances
   };
   
-  const createMutation = useMutation<Transaction, DataError<TransactionDTO>, TransactionDTO>({
-    mutationFn: (data: TransactionDTO) => service.createTransaction(data),
+  const createMutation = useMutation<Transaction, DataError<TransactionQuerySchemaOutput>, TransactionQuerySchemaOutput>({
+    mutationFn: (data: TransactionQuerySchemaOutput) => service.createTransaction(data),
     onSuccess: invalidateAll,
   });
 
   
-  const updateMutation = useMutation<Transaction, DataError<UpdateTransactionDTO>, UpdateTransactionDTO>({
-    mutationFn: (data: UpdateTransactionDTO) => service.updateTransaction(data.transactionId, data),
+  const updateMutation = useMutation<Transaction, DataError<UpdateTransactionOutput>, UpdateTransactionOutput>({
+    mutationFn: (data: UpdateTransactionOutput) => service.updateTransaction(data.transactionId, data),
     onSuccess: invalidateAll,
   });
 
-  const saveTransaction = useMutation<Transaction, DataError<TransactionDTO>, TransactionDTO | UpdateTransactionDTO>({
-    mutationFn: (data: TransactionDTO | UpdateTransactionDTO) => {
+  const saveTransaction = useMutation<Transaction, DataError<TransactionOutput>, TransactionOutput | UpdateTransactionOutput>({
+    mutationFn: (data: TransactionQuerySchemaOutput | UpdateTransactionOutput) => {
       if ('transactionId' in data && data.transactionId) {
-        return updateMutation.mutateAsync(data as UpdateTransactionDTO);
+        return updateMutation.mutateAsync(data as UpdateTransactionOutput);
       }
-      return createMutation.mutateAsync(data as TransactionDTO);
+      return createMutation.mutateAsync(data as TransactionQuerySchemaOutput);
     },
   });
 

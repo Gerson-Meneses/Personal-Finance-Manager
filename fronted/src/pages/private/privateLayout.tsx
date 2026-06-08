@@ -1,6 +1,6 @@
 import { useAuthContext } from "../../features/auth/authContext";
 import { useLogout } from "../../features/auth/useLogout";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ArrowLeft, Home, Plus } from "lucide-react";
 import ModalPortal from "../../shared/components/ModalPortal/ModalPortal";
@@ -15,17 +15,20 @@ function getInitials(name: string) {
   return name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()
 }
 
-export function PrivateLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuthContext()
+export function PrivateLayout() {
+  const { user, loading } = useAuthContext()
   const logout = useLogout()
   const location = useLocation()
   const navigate = useNavigate()
-  const { saveTransaction, loading } = useTransactions()
+  const { saveTransaction } = useTransactions()
   const [modal, setModal] = useState(false)
 
   const isHome = location.pathname === "/"
 
   if (loading) return <LoadingScreen />
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
 
   return (
     <>
@@ -44,8 +47,8 @@ export function PrivateLayout({ children }: { children: React.ReactNode }) {
           <div className="header-avatar" onClick={() => navigate("/perfil")} aria-hidden="true">
             {user?.name ? getInitials(user.name) : "?"}
           </div>
-          
-          <Tippy placement="left" offset={[-22, 5]} delay={[300, 50]} content={<span style={{color:"#f65353"}} className="tooltip">Cerrar Sesion</span>}>
+
+          <Tippy placement="left" offset={[-22, 5]} delay={[300, 50]} content={<span style={{ color: "#f65353" }} className="tooltip">Cerrar Sesion</span>}>
             <button className="header-logout-btn" onClick={logout}>
               {getIcon("logOut")}
             </button>
@@ -72,7 +75,7 @@ export function PrivateLayout({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {children}
+        <Outlet></Outlet>
 
         {/* FAB crear transacción */}
         <Tippy placement="left" offset={[-22, 5]} arrow delay={[300, 50]} content={
@@ -84,7 +87,7 @@ export function PrivateLayout({ children }: { children: React.ReactNode }) {
         </Tippy>
 
         <ModalPortal isOpen={modal} onClose={() => setModal(false)}>
-          <TransactionForm mutation={saveTransaction} />
+          <TransactionForm mutation={saveTransaction} onClose={() => setModal(false)} />
         </ModalPortal>
       </main>
 

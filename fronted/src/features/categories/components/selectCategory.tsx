@@ -133,8 +133,9 @@ export default function SelectCategory({
     };
 
     const handleSuccess = (
-        newCategory: Category
+        newCategory?: Category
     ) => {
+        if(!newCategory) return
         onChange(
             String(newCategory.id)
         );
@@ -166,7 +167,7 @@ export default function SelectCategory({
                     {loading ? (
                         <select
                             disabled
-                           
+
                         >
                             <option>
                                 Cargando categorías...
@@ -176,13 +177,13 @@ export default function SelectCategory({
                         <select
                             id={inputId}
                             name={name}
-                            value={value}
+                            value={value ?? ""}
                             onChange={
                                 handleSelectChange
                             }
                             disabled={disabled}
                             required={required}
-                           
+
                         >
                             <option value="">
                                 {placeholder}

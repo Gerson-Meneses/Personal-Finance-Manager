@@ -1,74 +1,130 @@
-.form-payment-tc {
-  background: #ffffff;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  max-width: 500px;
-  margin: auto;
+/* ============================================================
+   PAYMENT CREDIT CARD FORM — Design System
+   Accent → Amber / Gold  (#B45309)
+   Communicates "settlement / payment" — warm, serious, trustworthy
+   ============================================================ */
+
+/* ---------- Tokens ---------- */
+:root {
+    --pay-50:  #FFFBEB;
+    --pay-100: #FDE68A;
+    --pay-200: #FCD34D;
+    --pay-400: #D97706;
+    --pay-600: #B45309;   /* primary accent */
+    --pay-800: #78350F;
 }
 
-.form-header-payment {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
-  padding-bottom: 1rem;
+
+/* ============================================================
+   SUBMIT BUTTON — Payment variant
+   ============================================================ */
+.btn-submit.payment {
+    background: linear-gradient(135deg, var(--pay-600) 0%, var(--pay-800) 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(180, 83, 9, 0.28);
+    width: 100%;
+    justify-content: center;
+    padding: 13px 28px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: var(--r-lg, 16px);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition:
+        background  150ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow  150ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform   150ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity     150ms cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
 }
 
-.pay-icon {
-  background: #eef2ff;
-  color: #4f46e5;
-  padding: 10px;
-  border-radius: 12px;
+.btn-submit.payment::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0);
+    transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.title-group .form-subtitle {
-  font-size: 0.85rem;
-  color: #6b7280;
-  margin: 0;
+.btn-submit.payment:hover:not(:disabled)::after {
+    background: rgba(255, 255, 255, 0.10);
 }
 
-.payment-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+.btn-submit.payment:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--pay-400) 0%, var(--pay-600) 100%);
+    box-shadow: 0 6px 22px rgba(180, 83, 9, 0.38);
 }
 
-.datetime-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+.btn-submit.payment:active {
+    transform: scale(0.97);
 }
 
-.btn-pay-submit {
-  width: 100%;
-  margin-top: 1.5rem;
-  background-color: #059669; /* Verde éxito */
-  color: white;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: background 0.2s;
-  border: none;
-  cursor: pointer;
+.btn-submit.payment:disabled {
+    opacity: 0.44;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
-.btn-pay-submit:hover {
-  background-color: #047857;
+
+/* ============================================================
+   INPUT FOCUS — amber ring
+   ============================================================ */
+.form-default-container input:focus,
+.form-default-container select:focus,
+.form-default-container textarea:focus {
+    border-color: var(--pay-400) !important;
+    box-shadow:   0 0 0 3px rgba(217, 119, 6, 0.12) !important;
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
-.btn-pay-submit:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.form-default-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0;
 }
 
-.error-banner {
-  background-color: #fef2f2;
-  color: #b91c1c;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  margin-top: 1rem;
-  border: 1px solid #fee2e2;
+.form-default-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.form-default-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-actions-container {
+    padding-top: 4px;
+    display: flex;
+    justify-content: stretch;
+}
+
+.form-actions-container > * {
+    flex: 1;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 480px) {
+    .form-default-grid-2col {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
 }

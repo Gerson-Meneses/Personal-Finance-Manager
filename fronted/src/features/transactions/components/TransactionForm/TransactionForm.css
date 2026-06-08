@@ -1,0 +1,250 @@
+/* ============================================================
+   TRANSACTION FORM — Design System
+   EXPENSE → Coral  (#D85A30)  — igual que Category EXPENSE
+   INCOME  → Teal   (#1D9E75)  — igual que Category INCOME
+   Máxima coherencia semántica en toda la app
+   ============================================================ */
+
+/* ---------- Tokens ---------- */
+:root {
+    /* Expense — Coral (re-declarados por si este CSS se carga solo) */
+    --tx-exp-50:  #FAECE7;
+    --tx-exp-100: #F5C4B3;
+    --tx-exp-200: #F0997B;
+    --tx-exp-400: #D85A30;
+    --tx-exp-600: #993C1D;
+    --tx-exp-800: #712B13;
+
+    /* Income — Teal */
+    --tx-inc-50:  #E1F5EE;
+    --tx-inc-100: #9FE1CB;
+    --tx-inc-200: #5DCAA5;
+    --tx-inc-400: #1D9E75;
+    --tx-inc-600: #0F6E56;
+    --tx-inc-800: #085041;
+}
+
+
+/* ============================================================
+   TYPE TOGGLE — scoped
+   ============================================================ */
+.tx-form .type-toggle-option.active-EXPENSE,
+.tx-form .type-toggle-option.active-expense {
+    background:  var(--tx-exp-400);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(216, 90, 48, 0.32);
+}
+
+.tx-form .type-toggle-option.active-INCOME,
+.tx-form .type-toggle-option.active-income {
+    background:  var(--tx-inc-400);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(29, 158, 117, 0.28);
+}
+
+
+/* ============================================================
+   SUBMIT BUTTON — Transaction variants
+   ============================================================ */
+.btn-submit.tx {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 26px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #fff;
+    flex: 1;                /* ocupa el espacio junto al botón eliminar */
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition:
+        background  150ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow  150ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform   150ms cubic-bezier(0.4, 0, 0.2, 1),
+        opacity     150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-submit.tx::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 150ms ease;
+}
+
+.btn-submit.tx:hover:not(:disabled)::after { background: rgba(255,255,255,0.11); }
+.btn-submit.tx:active                       { transform: scale(0.97); }
+.btn-submit.tx:disabled                     { opacity: 0.44; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Expense */
+.btn-submit.tx.expense {
+    background: linear-gradient(135deg, var(--tx-exp-400) 0%, var(--tx-exp-600) 100%);
+    box-shadow: 0 4px 14px rgba(216, 90, 48, 0.26);
+}
+.btn-submit.tx.expense:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--tx-exp-200) 0%, var(--tx-exp-400) 100%);
+    box-shadow: 0 6px 20px rgba(216, 90, 48, 0.36);
+}
+
+/* Income */
+.btn-submit.tx.income {
+    background: linear-gradient(135deg, var(--tx-inc-400) 0%, var(--tx-inc-600) 100%);
+    box-shadow: 0 4px 14px rgba(29, 158, 117, 0.24);
+}
+.btn-submit.tx.income:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--tx-inc-200) 0%, var(--tx-inc-400) 100%);
+    box-shadow: 0 6px 20px rgba(29, 158, 117, 0.34);
+}
+
+
+/* ============================================================
+   DELETE BUTTON
+   ============================================================ */
+.btn-icon-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 20px;
+    border-radius: 14px;
+    border: 0.5px solid rgba(163, 45, 45, 0.28);
+    background: rgba(252, 235, 235, 0.55);
+    color: #A32D2D;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        background    150ms cubic-bezier(0.4, 0, 0.2, 1),
+        border-color  150ms cubic-bezier(0.4, 0, 0.2, 1),
+        transform     150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-icon-delete:hover:not(:disabled) {
+    background:   rgba(240, 149, 149, 0.22);
+    border-color: rgba(163, 45, 45, 0.50);
+    transform: scale(0.98);
+}
+
+.btn-icon-delete:active  { transform: scale(0.95); }
+.btn-icon-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+
+/* ============================================================
+   INPUT FOCUS — scoped al form
+   ============================================================ */
+.tx-form.expense input:focus,
+.tx-form.expense select:focus,
+.tx-form.expense textarea:focus {
+    border-color: var(--tx-exp-400) !important;
+    box-shadow:   0 0 0 3px rgba(216, 90, 48, 0.11) !important;
+    outline: none;
+}
+
+.tx-form.income input:focus,
+.tx-form.income select:focus,
+.tx-form.income textarea:focus {
+    border-color: var(--tx-inc-400) !important;
+    box-shadow:   0 0 0 3px rgba(29, 158, 117, 0.11) !important;
+    outline: none;
+}
+
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.tx-form {
+    gap: 14px;
+}
+
+/* Grilla 2 columnas (compartida, reafirmada aquí) */
+.form-default-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+/* Fila estándar */
+.form-default-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Fila de acciones — botones al final */
+.form-actions-container {
+    padding-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Cuando solo hay el botón submit (sin delete), que ocupe todo */
+.form-actions-container:has(.btn-submit.tx:only-child),
+.form-actions-container > *:only-child {
+    width: 100%;
+}
+
+
+/* ============================================================
+   RESPONSIVE — Mobile first
+   ============================================================ */
+
+/* Tablet y móvil: colapsa la grilla de 2 col a 1 */
+@media (max-width: 600px) {
+    .form-default-grid-2col {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    /* Acciones: submit arriba, delete abajo */
+    .form-actions-container {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .btn-submit.tx,
+    .btn-icon-delete {
+        width: 100%;
+        justify-content: center;
+        flex: unset;
+    }
+}
+
+/* Móvil pequeño */
+@media (max-width: 380px) {
+    .tx-form {
+        gap: 12px;
+    }
+
+    .btn-submit.tx {
+        padding: 12px 18px;
+        font-size: 13px;
+    }
+}
+
+
+/* ============================================================
+   ANIMACIÓN DE ENTRADA DEL FORMULARIO
+   (opcional — se activa si el FormContainer usa un portal/modal)
+   ============================================================ */
+.tx-form {
+    animation: txFormIn 300ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+}
+
+@keyframes txFormIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.99);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

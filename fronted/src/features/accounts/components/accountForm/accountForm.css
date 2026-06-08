@@ -1,26 +1,348 @@
-/* Contenedor de los campos opcionales */
-.form-credit-section {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 12px; /* Mantiene el ritmo de tus otros rows */
-    
-    /* Aplicamos la animación */
-    animation: slideInDown 2s cubic-bezier(0.6, 1, 0.3, 1) forwards;
-    transform-origin: top;
-    will-change: transform, opacity;
+/* ============================================================
+   ACCOUNT FORM — Design System
+   DEBIT  → Blue ramp  (#185FA5 accent)
+   CREDIT → Coral ramp (#D85A30 accent)
+   ============================================================ */
+
+/* ---------- Tokens ---------- */
+:root {
+    --debit-50:  #E6F1FB;
+    --debit-100: #B5D4F4;
+    --debit-200: #85B7EB;
+    --debit-400: #378ADD;
+    --debit-600: #185FA5;
+    --debit-800: #0C447C;
+
+    --credit-50:  #FAECE7;
+    --credit-100: #F5C4B3;
+    --credit-200: #F0997B;
+    --credit-400: #D85A30;
+    --credit-600: #993C1D;
+    --credit-800: #712B13;
+
+    --neutral-50:  #F1EFE8;
+    --neutral-100: #D3D1C7;
+    --neutral-400: #888780;
+    --neutral-600: #5F5E5A;
+    --neutral-800: #444441;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 22px;
+
+    --shadow-card: 0 2px 12px rgba(0,0,0,0.07), 0 0 0 0.5px rgba(0,0,0,0.06);
+    --shadow-input: 0 1px 4px rgba(0,0,0,0.06);
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-med:  260ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes slideInDown {
+
+/* ---------- Layout base ---------- */
+
+.form-default-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.form-default-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-actions-container {
+    padding-top: 6px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+
+/* ============================================================
+   TYPE TOGGLE — DEBIT vs CREDIT
+   ============================================================ */
+.type-toggle-wrapper {
+    display: flex;
+    background: var(--neutral-50);
+    border-radius: var(--radius-xl);
+    padding: 4px;
+    gap: 4px;
+    border: 0.5px solid var(--neutral-100);
+}
+
+.type-toggle-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius-xl);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    transition: background var(--transition-med), color var(--transition-med), box-shadow var(--transition-med);
+    color: var(--neutral-600);
+}
+
+.type-toggle-option .toggle-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    transition: transform var(--transition-spring);
+}
+
+.type-toggle-option.active-debit {
+    background: var(--debit-600);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(24, 95, 165, 0.35);
+}
+
+.type-toggle-option.active-debit .toggle-icon {
+    transform: rotate(0deg);
+}
+
+.type-toggle-option.active-credit {
+    background: var(--credit-400);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(216, 90, 48, 0.35);
+}
+
+.type-toggle-option:hover:not(.active-debit):not(.active-credit) {
+    background: var(--neutral-100);
+    color: var(--neutral-800);
+}
+
+
+/* ============================================================
+   BUTTONS — Submit
+   ============================================================ */
+.btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 28px;
+    border-radius: var(--radius-lg);
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-submit::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background var(--transition-fast);
+}
+
+.btn-submit:hover::after {
+    background: rgba(255,255,255,0.12);
+}
+
+.btn-submit:active {
+    transform: scale(0.97);
+}
+
+.btn-submit:disabled {
+    opacity: 0.44;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Variante DEBIT — azul */
+.btn-submit.debit {
+    background: var(--debit-600);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(24, 95, 165, 0.28);
+}
+
+.btn-submit.debit:hover:not(:disabled) {
+    background: var(--debit-800);
+    box-shadow: 0 6px 18px rgba(24, 95, 165, 0.38);
+}
+
+/* Variante CREDIT — coral */
+.btn-submit.credit {
+    background: var(--credit-400);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(216, 90, 48, 0.28);
+}
+
+.btn-submit.credit:hover:not(:disabled) {
+    background: var(--credit-600);
+    box-shadow: 0 6px 18px rgba(216, 90, 48, 0.38);
+}
+
+/* Botón eliminar */
+.btn-icon-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 22px;
+    border-radius: var(--radius-lg);
+    border: 0.5px solid rgba(163, 45, 45, 0.3);
+    background: rgba(252, 235, 235, 0.5);
+    color: #A32D2D;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-icon-delete:hover:not(:disabled) {
+    background: rgba(240, 149, 149, 0.25);
+    border-color: rgba(163, 45, 45, 0.55);
+    transform: scale(0.98);
+}
+
+.btn-icon-delete:active {
+    transform: scale(0.95);
+}
+
+.btn-icon-delete:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================================
+   SECCIÓN DE CRÉDITO — Animación de entrada
+   ============================================================ */
+.form-credit-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+
+    /* Estado inicial */
+    animation: creditSlideIn 380ms cubic-bezier(0.34, 1.2, 0.64, 1) both;
+    transform-origin: top center;
+}
+
+@keyframes creditSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-10px) scale(0.98);
-        max-height: 0;
+        transform: translateY(-12px) scaleY(0.94);
+        filter: blur(2px);
+    }
+    60% {
+        filter: blur(0px);
     }
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
-        max-height: 500px; /* Ajusta según el alto total de tus campos */
+        transform: translateY(0) scaleY(1);
+        filter: blur(0px);
     }
 }
 
+/* Separador visual opcional antes de los campos de crédito */
+.form-credit-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--credit-400);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.form-credit-divider::before,
+.form-credit-divider::after {
+    content: "";
+    flex: 1;
+    height: 0.5px;
+    background: linear-gradient(to right, transparent, var(--credit-200));
+}
+
+.form-credit-divider::after {
+    background: linear-gradient(to left, transparent, var(--credit-200));
+}
+
+
+/* ============================================================
+   INPUTS — Sobrescrituras de color según tipo activo
+   ============================================================ */
+
+/* Cuando el formulario está en modo CREDIT, accentuar los inputs */
+.form-credit-section input:focus,
+.form-credit-section select:focus {
+    border-color: var(--credit-400) !important;
+    box-shadow: 0 0 0 3px rgba(216, 90, 48, 0.12) !important;
+    outline: none;
+}
+
+/* Inputs del formulario base — modo DEBIT */
+.form-default-container input:focus,
+.form-default-container select:focus,
+.form-default-container textarea:focus {
+    border-color: var(--debit-400);
+    box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.12);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+
+/* ============================================================
+   BADGES DE TIPO (opcionales, para uso interno)
+   ============================================================ */
+.badge-debit {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: var(--debit-50);
+    color: var(--debit-800);
+    font-size: 12px;
+    font-weight: 600;
+    border: 0.5px solid var(--debit-200);
+}
+
+.badge-credit {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: var(--credit-50);
+    color: var(--credit-800);
+    font-size: 12px;
+    font-weight: 600;
+    border: 0.5px solid var(--credit-200);
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 520px) {
+    .form-default-grid-2col {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .form-actions-container {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .btn-submit,
+    .btn-icon-delete {
+        width: 100%;
+        justify-content: center;
+    }
+}

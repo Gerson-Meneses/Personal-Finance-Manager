@@ -15,7 +15,7 @@ export default function NotFoundView() {
                 <h1>404</h1>
                 <h2>¡Ups! Página no encontrada</h2>
                 <p>
-                    Parece que la ruta que buscas no existe o fue movida a otra sección de tus finanzas.
+                    Parece que la ruta o recurso que buscas no existe o fue movida a otra sección de tus finanzas.
                 </p>
 
                 <div className="not-found-actions">

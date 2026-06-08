@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as service from "./services";
-import type { Account, CreateAccountDTO, UpdateAccountDTO } from "./types";
+import type { Account, AccountSchemaInput, AccountSchemaOutput, UpdateAccountOutput } from "./types";
 import type { DataError } from "../../shared/dataApiInterface";
 
 export const useAccounts = (id?: string) => {
@@ -31,7 +31,7 @@ export const useAccounts = (id?: string) => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateAccountDTO }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateAccountOutput }) =>
       service.updateAccount(id, data),
     onSuccess: (updatedAccount) => {
       invalidateAll();
@@ -39,12 +39,12 @@ export const useAccounts = (id?: string) => {
     },
   });
 
-  const saveAccount = useMutation<Account, DataError<CreateAccountDTO>, CreateAccountDTO | UpdateAccountDTO>({
-    mutationFn: (data: CreateAccountDTO | UpdateAccountDTO) => {
+  const saveAccount = useMutation<Account, DataError<AccountSchemaOutput>, AccountSchemaOutput | UpdateAccountOutput>({
+    mutationFn: (data: AccountSchemaInput | UpdateAccountOutput) => {
       if ('accountId' in data && data.accountId) {
         return updateMutation.mutateAsync({ id: data.accountId, data: data });
       }
-      return createMutation.mutateAsync(data as CreateAccountDTO);
+      return createMutation.mutateAsync(data as AccountSchemaOutput);
     },
   });
 

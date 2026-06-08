@@ -1,0 +1,95 @@
+.lender-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lender-header h3 {
+    text-transform: uppercase;
+    color: #ededed;
+    margin-top: 8px;
+    border-bottom: #a9a9a9 solid .1px;
+    width: 90%;
+    padding-bottom: 4px;
+    text-align: center;
+}
+
+.loan-columns {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+.loan-column {
+    padding: .5rem;
+}
+
+.loan-column h4 {
+    margin-bottom: .75rem;
+}
+
+.loan-data {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: .5rem;
+}
+
+.loan-data span {
+    color: #94a3b8;
+    margin-right: 4px;
+}
+
+.progress {
+    height: 8px;
+    margin-top: .75rem;
+
+    border-radius: 999px;
+    overflow: hidden;
+
+    background: rgba(255, 255, 255, .08);
+}
+
+
+.tittle {
+    font-weight: bold;
+}
+
+.tittle::before {
+    display: inline-block;
+    content: "";
+    background-color: #ededed;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    margin-right: 8px;
+}
+
+.given.tittle::before {
+    background-color: #8f4eff;
+}
+
+.received.tittle::before {
+    background-color: #0891B2;
+}
+
+.progress-fill {
+    height: 100%;
+}
+
+.given {
+    color: #8f4eff;
+}
+
+.received {
+    color: #0891B2;
+}
+
+.progress-fill.given {
+    background-color: #7C3AED;
+}
+
+.progress-fill.received {
+    background-color: #0891B2;
+}

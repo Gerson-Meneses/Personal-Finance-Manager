@@ -70,7 +70,7 @@ export default function CategoriesPage() {
                                         className="category-delete-btn"
                                         onClick={() => {
                                             if (window.confirm(`¿Eliminar "${cat.name}"?`)) {
-                                                deleteCategory(cat.id)
+                                                deleteCategory.mutate(cat.id)
                                             }
                                         }}
                                         aria-label={`Eliminar ${cat.name}`}
@@ -111,7 +111,7 @@ export default function CategoriesPage() {
                                     className="category-delete-btn"
                                     onClick={() => {
                                         if (window.confirm(`¿Eliminar "${cat.name}"?`)) {
-                                            deleteCategory(cat.id)
+                                            deleteCategory.mutate(cat.id)
                                         }
                                     }}
                                 >
@@ -130,6 +130,7 @@ export default function CategoriesPage() {
                 <CategoryForm
                     mutation={createCategory}
                     onSuccess={() => { setShowForm(false), setToast(true) }}
+                    onClose={() => setShowForm(false)}
                 />
 
             </ModalPortal>

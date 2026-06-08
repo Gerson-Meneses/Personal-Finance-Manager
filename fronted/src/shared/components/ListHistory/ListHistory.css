@@ -1,0 +1,93 @@
+/* Contenedor principal de la sección de historial */
+.list-history-container {
+  background: transparent;
+  color: #f8fafc;
+  font-family: inherit;
+  width: 100%;
+}
+
+/* Encabezado Principal */
+.list-history__header {
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+
+.list-history__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.list-history__title svg {
+  color: #64748b;
+}
+
+.list-history__subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Modo con línea de tiempo lateral sutil */
+.list-history__timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: relative;
+  padding-left: 8px;
+}
+
+/* Grupo de Fecha */
+.list-history__date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+/* Label de la fecha dinámica (Regla Dayjs) */
+.list-history__date-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569; /* Gris oscuro sutil */
+  text-transform: capitalize; /* Convierte "jueves 4" -> "Jueves 4" */
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+  padding-left: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Contenedor de las filas internas de tarjetas */
+.list-history__items-wrapper,
+.list-history__flat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Separación idéntica entre tus tx-item-cards */
+}
+
+/* Envoltura de cada item inyectado */
+.list-history__item-row {
+  width: 100%;
+}
+
+/* Animación sutil de entrada para la lista */
+@keyframes fadeInList {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.list-history__date-group {
+  animation: fadeInList 0.25s ease forwards;
+}

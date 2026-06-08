@@ -1,160 +1,223 @@
-import { useState, useEffect } from "react";
-import { ArrowLeftRight, MoveRight } from "lucide-react";
+import { useEffect } from "react";
+import {
+    ArrowLeftRight,
+    ArrowRightLeft,
+} from "lucide-react";
 import dayjs from "dayjs";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { UseMutationResult } from "@tanstack/react-query";
+
+import { Transfer, type TransferInput, type TransferOutput } from "../../types";
+import type { Transaction } from "../../../transactions/types";
+import type { Account } from "../../../accounts/types";
+import type { DataError } from "../../../../shared/dataApiInterface";
+
 import { SelectAccount } from "../../../accounts/components/selectAccount/selectAccount";
 import { DatePicker, TimePicker } from "../../../../shared/components/DateInput/DateInput";
-import type { Account } from "../../../accounts/types";
 import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
 import { TextInput } from "../../../../shared/components/TextInput/TextInput";
-import type { UseMutationResult } from "@tanstack/react-query";
-import type { Transaction } from "../../../transactions/types";
-import type { CreateTransferDto } from "../../types";
-import { handleFieldChange } from "../../../../shared/utils/handleFieldChange";
-import type { DataError, DetailsError } from "../../../../shared/dataApiInterface";
-import './TransferForm.css'
+import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
+import { FormContainer } from "../../../../shared/components/FormContainer/FormContainer";
 
+import "./TransferForm.css";
+
+/* ------------------------------------------------------------------ */
+/*  Props                                                               */
+/* ------------------------------------------------------------------ */
 interface Props {
-    mutation: UseMutationResult<Transaction, DataError<CreateTransferDto>, CreateTransferDto>
-    account?: Account
+    mutation: UseMutationResult<Transaction, DataError<TransferOutput>, TransferOutput>;
+    /** Cuenta pre-seleccionada como origen (ej. al abrir desde el detalle de cuenta) */
+    account?: Account;
+    onSuccess?: (tx?: Transaction) => void;
+    onClose?: () => void;
 }
 
-export default function TransferForm({ mutation, account }: Props) {
-    const { mutate, isPending, error, reset, isSuccess } = mutation;
+/* ------------------------------------------------------------------ */
+/*  Defaults                                                            */
+/* ------------------------------------------------------------------ */
+const buildDefaults = (account?: Account): TransferInput => ({
+    fromAccount: account?.id ?? "",
+    toAccount:   "",
+    amount:      "" as any,      // el schema lo transforma a number
+    date:        dayjs().format("YYYY-MM-DD"),
+    time:        dayjs().format("HH:mm"),
+    description: "",
+});
 
-    const [localErrors, setLocalErrors] = useState<DetailsError<CreateTransferDto> | null>(null);
+/* ------------------------------------------------------------------ */
+/*  Component                                                           */
+/* ------------------------------------------------------------------ */
+export default function TransferForm({ mutation, account, onSuccess, onClose }: Props) {
+    const { mutateAsync, isPending, error, isSuccess, reset: resetMutation } = mutation;
 
-    const initialStateForm: CreateTransferDto = {
-        fromAccount: account?.id ?? "",
-        toAccount: "",
-        amount: 0,
-        date: dayjs().format("YYYY-MM-DD"),
-        time: dayjs().format("HH:mm"),
-        description: ""
-    }
+    const {
+        control,
+        handleSubmit,
+        reset,
+        watch,
+        formState: { isDirty, isValid },
+    } = useForm<TransferInput, unknown, TransferOutput>({
+        resolver: zodResolver(Transfer),
+        mode: "onChange",
+        defaultValues: buildDefaults(account),
+    });
 
-    const [formData, setFormData] = useState<CreateTransferDto>(initialStateForm);
+    /* Necesitamos el id de fromAccount para excluirlo del selector destino */
+    const fromAccountId = watch("fromAccount");
 
+    /* Resetear cuando la mutación tiene éxito */
     useEffect(() => {
-        if (isSuccess) {
-            setFormData(initialStateForm);
-            setLocalErrors(null);
-        }
-        if (error) reset();
-        if (localErrors) setLocalErrors(null);
+        if (!isSuccess) return;
+        reset(buildDefaults(account));
+        resetMutation();
     }, [isSuccess]);
 
-    // Dentro de tu componente TransferForm...
-
-    useEffect(() => {
-        if (error && error.details) {
-            setLocalErrors(error.details);
-        }
-    }, [error]);
-
-    const onChange = <K extends keyof CreateTransferDto>(
-        field: K,
-        value: CreateTransferDto[K]
-    ) => {
-        if (error) reset();
-        handleFieldChange(field, value, setFormData, setLocalErrors);
+    /* ---------- submit ---------- */
+    const onSubmit = async (data: TransferOutput) => {
+        const result = await mutateAsync(data, {
+            onSuccess: (tx) => onSuccess?.(tx),
+        });
+        void result;
     };
-
-    // Helper para obtener el mensaje de error (prioriza local, luego servidor)
-    const getErrorMessage = (field: keyof CreateTransferDto) => {
-        return localErrors?.[field] ? localErrors[field][0] : null;
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        e.stopPropagation()
-        setLocalErrors(null);
-        if (formData.amount <= 0) {
-            setLocalErrors({ amount: ["El monto debe ser mayor a 0"] });
-            return;
-        }
-        mutate(formData);
-    };
-
 
     return (
-        <form onSubmit={handleSubmit} className="form-default-container">
-            <div className="form-default-tittle-container">
-                <div className="form-title-icon-circle"><ArrowLeftRight size={20} /></div>
-                <span className="form-default-title">Transferencia</span>
-            </div>
+        <FormContainer
+            title="Transferencia"
+            icon={<ArrowLeftRight size={20} />}
+            error={error && !error.details ? (error.message || "Ocurrió un error inesperado") : null}
+            className="max-w-lg mx-auto"
+            onClose={onClose}
+        >
+            <form onSubmit={handleSubmit(onSubmit)} className="form-default-container">
 
-            <div className="form-default-row">
-                <SelectAccount
-                    label="Origen"
-                    value={formData.fromAccount}
-                    disabled={isPending}
-                    onChange={(val) => onChange("fromAccount", val)}
-                    error={getErrorMessage("fromAccount")}
-                    noCredit
-                    required
-                    icon="BanknoteArrowUp "
-                />
-                <MoveRight className="text-muted divider-icon" />
-                <SelectAccount
-                    label="Destino"
-                    value={formData.toAccount}
-                    error={getErrorMessage("toAccount")}
-                    disabled={isPending}
-                    onChange={(val) => onChange("toAccount", val)}
-                    noAccountId={formData.fromAccount}
-                    noCredit
-                    required
-                    icon="BanknoteArrowDown"
-                />
-            </div>
+                {/* ── CUENTAS (origen → destino) ───────────────────────────── */}
+                <div className="transfer-accounts-row">
 
-            <div className="form-default-row">
-                <NumericInput
-                    label="Monto"
-                    value={formData.amount.toString()}
-                    onChange={(val) => onChange("amount", Number(val))}
-                    error={getErrorMessage("amount")}
-                    disabled={isPending}
-                    icon="CircleDollarSign"
-                />
-            </div>
+                    <Controller
+                        control={control}
+                        name="fromAccount"
+                        render={({ field, fieldState }) => (
+                            <SelectAccount
+                                label="Cuenta origen"
+                                value={field.value}
+                                onChange={field.onChange}
+                                error={fieldState.error?.message}
+                                disabled={isPending}
+                                noCredit
+                                required
+                                icon="BanknoteArrowUp"
+                            />
+                        )}
+                    />
 
-            <div className="form-default-row">
-                <DatePicker
-                    disabled={isPending}
-                    value={formData.date}
-                    onChange={(val) => onChange("date", val)}
-                />
-                <TimePicker
-                    disabled={isPending}
-                    value={formData.time}
-                    onChange={(val) => onChange("time", val)}
-                    selectedDate={formData.date}
-                />
-            </div>
+                    {/* Flecha central decorativa */}
+                    <div className="transfer-arrow-badge" aria-hidden="true">
+                        <ArrowRightLeft size={16} />
+                    </div>
 
-            <div className="form-default-row">
-                <TextInput
-                    label="Descripción"
-                    disabled={isPending}
-                    value={formData.description}
-                    onChange={(val) => onChange("description", val)}
-                    textarea
-                    icon="AlignLeft"
-                    placeholder="Notas adicionales..."
-                />
-            </div>
-
-            {/* Error General del Servidor */}
-            {error && !error.details && (
-                <div className="error-banner">
-                    {error.message || "Ocurrió un error inesperado"}
+                    <Controller
+                        control={control}
+                        name="toAccount"
+                        render={({ field, fieldState }) => (
+                            <SelectAccount
+                                label="Cuenta destino"
+                                value={field.value}
+                                onChange={field.onChange}
+                                error={fieldState.error?.message}
+                                disabled={isPending}
+                                noAccountId={fromAccountId}
+                                noCredit
+                                required
+                                icon="BanknoteArrowDown"
+                            />
+                        )}
+                    />
                 </div>
-            )}
 
-            <button className="btn-primary w-full mt-6" disabled={isPending}>
-                {isPending ? "Procesando..." : "Confirmar Transferencia"}
-            </button>
-        </form>
+                {/* ── MONTO ────────────────────────────────────────────────── */}
+                <Controller
+                    control={control}
+                    name="amount"
+                    render={({ field, fieldState }) => (
+                        <NumericInput
+                            label="Monto a transferir"
+                            value={field.value?.toString()}
+                            onChange={field.onChange}
+                            error={fieldState.error?.message}
+                            disabled={isPending}
+                            icon="CircleDollarSign"
+                            symbol="S/"
+                        />
+                    )}
+                />
+
+                {/* ── FECHA + HORA ──────────────────────────────────────────── */}
+                <div className="form-default-grid-2col">
+                    <Controller
+                        control={control}
+                        name="date"
+                        render={({ field, fieldState }) => (
+                            <DatePicker
+                                value={field.value}
+                                onChange={field.onChange}
+                                error={fieldState.error?.message}
+                                disabled={isPending}
+                            />
+                        )}
+                    />
+
+                    <Controller
+                        control={control}
+                        name="time"
+                        render={({ field, fieldState }) => (
+                            <TimePicker
+                                value={field.value}
+                                onChange={field.onChange}
+                                error={fieldState.error?.message}
+                                disabled={isPending}
+                                selectedDate={watch("date")}
+                            />
+                        )}
+                    />
+                </div>
+
+                {/* ── DESCRIPCIÓN ───────────────────────────────────────────── */}
+                <Controller
+                    control={control}
+                    name="description"
+                    render={({ field, fieldState }) => (
+                        <TextInput
+                            label="Descripción"
+                            placeholder="Notas adicionales…"
+                            value={field.value}
+                            onChange={field.onChange}
+                            error={fieldState.error?.message}
+                            disabled={isPending}
+                            textarea
+                            icon="AlignLeft"
+                        />
+                    )}
+                />
+
+                {/* ── ACTIONS ──────────────────────────────────────────────── */}
+                <div className="form-default-row form-actions-container">
+                    <SuccessToast
+                        isSucces={isSuccess}
+                        successText="Transferencia realizada con éxito."
+                    >
+                        <button
+                            type="submit"
+                            className="btn-submit transfer"
+                            disabled={isPending || !isDirty || !isValid}
+                        >
+                            <ArrowLeftRight size={15} />
+                            {isPending ? "Procesando…" : "Confirmar transferencia"}
+                        </button>
+                    </SuccessToast>
+                </div>
+
+            </form>
+        </FormContainer>
     );
 }

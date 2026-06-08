@@ -1,152 +1,283 @@
-import type { UseMutationResult } from "@tanstack/react-query"
-import type { Category, CreateCategoryDTO } from "../../types"
-import type { DataError, DetailsError } from "../../../../shared/dataApiInterface"
-import { TextInput } from "../../../../shared/components/TextInput/TextInput"
-import { useEffect, useState } from "react"
-import { handleFieldChange } from "../../../../shared/utils/handleFieldChange"
-import { ColorPicker } from "../../../../shared/components/ColorPicker/ColorPicker"
-import { IconPicker } from "../../../../shared/components/IconPicker/IconPicker"
-import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle"
-import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast"
-import type { TransactionType } from "../../../transactions/types"
+import { useEffect } from "react";
+import {
+    CategorySchema,
+    type Category,
+    type CategorySchemaInput,
+    type CategorySchemaOutput,
+    type UpdateCategoryInput,
+} from "../../types";
+import type { UseMutationResult } from "@tanstack/react-query";
+import type { DataError } from "../../../../shared/dataApiInterface";
+import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle";
+import { TextInput } from "../../../../shared/components/TextInput/TextInput";
+import { ColorPicker } from "../../../../shared/components/ColorPicker/ColorPicker";
+import { IconPicker } from "../../../../shared/components/IconPicker/IconPicker";
+import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
+import { FormContainer } from "../../../../shared/components/FormContainer/FormContainer";
+import { useCategories } from "../../hooks";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import "./categoryForm.css";
+import {
+    TrendingUp,
+    TrendingDown,
+    Trash2,
+} from "lucide-react";
 
-export interface CategoryFormProps {
-    mutation: UseMutationResult<Category, DataError<CreateCategoryDTO>, CreateCategoryDTO>
-    onSuccess: (category: Category) => void
-    category?: Category
-    isEdit?: boolean
-    title?: string
-    initialType?: TransactionType
+/* ------------------------------------------------------------------ */
+/*  Props                                                               */
+/* ------------------------------------------------------------------ */
+interface PropsCategoryForm {
+    mutation: UseMutationResult<
+        Category,
+        DataError<CategorySchemaOutput>,
+        CategorySchemaOutput | UpdateCategoryInput
+    >;
+    category?: Category;
+    isEdit?: boolean;
+    onSuccess?: (category?: Category) => void;
+    onClose?: () => void;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Defaults                                                            */
+/* ------------------------------------------------------------------ */
+const defaultValues: CategorySchemaInput = {
+    type: "EXPENSE",
+    name: "",
+    color: "#123456",
+    icon: "LayoutGrid",
+};
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                           */
+/* ------------------------------------------------------------------ */
 export const CategoryForm = ({
     mutation,
-    onSuccess,
     category,
     isEdit,
-    title = "Categoría",
-}: CategoryFormProps) => {
+    onSuccess,
+    onClose,
+}: PropsCategoryForm) => {
+    const { mutateAsync, isPending, error, isSuccess } = mutation;
+    const { deleteCategory } = useCategories();
 
-    const { mutateAsync, isSuccess, error, reset, isPending } = mutation;
+    const {
+        control,
+        handleSubmit,
+        reset,
+        formState: { isDirty, isValid },
+    } = useForm<CategorySchemaInput, unknown, CategorySchemaOutput>({
+        resolver: zodResolver(CategorySchema),
+        mode: "onChange",
+        defaultValues,
+    });
 
-    const initialStateForm: CreateCategoryDTO = {
-        name: "",
-        type: "EXPENSE",
-        color: "#000000",
-        icon: "LayoutGrid"
-    }
+    const categoryType = useWatch({ control, name: "type" });
+    const isIncome = categoryType === "INCOME";
 
-    const [formData, setFormData] = useState<CreateCategoryDTO>(initialStateForm);
-    const [errors, setErrors] = useState<DetailsError<CreateCategoryDTO> | null>(null);
-
-    // 1. Cargar datos si es edición
+    /* ---------- populate on edit ---------- */
     useEffect(() => {
+        if (!isEdit || !category) return;
+        reset({
+            type: category.type,
+            name: category.name,
+            color: category.color,
+            icon: category.icon ?? "LayoutGrid",
+        });
+        mutation.reset();
+    }, [isEdit, category, reset]);
+
+    /* ---------- submit ---------- */
+    const onSubmit = async (data: CategorySchemaOutput) => {
+        let result: Category;
+
         if (isEdit && category) {
-            setFormData({
-                name: category.name,
-                type: category.type,
-                color: category.color,
-                icon: category.icon
+            const updateData: UpdateCategoryInput = { ...data, categoryId: category.id };
+            result = await mutateAsync(updateData, {
+                onSuccess: () => onSuccess?.(result),
             });
+            return;
         }
-    }, [isEdit, category]);
 
-    // 2. Manejo de errores de la API
-    useEffect(() => {
-        if (error?.details) {
-            setErrors(error.details as DetailsError<CreateCategoryDTO>);
-        }
-    }, [error]);
-
-    // 3. Limpieza al montar
-    useEffect(() => {
-        reset();
-        setErrors(null);
-    }, []);
-
-    const onChange = <K extends keyof CreateCategoryDTO>(
-        field: K,
-        value: CreateCategoryDTO[K]
-    ) => {
-        handleFieldChange(field, value, setFormData, setErrors);
+        result = await mutateAsync(data, {
+            onSuccess: () => {
+                reset(defaultValues);
+                onSuccess?.(result);
+            },
+        });
     };
 
-    const getErrorMessage = (field: keyof CreateCategoryDTO) => {
-        return errors?.[field] ? errors[field][0] : null;
-    };
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setErrors(null);
-
-        try {
-            const result = await mutateAsync(formData);
-            if (onSuccess) {
-                onSuccess(result);
-            }
-        } catch (err) {
-            console.error("Error al guardar categoría:", err);
-        }
-    };
+    /* ---------- derived ---------- */
+    const headerIcon = isIncome ? <TrendingUp size={20} /> : <TrendingDown size={20} />;
+    const successText = `Categoría ${isEdit ? "actualizada" : "creada"} con éxito.`;
+    const typeModifier = isIncome ? "income" : "expense";
 
     return (
-        <form onSubmit={handleSubmit} className="form-default-container">
-            <h2>{isEdit ? `Editar ${title}` : `Crear ${title}`}</h2>
+        <FormContainer
+            title={isEdit ? "Editar Categoría" : "Nueva Categoría"}
+            icon={headerIcon}
+            error={error && !error.details ? (error.message || "Ocurrió un error inesperado") : null}
+            className="max-w-lg mx-auto"
+            onClose={onClose}
+        >
+            <form onSubmit={handleSubmit(onSubmit)} className="form-default-container">
 
-            <div className="form-default-row">
-                <TypeToggle
-                    value={formData.type}
-                    onChange={(val) => onChange("type", val as TransactionType)}
-                    error={getErrorMessage("type")}
+                {/* ── TYPE TOGGLE ──────────────────────────────────────────── */}
+                <Controller
+                    control={control}
+                    name="type"
+                    render={({ field, fieldState }) => (
+                        <TypeToggle<TransactionType>
+                            value={field.value}
+                            onChange={field.onChange}
+                            error={fieldState.error?.message}
+                            disabled={isPending}
+                            leftOption={{
+                                color: "#ef4444",
+                                value: "EXPENSE",
+                                label: "GASTO",
+                                icon: "TrendingDown",
+                            }}
+                            rightOption={{
+                                color: "#22c55e",
+                                value: "INCOME",
+                                label: "INGRESO",
+                                icon: "TrendingUp",
+                            }}
+                        />
+                    )}
                 />
-            </div>
 
-            <div className="form-default-row">
-                <TextInput
+                {/* ── NOMBRE ───────────────────────────────────────────────── */}
+                <Controller
+                    control={control}
                     name="name"
-                    label="Nombre"
-                    icon="Tag"
-                    value={formData.name}
-                    onChange={(val) => onChange("name", val)}
-                    placeholder="Ej: Alimentación"
-                    error={getErrorMessage("name")}
-                    required
+                    render={({ field, fieldState }) => (
+                        <TextInput
+                            label="Nombre de la categoría"
+                            placeholder={isIncome ? "Ej. Salario, Freelance…" : "Ej. Alimentación, Transporte…"}
+                            icon={"Tag"}
+                            value={field.value}
+                            onChange={field.onChange}
+                            error={fieldState.error?.message}
+                            disabled={isPending}
+                        />
+                    )}
                 />
-            </div>
 
-            <div className="form-default-row">
-                <ColorPicker
-                    value={formData.color}
-                    onChange={(val) => onChange("color", val)}
-                    error={getErrorMessage("color")}
-                />
-                <IconPicker
-                    label="Ícono"
-                    icon="Smile"
-                    value={formData.icon}
-                    onChange={(val) => onChange("icon", val)}
-                    error={getErrorMessage("icon")}
-                />
-            </div>
+                {/* ── COLOR + ICONO ─────────────────────────────────────────── */}
+                <div className="form-default-grid-2col">
+                    <Controller
+                        control={control}
+                        name="color"
+                        render={({ field, fieldState }) => (
+                            <ColorPicker
+                                label="Color"
+                                value={field.value}
+                                onChange={field.onChange}
+                                error={fieldState.error?.message}
+                                disabled={isPending}
+                            />
+                        )}
+                    />
 
-            {error && !error.details && (
-                <div className="error-banner">
-                    {error.message || "Error al procesar la categoría"}
+                    <Controller
+                        control={control}
+                        name="icon"
+                        render={({ field, fieldState }) => (
+                            <IconPicker
+                                label="Ícono"
+                                icon={"LayoutGrid"}
+                                value={field.value}
+                                onChange={field.onChange}
+                                error={fieldState.error?.message}
+                                disabled={isPending}
+                            />
+                        )}
+                    />
                 </div>
-            )}
 
-            <div className="form-default-row">
-                <SuccessToast isSucces={isSuccess} successText={`Categoría ${isEdit ? 'actualizada' : 'creada'} con éxito.`}>
-                    <button
-                        type="submit"
-                        disabled={isPending}
-                        className={`btn-submit ${formData.type.toLowerCase()}`}
-                    >
-                        {isPending ? "Guardando..." : isEdit ? "Actualizar" : "Crear categoría"}
-                    </button>
-                </SuccessToast>
-            </div>
-        </form>
+                {/* ── PREVIEW CHIP ─────────────────────────────────────────── */}
+                {/* Muestra un chip live con el color e ícono seleccionados */}
+                <CategoryPreviewChip
+                    control={control}
+                    isIncome={isIncome}
+                />
+
+                {/* ── ACTIONS ──────────────────────────────────────────────── */}
+                <div className="form-default-row form-actions-container">
+                    <SuccessToast isSucces={isSuccess} successText={successText}>
+                        <button
+                            type="submit"
+                            className={`btn-submit ${typeModifier}`}
+                            disabled={isPending || !isDirty || !isValid}
+                        >
+                            {isIncome ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                            {isPending
+                                ? "Guardando…"
+                                : isEdit ? "Actualizar" : "Crear categoría"
+                            }
+                        </button>
+                    </SuccessToast>
+
+                    {isEdit && category && (
+                        <button
+                            type="button"
+                            className="btn-icon btn-icon-delete"
+                            disabled={deleteCategory.isPending}
+                            onClick={() => {
+                                if (window.confirm("¿Seguro que deseas eliminar esta categoría?")) {
+                                    deleteCategory.mutate(category.id, {
+                                        onSuccess: () => onClose?.(),
+                                    });
+                                }
+                            }}
+                        >
+                            <Trash2 size={14} />
+                            {deleteCategory.isPending ? "Eliminando…" : "Eliminar"}
+                        </button>
+                    )}
+                </div>
+
+            </form>
+        </FormContainer>
     );
 };
+
+
+/* ------------------------------------------------------------------ */
+/*  Category Preview Chip (live feedback)                              */
+/* ------------------------------------------------------------------ */
+import { useWatch as useWatchInner } from "react-hook-form";
+import type { Control } from "react-hook-form";
+import type { TransactionType } from "../../../transactions/types";
+import { getIcon } from "../../../../shared/utils/GetIcon";
+
+interface PreviewProps {
+    control: Control<CategorySchemaInput, unknown>;
+    isIncome: boolean;
+}
+
+function CategoryPreviewChip({ control, isIncome }: PreviewProps) {
+    const name = useWatchInner({ control, name: "name" });
+    const color = useWatchInner({ control, name: "color" });
+    const icon = useWatchInner({ control, name: "icon" });
+
+    if (!name && !color) return null;
+
+    return (
+        <div className={`category-preview-chip ${isIncome ? "income" : "expense"}`}>
+            <span
+                className="chip-dot"
+                style={{ background: color || "currentColor" }}
+                aria-hidden="true"
+            />
+            <span className="chip-icon-label">{icon && getIcon(icon) || "—"}</span>
+            <span className="chip-name">{name || "Sin nombre"}</span>
+            <span className={`chip-badge ${isIncome ? "income" : "expense"}`}>
+                {isIncome ? "Ingreso" : "Gasto"}
+            </span>
+        </div>
+    );
+}

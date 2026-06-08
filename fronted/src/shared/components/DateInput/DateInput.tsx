@@ -4,10 +4,12 @@ import { Calendar, Clock } from "lucide-react";
 import type { BaseInputProps } from "../types";
 
 import "./DateInput.css";
+import { getIcon } from "../../utils/GetIcon";
 
 interface DatePickerProps
   extends BaseInputProps<string> {
   disableFuture?: boolean;
+  icon?: string
 }
 
 export const DatePicker = ({
@@ -15,6 +17,7 @@ export const DatePicker = ({
   onChange,
 
   label = "Fecha",
+  icon = "calendar",
 
   error,
 
@@ -45,7 +48,7 @@ export const DatePicker = ({
           htmlFor={inputId}
           className="input-label"
         >
-          <Calendar size={20} className="icon" />
+          {icon && getIcon(icon)}
           {label}
         </label>
       )}
@@ -55,7 +58,7 @@ export const DatePicker = ({
           id={inputId}
           name={name}
           type="date"
-          value={value}
+          value={value ?? ""}
           max={disableFuture ? today : undefined}
           onChange={(e) => onChange(e.target.value)}
           className="custom-date-input"
@@ -132,7 +135,7 @@ export const TimePicker = ({
           id={inputId}
           name={name}
           type="time"
-          value={value}
+          value={value ?? ""}
           max={
             disableFuture && isToday
               ? currentTime

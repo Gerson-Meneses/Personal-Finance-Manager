@@ -75,7 +75,7 @@ export const SelectInput = ({
                         <option value="">
                             {placeholder}
                         </option>
-                        {options && options.map(op => <option value={op.value}>{op.label}</option>)}
+                        {options && options.map(op => <option key={op.value} value={op.value}>{op.label}</option>)}
                     </select>
                 </div>
                 {error && (

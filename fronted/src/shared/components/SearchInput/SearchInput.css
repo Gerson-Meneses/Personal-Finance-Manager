@@ -1,0 +1,66 @@
+.si-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.si-icon {
+    position: absolute;
+    left: 10px;
+    display: flex;
+    align-items: center;
+    color: var(--color-text-tertiary);
+    pointer-events: none;
+}
+
+.si-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.si-input {
+    width: 100%;
+    padding: 0 36px 0 34px; /* espacio para icono izq y botón der */
+    height: 36px;
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    font-size: 14px;
+    color: var(--color-text-primary);
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+
+
+.si-input:focus {
+    border-color: var(--color-border-primary);
+}
+
+.si-clear {
+    position: absolute;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.si-clear:hover {
+    color: var(--color-text-primary);
+    background: var(--color-background-tertiary);
+}
+
+.si-clear svg {
+    width: 13px;
+    height: 13px;
+}

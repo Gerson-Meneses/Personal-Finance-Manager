@@ -10,6 +10,8 @@ interface ToggleOption<T = string> {
   value: T;
 
   color?: string;
+
+  icon?: string | null;
 }
 
 interface TypeToggleProps<T = string>
@@ -121,10 +123,9 @@ export const TypeToggle = <
         <div
           className={`
             toggle-slider
-            ${
-              isRightSelected
-                ? "is-right"
-                : "is-left"
+            ${isRightSelected
+              ? "is-right"
+              : "is-left"
             }
           `}
         />
@@ -138,17 +139,16 @@ export const TypeToggle = <
           disabled={disabled}
           className={`
             toggle-button
-            ${
-              value === leftOption.value
-                ? "active"
-                : ""
+            ${value === leftOption.value
+              ? "active"
+              : ""
             }
           `}
           onClick={() =>
             onChange(leftOption.value)
           }
         >
-          {leftOption.label}
+          {leftOption.label} {leftOption.icon && getIcon(leftOption.icon)}
         </button>
 
         <button
@@ -160,18 +160,17 @@ export const TypeToggle = <
           disabled={disabled}
           className={`
             toggle-button
-            ${
-              value ===
+            ${value ===
               rightOption.value
-                ? "active"
-                : ""
+              ? "active"
+              : ""
             }
           `}
           onClick={() =>
             onChange(rightOption.value)
           }
         >
-          {rightOption.label}
+          {rightOption.label} {rightOption.icon && getIcon(rightOption.icon)}
         </button>
       </div>
 

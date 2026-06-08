@@ -1,14 +1,14 @@
 import { apiFetch } from "../../shared/api"
 import type { Data } from "../../shared/dataApiInterface"
-import type { QuickPayDTO } from "./LoanPayments/types";
+import type { QuickPayDTO } from "../LoanPayments/types";
 import type {
     Loan,
-    CreateLoanDTO,
-    CreateLoanPaymentDTO,
     LoanPayment,
     LoanQueryFilters,
     LoanSummaryGrouped,
-    LoanSummaryQuerySchema
+    LoanSummaryQuerySchema,
+    CreateLoanOutput,
+    CreateLoanPaymentOutput
 } from "./types"
 
 export const getLoans = async (query?: LoanQueryFilters): Promise<Data<Loan>> => {
@@ -32,14 +32,14 @@ export const getByLender = async (lender: string, type?: string) => {
 }
 
 export const createLoan = async (
-    body: CreateLoanDTO
+    body: CreateLoanOutput
 ): Promise<Loan> => {
     const data = await apiFetch<Loan>("/loan", { method: "POST", body: JSON.stringify(body) })
     return data
 }
 
 export const createLoanPayment = async (
-    body: CreateLoanPaymentDTO
+    body: CreateLoanPaymentOutput
 ): Promise<LoanPayment> => {
     const data = await apiFetch<LoanPayment>(`/loan/${body.id}/pay`, { method: "POST", body: JSON.stringify(body) })
     return data
