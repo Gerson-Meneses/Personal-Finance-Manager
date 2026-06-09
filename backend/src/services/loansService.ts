@@ -558,9 +558,10 @@ export class LoansService {
           description: loanData.description,
           accountId: loanData.accountId,
         },
-        userId
+        userId, false
       );
 
+      console.log(transactionReferenceData)
       const transactionReference = queryRunner.manager.create(Transaction, transactionReferenceData);
 
       // Crear préstamo
@@ -690,7 +691,7 @@ export class LoansService {
         categoryId: category.id
       }
 
-      const referenceTransaction = await this.transactionService.createTransaction(createTransaction, userId, manager)
+      const referenceTransaction = await this.transactionService.createTransaction(createTransaction, userId, false, manager)
 
       const savedTransaction = manager.create(Transaction, referenceTransaction)
 

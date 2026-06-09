@@ -12,7 +12,7 @@ import { User } from '../entities/User.entity'
 import { LoanPayment } from '../entities/LoanPayment.entity'
 import { Codes } from '../entities/Codes.entity'
 
- export const AppDataSourceProd = new DataSource({
+/*  export const AppDataSourceProd = new DataSource({
     type: 'postgres',
     url: process.env.DATABASE_URL,
     ssl: {
@@ -22,10 +22,10 @@ import { Codes } from '../entities/Codes.entity'
     dropSchema: false, // ⚠️ en producción NO uses true
     logging: ['error'],
     entities: [Account, Category, Credential, Loan, LoanInstallment, LoanPayment ,ReccurentTransaction, Transaction, User, Codes],
-})  
+})   */
 
 
-/* export const AppDataSourceProd = new DataSource({
+export const AppDataSourceProd = new DataSource({
     type: 'postgres',
     host: 'localhost',
     port: 5432,
@@ -37,4 +37,4 @@ import { Codes } from '../entities/Codes.entity'
     logging: ["error"],
     entities: [Account, Category, Credential, Loan, LoanInstallment, LoanPayment, ReccurentTransaction, Transaction, User, Codes],
 })
- */
+

@@ -103,7 +103,7 @@ export class TransactionService {
         return toTransactionResponse(transaction)
     }
 
-    async createTransaction(transaction: TransactionSchema, userId: UuidSchema, entityManager?: EntityManager): Promise<TransactionResponse> {
+    async createTransaction(transaction: TransactionSchema, userId: UuidSchema,moneyAmount: boolean = true, entityManager?: EntityManager): Promise<TransactionResponse> {
 
         let queryRunner: QueryRunner | undefined;
         let manager: EntityManager;
@@ -177,7 +177,7 @@ export class TransactionService {
             if (isOwnTransaction && queryRunner) {
                 await queryRunner.commitTransaction();
             }
-            return toTransactionResponse(savedTransaction);
+            return toTransactionResponse(savedTransaction, { moneyAmount });
         } catch (error) {
             if (isOwnTransaction && queryRunner) {
                 await queryRunner.rollbackTransaction();
