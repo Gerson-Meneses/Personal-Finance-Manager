@@ -158,7 +158,7 @@ export const QuickPayForm = ({ lender, type, onSuccess, onClose }: Props) => {
                                 /* Si presté (GIVEN) el dinero sale de mi cuenta → sin crédito
                                    Si me prestaron (RECEIVED) puede entrar a cualquiera        */
                                 noCredit={!!isGiven}
-                                balance={isGiven}
+                                balance={!isGiven}
                                 required
                             />
                         )}

@@ -171,7 +171,7 @@ export const CreateLoanPaymentForm = ({ loanId, loan, initialValues, onSuccess, 
                 error={fieldState.error?.message}
                 disabled={isPending}
                 noCredit={isGiven}
-                balance={isGiven}
+                balance={!isGiven}
                 required
               />
             )}
