@@ -122,6 +122,7 @@ export const SelectAccount = ({
         newAccount?: Account
     ) => {
         if (newAccount) onChange(String(newAccount.id));
+        console.log("New account created:", newAccount);
         setShowForm(false);
     };
 

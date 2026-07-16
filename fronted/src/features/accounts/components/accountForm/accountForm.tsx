@@ -132,20 +132,22 @@ export default function AccountForm({
 
     /* ---------- submit ---------- */
     const onSubmit = async (data: AccountSchemaOutput) => {
+        console.log("Submitting account data:", data);
         let newAccount: Account;
         if (isEdit && account) {
             const updateData: UpdateAccountOutput = { ...data, accountId: account.id };
             newAccount = await mutateAsync(updateData, {
-                onSuccess: () => onSuccess?.(newAccount),
             });
+            console.log("Account updated:", newAccount);
             return;
         }
         newAccount = await mutateAsync(data, {
             onSuccess: () => {
                 reset(defaultDebitValues);
-                onSuccess?.(newAccount);
             },
         });
+        onSuccess?.(newAccount);
+        console.log("New account created:", newAccount);
     };
 
     /* ---------- helpers ---------- */

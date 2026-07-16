@@ -278,6 +278,8 @@ export class TransactionService {
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
+        console.log(payment)
+
         try {
 
             const user = await queryRunner.manager.findOne(User, {

@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal";
 import { useTransfers } from "../../../../features/transfers/hooks";
 import type { Transaction } from "../../../../features/transactions/types";
-import { format } from "date-fns";
 import AccountCard from "../../../../features/accounts/components/accountCard/accountCard";
 import TransferForm from "../../../../features/transfers/components/TransferForm/TransferForm";
 import { getIcon } from "../../../../shared/utils/GetIcon";
@@ -16,6 +15,7 @@ import AccountForm from "../../../../features/accounts/components/accountForm/ac
 import InfoModal from "../../../../shared/components/InfoModal/InfoModal";
 import PaymentCreditCardForm from "../../../../features/CreditPayment/Components/CreditPaymentForm";
 import NotFoundView from "../../../../shared/components/NotFoundView/NotFoundView";
+import { ListHistory } from "../../../../shared/components/ListHistory/ListHistory";
 
 export function AccountDetail() {
     const { id } = useParams();
@@ -25,18 +25,7 @@ export function AccountDetail() {
     const { createTransfer } = useTransfers()
     const navigate = useNavigate()
 
-
     transactions = [...transactions, ...trans]
-
-    // Función rápida para agrupar
-
-    let groupedTransactions = transactions.reduce((groups, tx) => {
-        const date = tx.date; // YYYY-MM-DD
-        if (!groups[date]) groups[date] = [];
-        groups[date].push(tx);
-        return groups;
-    }, {} as Record<string, Transaction[]>);
-
 
     const [showModal, setShowModal] = useState(false)
     const [editModal, setEditModal] = useState(false)
@@ -88,35 +77,19 @@ export function AccountDetail() {
                 {/* COLUMNA DERECHA: Movimientos */}
                 <main className="detail-main">
                     <section className="card">
-                        <div className="section-header">
-                            <h2>Últimos Movimientos</h2>
-                            <span className="badge">{transactions?.length || 0} Total</span>
-                        </div>
-
-                        <div className="transactions-list">
-                            {txLoading ? (
-                                <p>Cargando movimientos...</p>
-                            ) : transactions && transactions.length > 0 ? (
-
-                                Object.entries(groupedTransactions).sort(([dateA], [dateB]) => (new Date(dateB).getTime()) - (new Date(dateA).getTime())).map(([date, txs]) => (
-                                    <div key={date} className="tx-group">
-                                        <h4 className="tx-date-header">{format(date, 'dd/MM/yyyy')}</h4>
-                                        {txs.map(tx => (
-                                            <TransactionItem
-                                                key={tx.id}
-                                                transaction={tx}
-                                                currentAccountId={account.id}
-                                            />
-                                        ))}
-                                    </div>
-                                ))
-
-
-                            )
-                                : (
-                                    <div className="empty-tx">No hay movimientos en esta cuenta.</div>
-                                )}
-                        </div>
+                        <ListHistory<Transaction>
+                            title="Últimos Movimientos"
+                            items={transactions}
+                            subtitle={`${transactions?.length || 0} Total(es)`}
+                            emptyMessage="No hay movimientos en esta cuenta."
+                            groupByDate
+                            renderItem={(item) => (
+                                <TransactionItem
+                                    transaction={item}
+                                />
+                            )}
+                        />
+                      
                     </section>
                 </main>
             </div>

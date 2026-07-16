@@ -95,7 +95,6 @@ export const CategoryForm = ({
         if (isEdit && category) {
             const updateData: UpdateCategoryInput = { ...data, categoryId: category.id };
             result = await mutateAsync(updateData, {
-                onSuccess: () => onSuccess?.(result),
             });
             return;
         }
@@ -103,9 +102,10 @@ export const CategoryForm = ({
         result = await mutateAsync(data, {
             onSuccess: () => {
                 reset(defaultValues);
-                onSuccess?.(result);
             },
         });
+
+        onSuccess?.(result);
     };
 
     /* ---------- derived ---------- */
