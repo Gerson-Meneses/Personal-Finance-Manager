@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, OneToMany, OneToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, OneToMany, OneToOne, JoinColumn, Index } from "typeorm";
 import type { Account } from "./Account.entity";
 import type { Category } from "./Category.entity";
 import { TypeTransaction } from "../utils/Enums";
@@ -10,6 +10,11 @@ import { LoanPayment } from "./LoanPayment.entity";
 @Entity({
     name: 'transactions'
 })
+@Index('IDX_transactions_user_date', ['user', 'date'])
+@Index('IDX_transactions_user_createdAt', ['user', 'createdAt'])
+@Index('IDX_transactions_account', ['account'])
+@Index('IDX_transactions_related_account', ['relatedAccount'])
+@Index('IDX_transactions_category', ['category'])
 export class Transaction {
 
     @PrimaryGeneratedColumn('uuid')
@@ -59,7 +64,7 @@ export class Transaction {
     account: Account;
 
     @ManyToOne("Account", "transactions", { nullable: true })
-    relatedAccount?: Account;
+    relatedAccount?: Account | null;
 
     @ManyToOne("Category", "transactions", { nullable: true })
     category: Category;

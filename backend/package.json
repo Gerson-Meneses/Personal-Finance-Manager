@@ -3,7 +3,12 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "build": "tsc",
-    "start": "bun run dist/index.js"
+    "start": "bun run dist/index.js",
+    "db:generate": "bun node_modules/typeorm/cli.js migration:generate -d src/database/dataBaseDev.ts",
+    "db:migrate": "bun node_modules/typeorm/cli.js migration:run -d src/database/dataBaseDev.ts",
+    "db:revert": "bun node_modules/typeorm/cli.js migration:revert -d src/database/dataBaseDev.ts",
+    "db:show": "bun node_modules/typeorm/cli.js migration:show -d src/database/dataBaseDev.ts",
+    "db:baseline": "bun src/database/baseline.ts"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",

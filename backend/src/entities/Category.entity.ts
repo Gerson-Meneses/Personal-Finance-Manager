@@ -1,4 +1,4 @@
-import { Entity, ManyToMany, ManyToOne, OneToMany } from "typeorm";
+import { Entity, Index, ManyToMany, ManyToOne, OneToMany } from "typeorm";
 import { PrimaryGeneratedColumn, Column } from "typeorm"
 import { TypeTransaction } from "../utils/Enums";
 import type { User } from "./User.entity";
@@ -8,6 +8,7 @@ import { ReccurentTransaction } from "./ReccurentTransaction.entity";
 @Entity({
     name: "categories",
 })
+@Index('IDX_categories_user', ['user'])
 export class Category {
     @PrimaryGeneratedColumn("uuid")
     id: string;

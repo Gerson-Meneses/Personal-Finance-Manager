@@ -1,4 +1,4 @@
-import { PrimaryGeneratedColumn, Entity, Column, ManyToOne } from "typeorm";
+import { PrimaryGeneratedColumn, Entity, Column, Index, ManyToOne } from "typeorm";
 import type { Transaction } from "./Transaction.entity";
 import { TypeTransaction } from "../utils/Enums";
 import type { User } from "./User.entity";
@@ -8,7 +8,7 @@ import type { Category } from "./Category.entity";
 @Entity({
     name: 'reccurent_transactions'
 })
-
+@Index('IDX_reccurent_transactions_user', ['user'])
 export class ReccurentTransaction {
     @PrimaryGeneratedColumn('uuid')
     id: string;

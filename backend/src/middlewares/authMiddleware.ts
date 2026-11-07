@@ -1,5 +1,7 @@
-import type { Context, Next } from "hono"
+import type { Context, MiddlewareHandler, Next } from "hono"
 import { verify } from "hono/jwt"
+import { AppEnv } from "../types"
+import { AccessDeniedError } from "../helpers/errors/domain.errors"
 import 'dotenv/config'
 
 export const authMiddleware = async (c: Context, next: Next) => {
@@ -22,4 +24,14 @@ export const authMiddleware = async (c: Context, next: Next) => {
     } catch {
         return c.json({ error: 'Token inválido o expirado' }, 401)
     }
+}
+
+export const adminMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
+    const user = c.get('user')
+
+    if (!user || user.role !== 'admin') {
+        throw new AccessDeniedError()
+    }
+
+    await next()
 }

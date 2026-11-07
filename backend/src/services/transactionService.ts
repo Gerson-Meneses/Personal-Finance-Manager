@@ -12,12 +12,88 @@ import { UuidSchema } from "../schemas/uuid.schema";
 import { TypeAccount, TypeTransaction } from "../utils/Enums";
 import { PaginatedResult } from "../types";
 import { TransactionQuerySchema } from "../schemas/querysTransaction.schema";
-import { EntityManager, In, QueryRunner } from "typeorm";
+import { EntityManager, QueryRunner } from "typeorm";
 import { toTransactionResponse } from "../mappers/TransactionMapper";
 import { TransactionResponse } from "../ResponseInterfaces/TransactionInterface";
 
+type BalanceState = {
+    type: TypeTransaction;
+    amount: number;
+    account: Account;
+    relatedAccount?: Account | null;
+};
+
 export class TransactionService {
     private transactionRepo = AppDataSourceProd.getRepository(Transaction);
+
+    /**
+     * Efecto puro de una transacción sobre los saldos: accountId -> delta.
+     * INCOME  -> cuenta +
+     * EXPENSE -> cuenta -
+     * TRANSFER / CREDIT_PAYMENT -> origen -, destino +
+     */
+    private computeBalanceEffect(state: BalanceState): Map<string, number> {
+        const effect = new Map<string, number>();
+        const add = (account: Account | null | undefined, delta: number) => {
+            if (!account) return;
+            effect.set(account.id, (effect.get(account.id) ?? 0) + delta);
+        };
+
+        switch (state.type) {
+            case TypeTransaction.INCOME:
+                add(state.account, state.amount);
+                break;
+            case TypeTransaction.EXPENSE:
+                add(state.account, -state.amount);
+                break;
+            case TypeTransaction.TRANSFER:
+            case TypeTransaction.CREDIT_PAYMENT:
+                add(state.account, -state.amount);
+                add(state.relatedAccount, state.amount);
+                break;
+        }
+        return effect;
+    }
+
+    /**
+     * Bloquea (SELECT ... FOR UPDATE) las cuentas indicadas dentro de la transacción
+     * actual, respetando el ownership del usuario. Los ids se ordenan para
+     * serializar el bloqueo en un orden estable y evitar deadlocks.
+     * Devuelve un mapa id -> cuenta; el caller decide si falta alguna.
+     */
+    private async lockAccounts(
+        manager: EntityManager,
+        accountIds: Array<string | null | undefined>,
+        userId: UuidSchema
+    ): Promise<Map<string, Account>> {
+        const uniqueIds = [...new Set(accountIds.filter((id): id is string => !!id))].sort();
+        if (uniqueIds.length === 0) return new Map();
+
+        const accounts = await manager
+            .createQueryBuilder(Account, 'account')
+            .where('account.id IN (:...ids)', { ids: uniqueIds })
+            .andWhere('account.userId = :userId', { userId })
+            .setLock('pessimistic_write')
+            .getMany();
+
+        return new Map(accounts.map((account) => [account.id, account]));
+    }
+
+    /**
+     * Bloquea la fila de la transacción para serializar updates concurrentes
+     * sobre la misma. Debe llamarse ANTES de leer el estado actual.
+     */
+    private async lockTransactionRow(manager: EntityManager, id: UuidSchema, userId: UuidSchema): Promise<void> {
+        const locked = await manager
+            .createQueryBuilder(Transaction, 't')
+            .select('t.id')
+            .where('t.id = :id', { id })
+            .andWhere('t.userId = :userId', { userId })
+            .setLock('pessimistic_write')
+            .getOne();
+
+        if (!locked) throw new NotFoundError('Transacción no encontrada');
+    }
 
     async getTransactions(
         userId: UuidSchema,
@@ -122,8 +198,7 @@ export class TransactionService {
         try {
 
             const user = await manager.findOne(User, {
-                where: { id: userId },
-                relations: ["credential"]
+                where: { id: userId }
             });
             if (!user) throw new NotFoundError("Usuario no encontrado");
 
@@ -137,9 +212,8 @@ export class TransactionService {
                 });
             }
 
-            const account = await manager.findOne(Account, {
-                where: { id: transaction.accountId, user: { id: userId } }
-            });
+            const accountsById = await this.lockAccounts(manager, [transaction.accountId], userId);
+            const account = accountsById.get(transaction.accountId);
             if (!account) throw new NotFoundError("Cuenta no encontrada");
 
             if (transaction.isRecurrent) {
@@ -211,14 +285,12 @@ export class TransactionService {
             });
             if (!user) throw new NotFoundError("Usuario no encontrado para asignar la creación de la transacción");
 
-            const fromAccountEntity = await queryRunner.manager.findOne(Account, {
-                where: { id: fromAccount, user: { id: userId } }
-            });
+            const accountsById = await this.lockAccounts(queryRunner.manager, [fromAccount, toAccount], userId);
+
+            const fromAccountEntity = accountsById.get(fromAccount);
             if (!fromAccountEntity) throw new NotFoundError("Cuenta origen no encontrada o no pertenece al usuario");
 
-            const toAccountEntity = await queryRunner.manager.findOne(Account, {
-                where: { id: toAccount, user: { id: userId } }
-            });
+            const toAccountEntity = accountsById.get(toAccount);
             if (!toAccountEntity) throw new NotFoundError("Cuenta destino no encontrada o no pertenece al usuario");
 
             if (fromAccountEntity.type === TypeAccount.CREDIT || toAccountEntity.type === TypeAccount.CREDIT) {
@@ -278,8 +350,6 @@ export class TransactionService {
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
-        console.log(payment)
-
         try {
 
             const user = await queryRunner.manager.findOne(User, {
@@ -287,9 +357,9 @@ export class TransactionService {
             });
             if (!user) throw new NotFoundError("Usuario no encontrado");
 
-            const relatedAccount = await queryRunner.manager.findOne(Account, {
-                where: { id: creditCardId, user: { id: userId } }
-            });
+            const accountsById = await this.lockAccounts(queryRunner.manager, [creditCardId, payment.accountId], userId);
+
+            const relatedAccount = accountsById.get(creditCardId);
             if (!relatedAccount) throw new NotFoundError("Cuenta a pagar no encontrada o no pertenece al usuario");
 
             if (relatedAccount.type !== TypeAccount.CREDIT) {
@@ -298,14 +368,10 @@ export class TransactionService {
                 });
             }
 
-            const account = await queryRunner.manager.findOne(Account, {
-                where: {
-                    id: payment.accountId,
-                    user: { id: userId },
-                    type: In([TypeAccount.DEBIT, TypeAccount.CASH])
-                }
-            });
-            if (!account) throw new NotFoundError("Cuenta para pagar no encontrada o no pertenece al usuario o no es de tipo débito/cash");
+            const account = accountsById.get(payment.accountId);
+            if (!account || ![TypeAccount.DEBIT, TypeAccount.CASH].includes(account.type)) {
+                throw new NotFoundError("Cuenta para pagar no encontrada o no pertenece al usuario o no es de tipo débito/cash");
+            }
 
             const withOverDraft = relatedAccount.creditLimit * ((relatedAccount.overdraft || 0) + 1);
             const debt = withOverDraft - relatedAccount.balance;
@@ -360,130 +426,170 @@ export class TransactionService {
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
-        let updatedTransaction = {} as Transaction;
-
         try {
+            const manager = queryRunner.manager;
 
-            const transaction = await queryRunner.manager.findOne(Transaction, {
+            // 1) Bloquear la fila de la transacción ANTES de leer su estado,
+            //    para que updates concurrentes se serialicen y el segundo lea
+            //    el estado ya confirmado del primero.
+            await this.lockTransactionRow(manager, id, userId);
+
+            const transaction = await manager.findOne(Transaction, {
                 where: { id, user: { id: userId } },
                 relations: ['account', 'relatedAccount', 'category']
             });
-
             if (!transaction) throw new NotFoundError("Transacción no encontrada");
 
-            if (transaction.type === TypeTransaction.INCOME) {
-                transaction.account.balance -= transaction.amount;
-            } else if (transaction.type === TypeTransaction.EXPENSE) {
-                transaction.account.balance += transaction.amount;
-            } else if ([TypeTransaction.TRANSFER, TypeTransaction.CREDIT_PAYMENT].includes(transaction.type)) {
-                transaction.account.balance += transaction.amount;
-                if (transaction.relatedAccount) {
-                    transaction.relatedAccount.balance -= transaction.amount;
+            // 2) Estado actual (old*) y estado deseado (next*)
+            const oldType = transaction.type;
+            const oldAmount = transaction.amount;
+            const oldAccountId = transaction.account.id;
+            const oldRelatedAccountId = transaction.relatedAccount?.id ?? null;
+
+            const nextType = updateData.type ?? transaction.type;
+            const nextAmount = updateData.amount ?? transaction.amount;
+            const usesRelatedAccount =
+                nextType === TypeTransaction.TRANSFER || nextType === TypeTransaction.CREDIT_PAYMENT;
+
+            const nextAccountId = updateData.accountId ?? oldAccountId;
+            let nextRelatedAccountId: string | null = null;
+
+            if (usesRelatedAccount) {
+                nextRelatedAccountId = updateData.relatedAccountId ?? oldRelatedAccountId;
+                if (!nextRelatedAccountId) {
+                    throw new BadRequestError("Esta transacción requiere una cuenta relacionada.");
+                }
+                if (nextRelatedAccountId === nextAccountId) {
+                    throw new ConflictError("Las cuentas de origen y destino no pueden ser las mismas", {
+                        relatedAccountId: ["Las cuentas de origen y destino no pueden ser las mismas"]
+                    });
                 }
             }
 
-            await queryRunner.manager.save(transaction.account);
-            if (transaction.relatedAccount) {
-                await queryRunner.manager.save(transaction.relatedAccount);
-            }
+            // 3) Bloquear (FOR UPDATE) todas las cuentas involucradas en el
+            //    estado viejo o nuevo, en orden estable para evitar deadlocks.
+            const accountsById = await this.lockAccounts(
+                manager,
+                [oldAccountId, oldRelatedAccountId, nextAccountId, nextRelatedAccountId],
+                userId
+            );
 
-            if (updateData.accountId && updateData.accountId !== transaction.account.id) {
-                const newAccount = await queryRunner.manager.findOne(Account, {
-                    where: { id: updateData.accountId, user: { id: userId } }
-                });
-                if (!newAccount) throw new NotFoundError("La cuenta principal no existe.");
-                transaction.account = newAccount;
-            }
+            const requireAccount = (accountId: string): Account => {
+                const account = accountsById.get(accountId);
+                if (!account) throw new NotFoundError("Cuenta no encontrada o no pertenece al usuario");
+                return account;
+            };
 
-            if (updateData.relatedAccountId && updateData.relatedAccountId !== transaction.relatedAccount?.id) {
-                const newRelatedAccount = await queryRunner.manager.findOne(Account, {
-                    where: { id: updateData.relatedAccountId, user: { id: userId } }
-                });
-                if (!newRelatedAccount) throw new NotFoundError("La cuenta relacionada no existe.");
-                transaction.relatedAccount = newRelatedAccount;
-            }
+            const oldAccount = requireAccount(oldAccountId);
+            const oldRelatedAccount = oldRelatedAccountId ? requireAccount(oldRelatedAccountId) : null;
+            const nextAccount = requireAccount(nextAccountId);
+            const nextRelatedAccount = nextRelatedAccountId ? requireAccount(nextRelatedAccountId) : null;
 
-            if (updateData.categoryId) {
-                const category = await queryRunner.manager.findOne(Category, {
+            // 4) Categoría: validar ownership y que su tipo coincida con el nuevo tipo
+            let nextCategory = transaction.category;
+            if (updateData.categoryId && updateData.categoryId !== transaction.category?.id) {
+                const category = await manager.findOne(Category, {
                     where: { id: updateData.categoryId, user: { id: userId } }
                 });
                 if (!category) throw new NotFoundError("La categoría no existe.");
-                transaction.category = category;
+                nextCategory = category;
+            }
+            if (!nextCategory) throw new NotFoundError("La categoría no existe.");
+            if (nextCategory.type !== nextType) {
+                throw new ConflictError("El tipo de la categoría no coincide con la transacción.", {
+                    categoryId: ["El tipo de la categoría no coincide con la transacción."]
+                });
             }
 
-            if (updateData.amount !== undefined) transaction.amount = updateData.amount;
-            if (updateData.name) transaction.name = updateData.name;
-            if (updateData.description) transaction.description = updateData.description;
-            if (updateData.date) transaction.date = updateData.date;
-            if (updateData.time) transaction.time = updateData.time;
-            if (updateData.type) transaction.type = updateData.type;
+            // 5) Efectos de saldo. base = saldo actual - efecto viejo = saldo como
+            //    si esta transacción no existiera. Se valida el estado nuevo sobre
+            //    esa base y luego se aplica el delta neto una sola vez.
+            const oldEffect = this.computeBalanceEffect({
+                type: oldType,
+                amount: oldAmount,
+                account: oldAccount,
+                relatedAccount: oldRelatedAccount
+            });
+            const newEffect = this.computeBalanceEffect({
+                type: nextType,
+                amount: nextAmount,
+                account: nextAccount,
+                relatedAccount: nextRelatedAccount
+            });
 
-            if (transaction.type === TypeTransaction.INCOME) {
-                if (transaction.account.type === TypeAccount.CREDIT) {
-                    throw new ConflictError("No se pueden hacer ingresos a cuentas de crédito.", {
-                        type: ["No se pueden hacer ingresos a cuentas de crédito."]
-                    });
-                }
-                transaction.account.balance += transaction.amount;
+            if (nextType === TypeTransaction.INCOME && nextAccount.type === TypeAccount.CREDIT) {
+                throw new ConflictError("No se pueden hacer ingresos a cuentas de crédito.", {
+                    type: ["No se pueden hacer ingresos a cuentas de crédito."]
+                });
             }
-            else if (transaction.type === TypeTransaction.EXPENSE) {
-                if (transaction.account.balance < transaction.amount) {
-                    throw new ConflictError("Saldo insuficiente en la cuenta.", {
-                        accountId: ["Saldo insuficiente"]
-                    });
-                }
-                transaction.account.balance -= transaction.amount;
-            }
-            else if (transaction.type === TypeTransaction.TRANSFER) {
-                if (!transaction.relatedAccount) throw new BadRequestError("Una transferencia requiere una cuenta destino.");
-                if (transaction.account.balance < transaction.amount) {
-                    throw new ConflictError("Saldo insuficiente en cuenta origen.");
-                }
 
-                transaction.account.balance -= transaction.amount;
-                transaction.relatedAccount.balance += transaction.amount;
-            }
-            else if (transaction.type === TypeTransaction.CREDIT_PAYMENT) {
-                if (!transaction.relatedAccount || transaction.relatedAccount.type !== TypeAccount.CREDIT) {
+            if (nextType === TypeTransaction.CREDIT_PAYMENT) {
+                if (!nextRelatedAccount || nextRelatedAccount.type !== TypeAccount.CREDIT) {
                     throw new ConflictError("El pago de crédito debe ser hacia una cuenta de tipo crédito.", {
                         relatedAccountId: ["El pago de crédito debe ser hacia una cuenta de tipo crédito."]
                     });
                 }
 
-                const withOverDraft = transaction.relatedAccount.creditLimit * ((transaction.relatedAccount.overdraft || 0) + 1);
-                const debt = withOverDraft - transaction.relatedAccount.balance;
+                const baseRelatedBalance = nextRelatedAccount.balance - (oldEffect.get(nextRelatedAccount.id) ?? 0);
+                const withOverDraft = nextRelatedAccount.creditLimit * ((nextRelatedAccount.overdraft || 0) + 1);
+                const debt = withOverDraft - baseRelatedBalance;
 
-                if (transaction.account.balance < transaction.amount) {
-                    throw new ConflictError("Saldo insuficiente para el pago.", {
-                        amount: ["Monto no disponible en la cuenta."]
-                    });
-                }
-                if (transaction.amount > debt) {
+                if (nextAmount > debt) {
                     throw new BadRequestError("El pago excede la deuda de la tarjeta.", {
                         amount: ["Monto excede la deuda registrada"]
                     });
                 }
-
-                transaction.account.balance -= transaction.amount;
-                transaction.relatedAccount.balance += transaction.amount;
             }
 
-            await queryRunner.manager.save(transaction.account);
-            if (transaction.relatedAccount) {
-                await queryRunner.manager.save(transaction.relatedAccount);
+            // Ninguna cuenta puede quedar con saldo negativo tras el cambio
+            for (const [accountId, delta] of newEffect) {
+                const account = requireAccount(accountId);
+                const base = account.balance - (oldEffect.get(accountId) ?? 0);
+                if (base + delta < 0) {
+                    throw new ConflictError("Saldo insuficiente en la cuenta.", {
+                        accountId: ["Saldo insuficiente"],
+                        amount: ["Monto no disponible en la cuenta."]
+                    });
+                }
             }
 
-            updatedTransaction = await queryRunner.manager.save(transaction);
+            // 6) Aplicar deltas netos: un solo UPDATE por cuenta afectada
+            const touchedIds = new Set([...oldEffect.keys(), ...newEffect.keys()]);
+            const accountsToSave: Account[] = [];
+            for (const accountId of touchedIds) {
+                const account = requireAccount(accountId);
+                const net = (newEffect.get(accountId) ?? 0) - (oldEffect.get(accountId) ?? 0);
+                if (net !== 0) {
+                    account.balance += net;
+                    accountsToSave.push(account);
+                }
+            }
+
+            // 7) Actualizar la transacción. relatedAccount = null limpia el FK
+            //    cuando el nuevo tipo no usa cuenta relacionada.
+            transaction.type = nextType;
+            transaction.amount = nextAmount;
+            transaction.account = nextAccount;
+            transaction.relatedAccount = nextRelatedAccount ?? null;
+            transaction.category = nextCategory;
+            if (updateData.name) transaction.name = updateData.name;
+            if (updateData.description !== undefined) transaction.description = updateData.description;
+            if (updateData.date) transaction.date = updateData.date;
+            if (updateData.time) transaction.time = updateData.time;
+
+            for (const account of accountsToSave) {
+                await manager.save(account);
+            }
+            const updatedTransaction = await manager.save(transaction);
+
             await queryRunner.commitTransaction();
-
+            return toTransactionResponse(updatedTransaction);
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw error;
         } finally {
             await queryRunner.release();
         }
-
-        return toTransactionResponse(updatedTransaction);
     }
 
     async deleteTransaction(id: UuidSchema, userId: UuidSchema): Promise<void> {
@@ -492,36 +598,38 @@ export class TransactionService {
         await queryRunner.startTransaction();
 
         try {
-            const transaction = await queryRunner.manager.findOne(Transaction, {
+            const manager = queryRunner.manager;
+
+            await this.lockTransactionRow(manager, id, userId);
+
+            const transaction = await manager.findOne(Transaction, {
                 where: { id, user: { id: userId } },
                 relations: ['account', 'relatedAccount']
             });
             if (!transaction) throw new NotFoundError("Transacción no encontrada para el usuario");
 
-            // Revertir impacto en cuentas según tipo
-            switch (transaction.type) {
-                case TypeTransaction.INCOME:
-                    transaction.account.balance -= transaction.amount;
-                    break;
-                case TypeTransaction.EXPENSE:
-                    transaction.account.balance += transaction.amount;
-                    break;
-                case TypeTransaction.TRANSFER:
-                    transaction.account.balance += transaction.amount;
-                    if (transaction.relatedAccount) transaction.relatedAccount.balance -= transaction.amount;
-                    break;
-                case TypeTransaction.CREDIT_PAYMENT:
-                    transaction.account.balance += transaction.amount;
-                    if (transaction.relatedAccount) transaction.relatedAccount.balance -= transaction.amount;
-                    break;
+            const accountsById = await this.lockAccounts(
+                manager,
+                [transaction.account.id, transaction.relatedAccount?.id],
+                userId
+            );
+
+            // Revertir el efecto exacto que la transacción tuvo sobre los saldos
+            const effect = this.computeBalanceEffect({
+                type: transaction.type,
+                amount: transaction.amount,
+                account: transaction.account,
+                relatedAccount: transaction.relatedAccount ?? null
+            });
+
+            for (const [accountId, delta] of effect) {
+                const account = accountsById.get(accountId);
+                if (!account) throw new NotFoundError("Cuenta no encontrada o no pertenece al usuario");
+                account.balance -= delta;
+                await manager.save(account);
             }
 
-            await queryRunner.manager.save(transaction.account);
-            if (transaction.relatedAccount) {
-                await queryRunner.manager.save(transaction.relatedAccount);
-            }
-
-            await queryRunner.manager.delete(Transaction, { id, user: { id: userId } });
+            await manager.delete(Transaction, { id, user: { id: userId } });
             await queryRunner.commitTransaction();
         } catch (error) {
             await queryRunner.rollbackTransaction();

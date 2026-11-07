@@ -38,3 +38,16 @@ export const updateCategorySchema = categorySchema.omit({ type: true }).partial(
     { message: "Debes enviar al menos un campo válido para actualizar", path: [], }
 )
 export type UpdateCategorySchema = z.infer<typeof updateCategorySchema>;
+
+export const suggestQuerySchema = z.object({
+    name: z
+        .string({ message: 'El campo "name" es requerido' })
+        .trim()
+        .min(2, { message: "El nombre debe tener al menos 2 caracteres" })
+        .max(100, { message: "El nombre no puede exceder los 100 caracteres" }),
+
+    type: z
+        .enum(TypeTransaction, { message: `El campo "type" debe ser uno de los siguientes valores: "INCOME" o "EXPENSE"` }),
+});
+
+export type SuggestQuerySchema = z.infer<typeof suggestQuerySchema>;

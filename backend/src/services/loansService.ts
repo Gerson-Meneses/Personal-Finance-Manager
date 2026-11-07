@@ -42,7 +42,6 @@ export class LoansService {
     userId: UuidSchema,
     filters: LoanQuerySchema
   ): Promise<PaginatedResult<LoanResponse>> {
-    console.log(filters)
     try {
       // Validar y establecer valores por defecto
       const page = filters.page && filters.page > 0 ? filters.page : 1;
@@ -561,7 +560,6 @@ export class LoansService {
         userId, false
       );
 
-      console.log(transactionReferenceData)
       const transactionReference = queryRunner.manager.create(Transaction, transactionReferenceData);
 
       // Crear préstamo

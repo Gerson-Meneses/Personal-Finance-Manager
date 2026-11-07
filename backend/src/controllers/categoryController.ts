@@ -6,12 +6,18 @@ import { PaginationQuerySchema } from "../schemas/queryPagination.schema";
 import { ApiPaginated } from "../typesResponseHttp/apiResponses";
 import { Category } from "../entities/Category.entity";
 import { paginated } from "../helpers/responses";
+import { TypeTransaction } from "../utils/Enums";
 
 const categoryService = new CategoryService();
 
 export const getAllCategoriesByUser = async (c: Context, user: UuidSchema, filters: PaginationQuerySchema) => {
     const result = await categoryService.getCategoriesByUser(user, filters);
     return c.json<ApiPaginated<Category>>(paginated(result.items, result.total, result.page, result.limit), 200)
+}
+
+export const suggestCategoryForUser = async (c: Context, userId: UuidSchema, name: string, type: TypeTransaction) => {
+    const result = await categoryService.suggestCategory(userId, name, type);
+    return c.json(result, 200);
 }
 
 export const getCategoryById = async (c: Context, userId: UuidSchema, categoryId: UuidSchema) => {
@@ -30,6 +36,6 @@ export const updateCategory = async (c: Context, userId: UuidSchema, categoryId:
 }
 
 export const deleteCategory = async (c: Context, userId: UuidSchema, categoryId: UuidSchema) => {
-    const deletedCategory = await categoryService.deleteCategory(userId, categoryId)
-    return c.json(204)
+    await categoryService.deleteCategory(userId, categoryId)
+    return c.body(null, 204)
 }

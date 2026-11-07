@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { TypeAccount } from "../utils/Enums";
 import type { User } from "./User.entity";
 import { Transaction } from "./Transaction.entity";
@@ -8,6 +8,7 @@ import { Loan } from "./Loan.entity";
 @Entity({
     name: "accounts"
 })
+@Index('IDX_accounts_user', ['user'])
 export class Account {
     @PrimaryGeneratedColumn("uuid")
     id: string;

@@ -2,7 +2,7 @@ import { UuidSchema } from "./schemas/uuid.schema";
 
 export type AppEnv = {
     Variables: {
-        user: { sub: UuidSchema; email: string };
+        user: { sub: UuidSchema; email: string; role?: "admin" | "user" };
     };
     Bindings: {};
 };

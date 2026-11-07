@@ -17,6 +17,10 @@ import { resetPasswordTemplate } from "../utils/templates/resetPassword";
 import { passwordReseted } from "../utils/templates/passworReseted";
 import { mailVerifiedTemplate } from "../utils/templates/mailVerified";
 import { templateHtmlVerifyAccount } from "../utils/templates/templateHtmlVerifyAccount";
+import { changeCredentialCode } from "../utils/templates/changeCredentialCode";
+import { emailChangedTemplate } from "../utils/templates/emailChanged";
+import { ChangeEmailSchema, ChangePasswordSchema, UpdateProfileSchema } from "../schemas/profile.schema";
+import { assertNotLastAdmin } from "./userService";
 
 export class AuthService {
 	private userRepo = AppDataSourceProd.getRepository(User);
@@ -282,6 +286,212 @@ export class AuthService {
 
 			await queryRunner.commitTransaction();
 			return "Contraseña actualizada con éxito";
+		} catch (error) {
+			await queryRunner.rollbackTransaction();
+			throw error;
+		} finally {
+			await queryRunner.release();
+		}
+	}
+
+	private async createChangeCode(user: User, type: TypeCode, ip: string, minutes: number) {
+		const code = this.ramdonNum();
+		const hash_code = await Bun.password.hash(code);
+
+		const newCode = this.codesRepo.create({
+			used: false,
+			attemps: 0,
+			user,
+			type,
+			expired_at: new Date(Date.now() + minutes * 60 * 1000),
+			hash_code,
+			ip_address: ip
+		});
+
+		await this.codesRepo.save(newCode);
+		return code;
+	}
+
+	private async verifyChangeCode(userId: string, code: string, type: TypeCode, currentIp: string) {
+		if (code.length !== 6) throw new ConflictError("El código debe tener 6 dígitos");
+
+		const codeDb = await this.codesRepo.findOne({
+			where: { user: { id: userId }, used: false, type },
+			order: { createdAt: "DESC" }
+		});
+
+		if (!codeDb) throw new NotFoundError("No hay códigos pendientes");
+		if (codeDb.expired_at.getTime() < Date.now()) throw new ConflictError("El código ha expirado");
+		if (codeDb.attemps >= 3) throw new ConflictError("Límite de intentos superado. Genera uno nuevo.");
+
+		const isCodeValid = await Bun.password.verify(code, codeDb.hash_code);
+
+		if (!isCodeValid) {
+			codeDb.attemps += 1;
+			await this.codesRepo.save(codeDb);
+			throw new UnauthorizedError("Código incorrecto");
+		}
+
+		codeDb.used = true;
+		codeDb.ip_validation_address = currentIp;
+		return codeDb;
+	}
+
+	async updateProfile(userId: string, data: UpdateProfileSchema) {
+		const user = await this.userRepo.findOne({ where: { id: userId } });
+		if (!user) throw new NotFoundError("Usuario no encontrado");
+
+		if (data.phone !== undefined && data.phone !== user.phone) {
+			const phoneInUse = await this.userRepo.findOneBy({ phone: data.phone });
+			if (phoneInUse) {
+				throw new ConflictError('Phone number already in use', { phone: ["El número de teléfono ya está en uso"] });
+			}
+		}
+
+		if (data.name !== undefined) user.name = data.name;
+		if (data.birthDate !== undefined) user.birthDate = new Date(data.birthDate);
+		if (data.phone !== undefined) user.phone = data.phone;
+		if (data.country !== undefined) user.country = data.country;
+
+		return await this.userRepo.save(user);
+	}
+
+	async changeEmailGenerate(userId: string, ip: string) {
+		const user = await this.userRepo.findOne({ where: { id: userId }, relations: ["credential"] });
+		if (!user) throw new NotFoundError("Usuario no encontrado");
+
+		const code = await this.createChangeCode(user, TypeCode.CHANGE_EMAIL, ip, 10);
+
+		sendEmail({
+			to: user.credential.email,
+			subject: "Cambio de Email",
+			html: changeCredentialCode(user.name, code, "cambio de email")
+		});
+
+		return "Recibirás un código en tu correo en unos instantes.";
+	}
+
+	async changeEmail(userId: string, data: ChangeEmailSchema, currentIp: string) {
+		const user = await this.userRepo.findOne({ where: { id: userId }, relations: ["credential"] });
+		if (!user) throw new NotFoundError("Usuario no encontrado");
+
+		const codeDb = await this.verifyChangeCode(userId, data.code, TypeCode.CHANGE_EMAIL, currentIp);
+
+		if (data.newEmail === user.credential.email) {
+			throw new ConflictError("El nuevo email es igual al actual");
+		}
+
+		const emailInUse = await this.credentialRepo.findOneBy({ email: data.newEmail });
+		if (emailInUse) {
+			throw new ConflictError('Email already in use', { email: ["El email ya está en uso"] });
+		}
+
+		const queryRunner = AppDataSourceProd.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+
+		try {
+			user.credential.email = data.newEmail;
+			await queryRunner.manager.save(user.credential);
+
+			await queryRunner.manager.save(codeDb);
+
+			sendEmail({
+				to: data.newEmail,
+				subject: "Tu email fue actualizado",
+				html: emailChangedTemplate(user.name, data.newEmail)
+			});
+
+			await queryRunner.commitTransaction();
+			return "Email actualizado con éxito";
+		} catch (error) {
+			await queryRunner.rollbackTransaction();
+			throw error;
+		} finally {
+			await queryRunner.release();
+		}
+	}
+
+	async changePasswordGenerate(userId: string, ip: string) {
+		const user = await this.userRepo.findOne({ where: { id: userId }, relations: ["credential"] });
+		if (!user) throw new NotFoundError("Usuario no encontrado");
+
+		const code = await this.createChangeCode(user, TypeCode.CHANGE_PASSWORD, ip, 15);
+
+		sendEmail({
+			to: user.credential.email,
+			subject: "Cambio de Contraseña",
+			html: changeCredentialCode(user.name, code, "cambio de contraseña")
+		});
+
+		return "Recibirás un código en tu correo en unos instantes.";
+	}
+
+	async changePassword(userId: string, data: ChangePasswordSchema, currentIp: string) {
+		const user = await this.userRepo.findOne({ where: { id: userId }, relations: ["credential"] });
+		if (!user) throw new NotFoundError("Usuario no encontrado");
+
+		const codeDb = await this.verifyChangeCode(userId, data.code, TypeCode.CHANGE_PASSWORD, currentIp);
+
+		const queryRunner = AppDataSourceProd.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+
+		try {
+			user.credential.password = await Bun.password.hash(data.newPassword);
+			await queryRunner.manager.save(user.credential);
+
+			await queryRunner.manager.save(codeDb);
+
+			sendEmail({
+				to: user.credential.email,
+				subject: "Cambio de contraseña",
+				html: passwordReseted(user.name, new Date().toISOString())
+			});
+
+			await queryRunner.commitTransaction();
+			return "Contraseña actualizada con éxito";
+		} catch (error) {
+			await queryRunner.rollbackTransaction();
+			throw error;
+		} finally {
+			await queryRunner.release();
+		}
+	}
+
+	async generateDeleteAccountCode(userId: string, ip: string) {
+		const user = await this.userRepo.findOne({ where: { id: userId }, relations: ["credential"] });
+		if (!user) throw new NotFoundError("Usuario no encontrado");
+		await assertNotLastAdmin(this.userRepo, user);
+
+		const code = await this.createChangeCode(user, TypeCode.DELETE_ACCOUNT, ip, 10);
+
+		sendEmail({
+			to: user.credential.email,
+			subject: "Eliminación de cuenta",
+			html: changeCredentialCode(user.name, code, "eliminación de cuenta")
+		});
+
+		return "Recibirás un código en tu correo en unos instantes.";
+	}
+
+	async deleteAccount(userId: string, code: string, currentIp: string) {
+		const user = await this.userRepo.findOne({ where: { id: userId }, relations: ["credential"] });
+		if (!user) throw new NotFoundError("Usuario no encontrado");
+
+		const codeDb = await this.verifyChangeCode(userId, code, TypeCode.DELETE_ACCOUNT, currentIp);
+		await assertNotLastAdmin(this.userRepo, user);
+
+		const queryRunner = AppDataSourceProd.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+
+		try {
+			await queryRunner.manager.softDelete(User, { id: userId });
+			await queryRunner.manager.save(codeDb);
+
+			await queryRunner.commitTransaction();
+			return "Cuenta eliminada con éxito";
 		} catch (error) {
 			await queryRunner.rollbackTransaction();
 			throw error;

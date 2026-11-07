@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne, JoinColumn, OneToMany, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne, JoinColumn, OneToMany, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 import { Credential } from './Credential.entity';
 import { Account } from './Account.entity';
 import { Category } from './Category.entity';
@@ -40,6 +40,9 @@ export class User {
 
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt: Date;
+
+    @DeleteDateColumn({ type: 'timestamp', nullable: true })
+    deletedAt: Date | null;
     
     @Column({ type: "boolean", default: false })
     is_verified: boolean

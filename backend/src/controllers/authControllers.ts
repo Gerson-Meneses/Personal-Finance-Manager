@@ -3,6 +3,7 @@ import { UserWithCredentials } from '../schemas/user.schema';
 import { AuthService } from '../services/authServices';
 import { CredentialSchema } from '../schemas/credential.schema';
 import { ResetPasswordSchema, VerifySchema } from '../schemas/verify.schema';
+import { ChangeEmailSchema, ChangePasswordSchema, UpdateProfileSchema } from '../schemas/profile.schema';
 
 const authService = new AuthService();
 
@@ -33,6 +34,31 @@ export const resetPasswordGenerateCode = async (c: Context, { email }: { email: 
 
 export const resetPasswordVerifyCode = async (c: Context, data: ResetPasswordSchema, ip: string) => {
     const response = await authService.resetPassword(data, ip);
+    return c.json({ message: response });
+}
+
+export const updateProfileController = async (c: Context, userId: string, data: UpdateProfileSchema) => {
+    const user = await authService.updateProfile(userId, data);
+    return c.json({ message: "Perfil actualizado correctamente", user });
+}
+
+export const changeEmailGenerateController = async (c: Context, userId: string, ip: string) => {
+    const response = await authService.changeEmailGenerate(userId, ip);
+    return c.json({ message: response });
+}
+
+export const changeEmailController = async (c: Context, userId: string, data: ChangeEmailSchema, ip: string) => {
+    const response = await authService.changeEmail(userId, data, ip);
+    return c.json({ message: response });
+}
+
+export const changePasswordGenerateController = async (c: Context, userId: string, ip: string) => {
+    const response = await authService.changePasswordGenerate(userId, ip);
+    return c.json({ message: response });
+}
+
+export const changePasswordController = async (c: Context, userId: string, data: ChangePasswordSchema, ip: string) => {
+    const response = await authService.changePassword(userId, data, ip);
     return c.json({ message: response });
 }
 

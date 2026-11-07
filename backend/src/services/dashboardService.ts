@@ -7,7 +7,7 @@ import { Transaction } from "../entities/Transaction.entity"
 import { DashboardQuerySchema } from "../schemas/dashboardQuerySchema"
 import { money } from "../utils/normalizarMoney"
 import { getMaxBalance } from "../utils/getBalanceToCreditCard"
-import { StatusLoan } from "../utils/Enums"
+import { StatusLoan, TypeTransaction } from "../utils/Enums"
 
 
 
@@ -67,12 +67,65 @@ export class DashboardService {
         const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
 
         /* -------------------------------- */
-        /* ACCOUNTS */
+        /* QUERIES (todas independientes -> en paralelo) */
         /* -------------------------------- */
 
-        const accounts = await this.accountRepo.find({
-            where: { user: { id: userId } }
+        const incomeExpensePromise = this.transactionRepo
+            .createQueryBuilder("t")
+            .select("COALESCE(SUM(t.amount) FILTER (WHERE t.type = :incomeType AND t.loanId IS NULL), 0)", "income")
+            .addSelect("COALESCE(SUM(t.amount) FILTER (WHERE t.type = :expenseType AND t.loanPaymentId IS NULL), 0)", "expense")
+            .where("t.userId = :userId", { userId })
+            .andWhere("t.date >= :start", { start: startOfMonth })
+            .andWhere("t.date <= :end", { end: endOfMonth })
+            .setParameters({ incomeType: TypeTransaction.INCOME, expenseType: TypeTransaction.EXPENSE })
+            .getRawOne()
+
+        const categoriesPromise = this.transactionRepo
+            .createQueryBuilder("t")
+            .leftJoinAndSelect("t.category", "category")
+            .select("category.id", "id")
+            .addSelect("category.name", "name")
+            .addSelect("category.color", "color")
+            .addSelect("category.icon", "icon")
+            .addSelect("SUM(t.amount)", "amount")
+            .addSelect("COUNT(t.id)", "transactionCount")
+            .where("t.userId = :userId", { userId })
+            .andWhere("t.type = 'EXPENSE'")
+            .andWhere("t.date >= :start", { start: startOfMonth })
+            .andWhere("t.date <= :end", { end: endOfMonth })
+            .groupBy("category.id")
+            .addGroupBy("category.name")
+            .addGroupBy("category.color")
+            .addGroupBy("category.icon")
+            .getRawMany()
+
+        const recentPromise = this.transactionRepo.find({
+            where: {
+                user: { id: userId }
+            },
+            relations: ["category", "account", "relatedAccount", "loan", "loanPayment"],
+            order: {
+                createdAt: "DESC"
+            },
+            take: recentsTransactions ?? 5
         })
+
+        const [accounts, loans, incomeExpenseRaw, rawCategories, recentTransactions] = await Promise.all([
+            this.accountRepo.find({
+                where: { user: { id: userId } }
+            }),
+            this.loanRepo.find({
+                where: { user: { id: userId }, status: StatusLoan.PENDING },
+                order: { createdAt: "DESC" }
+            }),
+            incomeExpensePromise,
+            categoriesPromise,
+            recentPromise
+        ])
+
+        /* -------------------------------- */
+        /* ACCOUNTS */
+        /* -------------------------------- */
 
         let debit = 0
         let credit = 0
@@ -103,11 +156,6 @@ export class DashboardService {
         /* LOANS */
         /* -------------------------------- */
 
-        const loans = await this.loanRepo.find({
-            where: { user: { id: userId }, status: StatusLoan.PENDING },
-            order: { createdAt: "DESC" }
-        })
-
         const given = loans.filter(l => l.type === "GIVEN").map(loan => ({ ...loan, principalAmount: money(loan.principalAmount) }))
         const received = loans.filter(l => l.type === "RECEIVED").map(loan => ({ ...loan, principalAmount: money(loan.principalAmount) }))
 
@@ -122,61 +170,15 @@ export class DashboardService {
         )
 
         /* -------------------------------- */
-        /* MONTH INCOME */
+        /* MONTH INCOME / EXPENSE (una sola query) */
         /* -------------------------------- */
 
-        const incomeMonthRaw = await this.transactionRepo
-            .createQueryBuilder("t")
-            .select("COALESCE(SUM(t.amount),0)", "total")
-            .where("t.userId = :userId", { userId })
-            .andWhere("t.type = 'INCOME'")
-            .andWhere("t.date >= :start", { start: startOfMonth })
-            .andWhere("t.date <= :end", { end: endOfMonth })
-            .andWhere("t.loanId IS NULL")
-            .getRawOne()
-
-        const incomeMonth = money(Number(incomeMonthRaw.total))
-
-        /* -------------------------------- */
-        /* MONTH EXPENSE */
-        /* -------------------------------- */
-
-        const expenseMonthRaw = await this.transactionRepo
-            .createQueryBuilder("t")
-            .select("COALESCE(SUM(t.amount),0)", "total")
-            .where("t.userId = :userId", { userId })
-            .andWhere("t.type = 'EXPENSE'")
-            .andWhere("t.date >= :start", { start: startOfMonth })
-            .andWhere("t.date <= :end", { end: endOfMonth })
-            .andWhere("t.loanPaymentId IS NULL")
-            .getRawOne()
-
-        const expenseMonth = money(Number(expenseMonthRaw.total))
+        const incomeMonth = money(Number(incomeExpenseRaw?.income ?? 0))
+        const expenseMonth = money(Number(incomeExpenseRaw?.expense ?? 0))
 
         /* -------------------------------- */
         /* EXPENSES BY CATEGORY */
         /* -------------------------------- */
-
-        const rawCategories = await this.transactionRepo
-            .createQueryBuilder("t")
-            .leftJoinAndSelect("t.category", "category")
-            .select("category.id", "id")
-            .addSelect("category.name", "name")
-            .addSelect("category.color", "color")
-            .addSelect("category.icon", "icon")
-            .addSelect("SUM(t.amount)", "amount")
-            .addSelect("COUNT(t.id)", "transactionCount")
-            .where("t.userId = :userId", { userId })
-            .andWhere("t.type = 'EXPENSE'")
-            .andWhere("t.date >= :start", { start: startOfMonth })
-            .andWhere("t.date <= :end", { end: endOfMonth })
-            .groupBy("category.id")
-            .addGroupBy("category.name")
-            .addGroupBy("category.color")
-            .addGroupBy("category.icon")
-            .getRawMany()
-
-
 
         const expensesByCategory = rawCategories.map(row => (
            {
@@ -193,17 +195,6 @@ export class DashboardService {
         /* -------------------------------- */
         /* RECENT TRANSACTIONS */
         /* -------------------------------- */
-
-        const recentTransactions = await this.transactionRepo.find({
-            where: {
-                user: { id: userId }
-            },
-            relations: ["category", "account", "relatedAccount", "loan", "loanPayment"],
-            order: {
-                createdAt: "DESC"
-            },
-            take: recentsTransactions ?? 5
-        })
 
         for (const t of recentTransactions) {
             t.amount = money(t.amount)

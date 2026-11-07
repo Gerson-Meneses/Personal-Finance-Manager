@@ -1,5 +1,6 @@
 import 'reflect-metadata'
-import { DataSource } from 'typeorm'
+import { join } from 'path'
+import { DataSource, DataSourceOptions, LogLevel } from 'typeorm'
 import 'dotenv/config'
 import { Account } from '../entities/Account.entity'
 import { Category } from '../entities/Category.entity'
@@ -12,29 +13,67 @@ import { User } from '../entities/User.entity'
 import { LoanPayment } from '../entities/LoanPayment.entity'
 import { Codes } from '../entities/Codes.entity'
 
- export const AppDataSourceProd = new DataSource({
-    type: 'postgres',
-    url: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false,
-    },
-    synchronize: true, // ⚠️ en producción NO uses true
-    dropSchema: false, // ⚠️ en producción NO uses true
-    logging: ['error'],
-    entities: [Account, Category, Credential, Loan, LoanInstallment, LoanPayment ,ReccurentTransaction, Transaction, User, Codes],
-})  
+const entities = [
+    Account,
+    Category,
+    Credential,
+    Loan,
+    LoanInstallment,
+    LoanPayment,
+    ReccurentTransaction,
+    Transaction,
+    User,
+    Codes,
+]
 
-/* 
-export const AppDataSourceProd = new DataSource({
-    type: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    username: 'postgres',
-    password: 'admin123',
-    database: 'finance_manager',
-    dropSchema: false,
-    synchronize: true, // ❗ solo en desarrollo
-    logging: ["error"],
-    entities: [Account, Category, Credential, Loan, LoanInstallment, LoanPayment, ReccurentTransaction, Transaction, User, Codes],
-}) */
+// En desarrollo (bun desde src) carga *.ts; en producción (dist) carga *.js
+const migrations = [join(__dirname, 'migrations', '*.{ts,js}')]
 
+const isLocalHost = (host: string) => host === 'localhost' || host === '127.0.0.1'
+
+const commonOptions = {
+    synchronize: false as const,
+    dropSchema: false as const,
+    logging: ['error'] as LogLevel[],
+    entities,
+    migrations,
+    migrationsTableName: 'migrations',
+}
+
+function buildDataSourceOptions(): DataSourceOptions {
+    const sslEnv = process.env.DB_SSL // 'true' | 'false'
+
+    // 1) Parámetros individuales (DB_HOST) → configuración local/ explícita
+    if (process.env.DB_HOST) {
+        return {
+            ...commonOptions,
+            type: 'postgres',
+            host: process.env.DB_HOST,
+            port: Number(process.env.DB_PORT ?? 5432),
+            username: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            ssl: sslEnv === 'true' ? { rejectUnauthorized: false } : undefined,
+        }
+    }
+
+    // 2) DATABASE_URL → entorno con URL completa (p.ej. producción)
+    if (process.env.DATABASE_URL) {
+        const useSsl = sslEnv
+            ? sslEnv === 'true'
+            : !isLocalHost(new URL(process.env.DATABASE_URL).hostname)
+
+        return {
+            ...commonOptions,
+            type: 'postgres',
+            url: process.env.DATABASE_URL,
+            ssl: useSsl ? { rejectUnauthorized: false } : undefined,
+        }
+    }
+
+    throw new Error(
+        'Configuración de base de datos faltante: define DATABASE_URL o DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME (usa .env.example como referencia)'
+    )
+}
+
+export const AppDataSourceProd = new DataSource(buildDataSourceOptions())

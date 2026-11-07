@@ -1,10 +1,10 @@
 import { Context, Hono } from "hono";
 import { AppEnv } from "../types";
 import { zValidator } from "@hono/zod-validator";
-import { categorySchema, UpdateCategorySchema, updateCategorySchema } from "../schemas/category.schema"
+import { categorySchema, suggestQuerySchema, UpdateCategorySchema, updateCategorySchema } from "../schemas/category.schema"
 import { ZodError } from "zod";
 import { zodErrorResponse } from "../helpers/zodErrorResponse";
-import { createCategory, deleteCategory, getAllCategoriesByUser, getCategoryById, updateCategory } from "../controllers/categoryController";
+import { createCategory, deleteCategory, getAllCategoriesByUser, getCategoryById, suggestCategoryForUser, updateCategory } from "../controllers/categoryController";
 import { uuidParamSchema, UuidSchema } from "../schemas/uuid.schema";
 import { PaginationQuerySchema, paginationQuerySchema } from "../schemas/queryPagination.schema";
 
@@ -22,6 +22,18 @@ categoryRouter.get("/",
         };
         const user = c.get('user')
         return await getAllCategoriesByUser(c, user.sub, filters)
+    }
+)
+
+// Debe registrarse antes de "/:id" para que no lo capture el parámetro
+categoryRouter.get("/suggest",
+    zValidator("query", suggestQuerySchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    async (c) => {
+        const user = c.get('user')
+        const { name, type } = c.req.valid("query")
+        return await suggestCategoryForUser(c, user.sub, name, type)
     }
 )
 

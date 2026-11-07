@@ -1,9 +1,9 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import type { User } from "./User.entity";
 import { TypeCode } from "../utils/Enums";
 
 @Entity({ name: "codes" })
-
+@Index('IDX_codes_user_type', ['user', 'type'])
 export class Codes {
     @PrimaryGeneratedColumn("uuid")
     id: string
