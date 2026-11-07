@@ -127,6 +127,11 @@
     gap: 20px;
 }
 
+.grid-auto > *,
+.grid-auto-tall > * {
+    min-width: 0;
+}
+
 /* Definir autamaticamente una fila */
 .default-row {
     display: flex;
@@ -707,13 +712,13 @@
     }
 
     .grid-auto {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
 @media (max-width: 768px) {
     .grid-auto-tall {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .default-row {

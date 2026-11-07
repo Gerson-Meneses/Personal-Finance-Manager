@@ -149,15 +149,23 @@ main {
     /* espacio para el FAB */
 }
 
+/* ─── FAB stack (FAB + pill de navegación alineados) ─── */
+.fab-stack {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    z-index: 50;
+}
+
 /* ─── Nav pills ───────────────────────────────────────── */
 .nav-pills {
     display: flex;
     gap: 8px;
-    position: fixed;
-    right: 26px;
-    bottom: 85px;
     flex-direction: column;
-    z-index: 50;
 }
 
 .nav-pill {
@@ -192,9 +200,7 @@ main {
 
 /* ─── FAB ─────────────────────────────────────────────── */
 .fab {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
+    position: relative;
     width: 52px;
     height: 52px;
     border-radius: 50%;
@@ -332,14 +338,12 @@ main {
         height: 34px;
     }
 
-    .nav-pills {
-        bottom: 80px;
+    .fab-stack {
         right: 16px;
+        bottom: 20px;
     }
 
     .fab {
-        bottom: 20px;
-        right: 16px;
         width: 48px;
         height: 48px;
     }

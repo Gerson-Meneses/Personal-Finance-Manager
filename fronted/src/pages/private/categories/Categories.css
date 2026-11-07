@@ -90,6 +90,51 @@
     }
 }
 
+@media (max-width: 640px) {
+    .page-header.categories-header {
+        margin-bottom: 0;
+        align-items: stretch;
+    }
+
+    .categories-toolbar {
+        gap: 8px;
+    }
+
+    .categories-toolbar .si-wrapper {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .cat-sort-select.custom-form-group {
+        flex: 1 1 auto;
+        width: auto;
+    }
+
+    .category-item {
+        gap: 6px;
+        padding: 8px 6px;
+    }
+
+    .cat-share-bar {
+        display: none;
+    }
+
+    .cat-share {
+        gap: 0;
+    }
+
+    .cat-usage {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .cat-usage,
+    .category-name {
+        max-width: 100%;
+    }
+}
+
 /* Contador por grupo */
 .category-count {
     display: inline-flex;

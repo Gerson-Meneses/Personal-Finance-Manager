@@ -157,38 +157,39 @@ export function PrivateLayout() {
       </header>
 
       <main>
-        {/* Pills de navegación contextual — solo fuera del home */}
-        {!isHome && (
-          <div className="nav-pills">
-            <button
-              className="nav-pill tooltip-left"
-              data-tooltip="Atrás"
-              onClick={() => navigate(-1)}
-              aria-label="Atrás"
-            >
-              <ArrowLeft size={20} />
-            </button>
-          </div>
-        )}
-
         <div className="page-transition" key={location.pathname}>
           <Outlet></Outlet>
         </div>
 
-        {/* FAB crear transacción */}
-        <button
-          className="fab tooltip-left"
-          data-tooltip="Agregar Transacción"
-          onClick={() => {
-            // Limpia isSuccess/error de una creación anterior: si no,
-            // al reabrir se montaría el SuccessToast viejo (flash).
-            saveTransaction.reset()
-            setModal(true)
-          }}
-          aria-label="Nueva transacción"
-        >
-          <Plus size={22} />
-        </button>
+        {/* FAB + navegación contextual alineados en una sola columna */}
+        <div className="fab-stack">
+          {!isHome && (
+            <div className="nav-pills">
+              <button
+                className="nav-pill tooltip-left"
+                data-tooltip="Atrás"
+                onClick={() => navigate(-1)}
+                aria-label="Atrás"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            </div>
+          )}
+
+          <button
+            className="fab tooltip-left"
+            data-tooltip="Agregar Transacción"
+            onClick={() => {
+              // Limpia isSuccess/error de una creación anterior: si no,
+              // al reabrir se montaría el SuccessToast viejo (flash).
+              saveTransaction.reset()
+              setModal(true)
+            }}
+            aria-label="Nueva transacción"
+          >
+            <Plus size={22} />
+          </button>
+        </div>
 
         <ModalPortal isOpen={modal} onClose={() => setModal(false)}>
           <TransactionForm

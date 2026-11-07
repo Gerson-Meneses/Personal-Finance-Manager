@@ -52,6 +52,7 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+    min-width: 0;
 }
 
 /* ─── Lenguaje de interacción unificado ───────────────── */
@@ -378,5 +379,27 @@ button.qs-item:focus-visible {
         padding: 12px;
     }
 
+    .dash-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dash-header .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+
     .qs-value { font-size: 1rem; }
+
+    .cat-row {
+        padding: 6px 4px;
+    }
+
+    .cat-row-left {
+        gap: 8px;
+    }
+
+    .cat-amount {
+        font-size: 0.8rem;
+    }
 }
