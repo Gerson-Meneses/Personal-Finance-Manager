@@ -5,9 +5,17 @@ body {
     padding: 0;
     margin: 0;
     min-height: 100vh;
-    background-color: #020120;
+    background-color: #000000;
+    background-image:
+        radial-gradient(ellipse 75% 45% at 50% -10%, rgba(241, 196, 15, 0.045), transparent 60%),
+        radial-gradient(ellipse 55% 40% at 95% 105%, rgba(56, 189, 248, 0.04), transparent 65%);
     color: #ededed;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+::selection {
+    background: rgba(241, 196, 15, 0.3);
+    color: #fff;
 }
 
 #root {
@@ -52,7 +60,7 @@ form {
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0px 1000px #0a1929 inset !important;
+    -webkit-box-shadow: 0 0 0px 1000px #0b0d12 inset !important;
     -webkit-text-fill-color: #f8fafc !important;
     transition: background-color 5000s ease-in-out 0s;
     caret-color: #f8fafc;
@@ -79,7 +87,7 @@ select {
     padding: .6rem;
     appearance: none;
 }
-option { background-color: #0B1628; cursor: pointer; }
+option { background-color: #0b0d12; cursor: pointer; }
 
 /* ─── Estado deshabilitado ────────────────────────────── */
 .disabled {
@@ -88,13 +96,192 @@ option { background-color: #0B1628; cursor: pointer; }
     pointer-events: none;
 }
 
-/* ─── Tooltip ─────────────────────────────────────────── */
-.tooltip {
-    background-color: #1e1a3f;
-    color: #a2a2a2;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: .8em;
-    margin-bottom: 16px;
+/* ─── Tooltip (hover en escritorio / mantenido presionado en móvil) ── */
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    z-index: 1000;
+    background: #1e293b;
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    transition:
+        opacity 0.12s ease,
+        transform 0.12s ease,
+        visibility 0s linear 0.12s;
+}
+
+/* ── Posiciones (solo con data-tooltip presente) ── */
+.tooltip-left[data-tooltip]::after {
+    top: 50%;
+    right: calc(100% + 8px);
+    transform: translate(6px, -50%);
+}
+
+.tooltip-top[data-tooltip]::after {
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translate(-50%, 6px);
+}
+
+.tooltip-right[data-tooltip]::after {
+    top: 50%;
+    left: calc(100% + 8px);
+    transform: translate(-6px, -50%);
+}
+
+.tooltip-left[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -9px;
+    transform: translateY(-50%);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 6px solid #1e293b;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease, visibility 0s linear 0.12s;
+}
+
+.tooltip-top[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -9px;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #1e293b;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease, visibility 0s linear 0.12s;
+}
+
+.tooltip-right[data-tooltip]::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -9px;
+    transform: translateY(-50%);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 6px solid #1e293b;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease, visibility 0s linear 0.12s;
+}
+
+/* ── Estados: teclado (inmediato) y mantener presionado (tras 250ms) ── */
+[data-tooltip]:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+    transition:
+        opacity 0.12s ease,
+        transform 0.12s ease,
+        visibility 0s linear 0s;
+}
+
+[data-tooltip]:active::after {
+    opacity: 1;
+    visibility: visible;
+    transition:
+        opacity 0.12s ease 0.25s,
+        transform 0.12s ease 0.25s,
+        visibility 0s linear 0.25s;
+}
+
+[data-tooltip]:focus-visible::before {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.12s ease, visibility 0s linear 0s;
+}
+
+[data-tooltip]:active::before {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.12s ease 0.25s, visibility 0s linear 0.25s;
+}
+
+/* Solo punteros con hover real (evita que se quede pegado tras tocar en móvil) */
+@media (hover: hover) and (pointer: fine) {
+    [data-tooltip]:hover::after {
+        opacity: 1;
+        visibility: visible;
+        transition:
+            opacity 0.12s ease,
+            transform 0.12s ease,
+            visibility 0s linear 0s;
+    }
+
+    [data-tooltip]:hover::before {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.12s ease, visibility 0s linear 0s;
+    }
+}
+
+/* ── Movimiento al mostrar ── */
+.tooltip-left[data-tooltip]:is(:active, :focus-visible)::after,
+.tooltip-right[data-tooltip]:is(:active, :focus-visible)::after {
+    transform: translate(0, -50%);
+}
+
+.tooltip-top[data-tooltip]:is(:active, :focus-visible)::after {
+    transform: translate(-50%, 0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .tooltip-left[data-tooltip]:hover::after,
+    .tooltip-right[data-tooltip]:hover::after {
+        transform: translate(0, -50%);
+    }
+
+    .tooltip-top[data-tooltip]:hover::after {
+        transform: translate(-50%, 0);
+    }
+}
+
+/* ── Textos largos: envuelve en varias líneas (anclado a la izquierda arriba) ── */
+.tooltip-wide[data-tooltip]::after {
+    width: max-content;
+    max-width: 340px;
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+
+.tooltip-top.tooltip-wide[data-tooltip]::after {
+    left: 0;
+    transform: translate(0, 6px);
+}
+
+.tooltip-top.tooltip-wide[data-tooltip]:is(:active, :focus-visible)::after {
+    transform: translate(0, 0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .tooltip-top.tooltip-wide[data-tooltip]:hover::after {
+        transform: translate(0, 0);
+    }
+}
+
+.tooltip-anchor {
+    position: relative;
+}
+
+.tooltip-danger::after {
+    color: #f65353;
 }
 

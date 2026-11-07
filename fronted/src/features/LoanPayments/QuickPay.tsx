@@ -78,6 +78,7 @@ export const QuickPayForm = ({ lender, type, onSuccess, onClose }: Props) => {
 
     /* Observamos el tipo para derivar lógica de UI */
     const loanType = useWatch({ control, name: "type" });
+    const selectedDate = useWatch({ control, name: "date" });
     const isGiven = loanType === "GIVEN";     // "Presté dinero"
     const typeClass = isGiven ? "given" : "received";
 
@@ -189,7 +190,7 @@ export const QuickPayForm = ({ lender, type, onSuccess, onClose }: Props) => {
                                 onChange={field.onChange}
                                 error={fieldState.error?.message}
                                 disabled={isPending}
-                                selectedDate={useWatch({ control, name: "date" })}
+                                selectedDate={selectedDate}
                             />
                         )}
                     />

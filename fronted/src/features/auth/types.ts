@@ -13,6 +13,7 @@ export interface User {
     createdAt: string,
     updatedAt: string,
     is_verified: boolean
+    email: string | null
     accounts: Account[],
     categories: Category[]
 }
@@ -66,8 +67,62 @@ export type VerifyEmailCodeOutput = z.output<typeof VerifyEmailCodeSchema>
 export const ResetPasswordSchema = z.object({
     email: emailSchema(),
     code: z.string().min(6, { message: "Formato de codido Invalido" }).max(6, { message: "Formato de codido Invalido" }),
-    newPAssword: passwordSchema()
+    newPassword: passwordSchema()
 })
 export type ResetPasswordInput = z.input<typeof ResetPasswordSchema>
 export type ResetPasswordOutput = z.output<typeof ResetPasswordSchema>
+
+// ─── Perfil ────────────────────────────────────────────────
+
+const codeSchema = z.string()
+    .regex(/^\d{6}$/, { message: "El código debe tener 6 dígitos" })
+
+const changePasswordRules = (label: string = "La contraseña") => z.string({ message: `${label} es requerida` })
+    .min(8, `${label} debe tener al menos 8 caracteres`)
+    .max(16, `${label} no debe exceder los 16 caracteres`)
+    .refine((v) => !/\s/.test(v), `${label} no debe contener espacios`)
+    .refine((v) => /[a-z]/.test(v), `${label} debe tener al menos una minúscula`)
+    .refine((v) => /[A-Z]/.test(v), `${label} debe tener al menos una mayúscula`)
+    .refine((v) => /\d/.test(v), `${label} debe tener al menos un número`)
+    .refine((v) => /[!@#$%^&*()_\-+=.]/.test(v), `${label} debe tener al menos un símbolo válido (!@#...)`)
+
+export const UpdateProfileSchema = z.object({
+    name: nameSchema("Nombre").optional(),
+    birthDate: dateSchema("Cumpleaños").optional(),
+    phone: z.string()
+        .min(7, { message: "El teléfono debe tener mínimo 7 caracteres" })
+        .max(15, { message: "El teléfono debe tener máximo 15 caracteres" })
+        .regex(/^\d+$/, { message: "El teléfono debe contener solo números" })
+        .optional(),
+    country: z.string()
+        .trim()
+        .min(2, { message: "El país debe tener mínimo 2 caracteres" })
+        .max(20, { message: "El país debe tener máximo 20 caracteres" })
+        .optional(),
+})
+export type UpdateProfileInput = z.input<typeof UpdateProfileSchema>
+export type UpdateProfileOutput = z.output<typeof UpdateProfileSchema>
+
+export const ChangeEmailSchema = z.object({
+    code: codeSchema,
+    newEmail: emailSchema("Nuevo email"),
+})
+export type ChangeEmailInput = z.input<typeof ChangeEmailSchema>
+export type ChangeEmailOutput = z.output<typeof ChangeEmailSchema>
+
+export const ChangePasswordSchema = z.object({
+    code: codeSchema,
+    newPassword: changePasswordRules(),
+})
+export type ChangePasswordInput = z.input<typeof ChangePasswordSchema>
+export type ChangePasswordOutput = z.output<typeof ChangePasswordSchema>
+
+export interface MessageResponse {
+    message: string
+}
+
+export interface UpdateProfileResponse {
+    message: string
+    user: User
+}
 

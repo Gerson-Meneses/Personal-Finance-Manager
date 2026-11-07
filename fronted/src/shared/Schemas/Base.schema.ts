@@ -40,8 +40,8 @@ export const nameSchema = (label: string = "Nombre") =>
         .min(3, `${label} debe tener al menos 3 caracteres`)
         .max(99, `${label} no puede exceder los 99 caracteres`)
         .refine(
-            (val) => /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-']+$/.test(val),
-            `${label} solo puede contener letras, números, espacios, guiones y apóstrofes`
+            (val) => /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-',.]+$/.test(val),
+            `${label} solo puede contener letras, números, espacios, guiones, apóstrofes, comas y puntos`
         );
 
 
@@ -103,7 +103,8 @@ export const dateRangeSchema = (label: string = "Rango de fechas") =>
 
 export const timeSchema = (label: string = "Hora") =>
     z.string()
-        .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, `${label} debe tener formato HH:mm`);
+        // Acepta "HH:mm" y también "HH:mm:ss" (Postgres devuelve TIME con segundos)
+        .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/, `${label} debe tener formato HH:mm`);
 
 export const dateTimeSchema = (label: string = "Fecha y Hora") =>
     z.string()

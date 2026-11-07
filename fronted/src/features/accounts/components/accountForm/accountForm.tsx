@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
     AccountSchema,
     type Account,
@@ -20,6 +20,7 @@ import { useAccounts } from "../../hooks";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormContainer } from "../../../../shared/components/FormContainer/FormContainer";
+import InfoModal from "../../../../shared/components/InfoModal/InfoModal";
 import {
     ArrowDownCircle,
     ArrowUpCircle,
@@ -55,6 +56,8 @@ interface PropsAccountForm {
     fieldsHidden?: Fields;
     fieldsDisabled?: Fields;
     isEdit?: boolean;
+    /** Nombre precargado al crear una cuenta */
+    initialName?: string;
     onSuccess?: (account?: Account) => void;
     onClose?: () => void;
 }
@@ -78,11 +81,13 @@ export default function AccountForm({
     fieldsHidden,
     fieldsDisabled,
     isEdit,
+    initialName,
     onSuccess,
     onClose,
 }: PropsAccountForm) {
     const { mutateAsync, isPending, error, isSuccess } = mutation;
     const { deleteAccount } = useAccounts();
+    const [confirmDelete, setConfirmDelete] = useState(false);
 
     const {
         control,
@@ -93,7 +98,10 @@ export default function AccountForm({
     } = useForm<AccountSchemaInput, unknown, AccountSchemaOutput>({
         resolver: zodResolver(AccountSchema),
         mode: "onChange",
-        defaultValues: defaultDebitValues,
+        defaultValues: {
+            ...defaultDebitValues,
+            ...(initialName ? { name: initialName } : {}),
+        },
     });
 
     const accountType = useWatch({ control, name: "type" });
@@ -105,7 +113,7 @@ export default function AccountForm({
 
         const credit = account.type === "CREDIT";
         reset({
-            type: account.type as any,
+            type: account.type as AccountSchemaInput["type"],
             name: account.name,
             color: account.color,
             icon: account.icon,
@@ -160,6 +168,7 @@ export default function AccountForm({
         : "Cuenta de Débito guardada con éxito.";
 
     return (
+        <>
         <FormContainer
             title={isEdit ? "Editar Cuenta" : "Nueva Cuenta"}
             icon={headerIcon}
@@ -340,7 +349,7 @@ export default function AccountForm({
                 )}
 
                 {/* ── ACTIONS ─────────────────────────────────────────────── */}
-                <div className="form-default-row">
+                <div className="form-default-row form-actions-container">
 
                     {!fieldsDisabled?.all && (
                         <SuccessToast successText={successText} isSucces={isSuccess}>
@@ -363,13 +372,7 @@ export default function AccountForm({
                             type="button"
                             className="btn-icon btn-icon-delete"
                             disabled={deleteAccount.isPending}
-                            onClick={() => {
-                                if (window.confirm("¿Seguro que deseas eliminar esta cuenta?")) {
-                                    deleteAccount.mutate(account.id, {
-                                        onSuccess: () => onClose?.(),
-                                    });
-                                }
-                            }}
+                            onClick={() => setConfirmDelete(true)}
                         >
                             <Trash2 size={15} />
                             {deleteAccount.isPending ? "Eliminando…" : "Eliminar"}
@@ -378,6 +381,27 @@ export default function AccountForm({
                 </div>
 
             </form>
-        </FormContainer>
+            </FormContainer>
+
+            <InfoModal
+                isOpen={confirmDelete}
+                onClose={() => setConfirmDelete(false)}
+                onConfirm={() => {
+                    if (!account) return;
+                    deleteAccount.mutate(account.id, {
+                        onSuccess: () => {
+                            setConfirmDelete(false);
+                            onClose?.();
+                        },
+                    });
+                }}
+                type="error"
+                title="Eliminar cuenta"
+                message="¿Seguro que deseas eliminar esta cuenta? Esta acción no se puede deshacer."
+                confirmText={deleteAccount.isPending ? "Eliminando…" : "Eliminar"}
+                cancelText="Cancelar"
+                confirmDisabled={deleteAccount.isPending}
+            />
+        </>
     );
 }

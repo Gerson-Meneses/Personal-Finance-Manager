@@ -33,22 +33,24 @@ export const RangeExactGroup = ({
                     <button
                         type="button"
                         onClick={() => onModeChange("range")}
-                        className={`px-3 py-1 text-[0.75rem] font-medium rounded-md transition-all cursor-pointer ${
+                        className={`relative tooltip-left px-3 py-1 text-[0.75rem] font-medium rounded-md transition-all cursor-pointer ${
                             mode === "range"
                                 ? "bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-[#38bdf8] shadow-sm"
                                 : "border border-transparent text-slate-400 hover:text-slate-200"
                         }`}
+                        data-tooltip={`Filtrar entre dos ${label.toLowerCase()}s`}
                     >
                         Rango
                     </button>
                     <button
                         type="button"
                         onClick={() => onModeChange("exact")}
-                        className={`px-3 py-1 text-[0.75rem] font-medium rounded-md transition-all cursor-pointer ${
+                        className={`relative tooltip-left px-3 py-1 text-[0.75rem] font-medium rounded-md transition-all cursor-pointer ${
                             mode === "exact"
                                 ? "bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-[#38bdf8] shadow-sm"
                                 : "border border-transparent text-slate-400 hover:text-slate-200"
                         }`}
+                        data-tooltip="Filtrar un valor exacto"
                     >
                         Exacto
                     </button>

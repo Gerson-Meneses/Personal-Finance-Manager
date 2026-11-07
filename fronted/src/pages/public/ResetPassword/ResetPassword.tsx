@@ -12,7 +12,7 @@ export const ResetPasswordPage = () => {
     const navigate = useNavigate()
     const { request, confirm } = useResetPassword()
 
-    const [step, setStep] = useState<1 | 2>(2)
+    const [step, setStep] = useState<1 | 2>(1)
     const [email, setEmail] = useState("")
     const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""))
     const [newPassword, setNewPassword] = useState("")
@@ -61,7 +61,7 @@ export const ResetPasswordPage = () => {
             return
         }
         confirm.mutate(
-            { email, code: digits.join(""), newPAssword: newPassword },
+            { email, code: digits.join(""), newPassword },
             { onSuccess: () => navigate("/login") }
         )
     }
@@ -103,7 +103,7 @@ export const ResetPasswordPage = () => {
 
                     {request.isError && (
                         <div className="error-banner">
-                            {(request.error as any)?.message || "Ocurrió un error inesperado"}
+                            {request.error.message || "Ocurrió un error inesperado"}
                         </div>
                     )}
 
@@ -170,7 +170,7 @@ export const ResetPasswordPage = () => {
                                 setPasswordMatch(val === confirmPassword)
                                 confirm.reset()
                             }}
-                            error={(confirm.error as any)?.details?.newPassword?.[0] ?? null}
+                            error={confirm.error?.details?.newPassword?.[0] ?? null}
                             required
                             disabled={confirm.isPending}
                         />
@@ -207,9 +207,9 @@ export const ResetPasswordPage = () => {
                         ))}
                     </ul>
 
-                    {confirm.isError && !(confirm.error as any)?.details && (
+                    {confirm.isError && !confirm.error.details && (
                         <div className="error-banner">
-                            {(confirm.error as any)?.message || "Código inválido o expirado"}
+                            {confirm.error.message || "Código inválido o expirado"}
                         </div>
                     )}
 

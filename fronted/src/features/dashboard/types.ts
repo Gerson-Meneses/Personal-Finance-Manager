@@ -9,9 +9,6 @@ export interface Loan {
   status: string
   startDate: string
 }
-export interface Loan {
-
-}
 
 export interface DashboardResponse {
 

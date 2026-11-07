@@ -5,7 +5,7 @@ import type { Account, AccountSchemaOutput } from "./types";
 const BASE_PATH = "/accounts";
 
 export const getAccounts = () =>
-  apiFetch<Data<Account>>(BASE_PATH);
+  apiFetch<Data<Account>>(`${BASE_PATH}?limit=9999`);
 
 export const getAccountById = (id: string) =>
   apiFetch<Account>(`${BASE_PATH}/${id}`);

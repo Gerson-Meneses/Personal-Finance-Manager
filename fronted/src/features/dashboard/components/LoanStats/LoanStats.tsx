@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { formatCurrency } from "../../../../shared/utils/formatCurrency";
 import type { Loan } from "../../types";
 import "./LoanStats.css"
@@ -11,93 +13,109 @@ interface Props {
         received: Loan[]
     };
 }
-import { useState } from "react";
+
+const groupByLender = (list: Loan[]) =>
+    Object.entries(
+        list.reduce((acc, curr) => {
+            acc[curr.lender] = (acc[curr.lender] || 0) + curr.principalAmount;
+            return acc;
+        }, {} as Record<string, number>)
+    );
 
 export default function LoanStats({ loans }: Props) {
-    const [isOpen, setIsOpen] = useState(false);
-    const [isOpen2, setIsOpen2] = useState(false);
+    const [isGivenOpen, setIsGivenOpen] = useState(false);
+    const [isReceivedOpen, setIsReceivedOpen] = useState(false);
 
     const navigate = useNavigate();
 
-    // Agrupar recibidos por prestamista
-    const receivedGrouped = loans.received.reduce((acc, curr) => {
-        const name = curr.lender;
-        acc[name] = (acc[name] || 0) + curr.principalAmount;
-        return acc;
-    }, {} as Record<string, number>);
+    const givenList = groupByLender(loans.given);
+    const receivedList = groupByLender(loans.received);
 
-    const receivedList = Object.entries(receivedGrouped);
-
-    const givenGrouped = loans.given.reduce((acc, curr) => {
-        const name = curr.lender;
-        acc[name] = (acc[name] || 0) + curr.principalAmount;
-        return acc;
-    }, {} as Record<string, number>);
-
-    const givendList = Object.entries(givenGrouped);
-
-    const activeItems1 = isOpen2 ? givendList.length : 0;
-    const activeItems2 = isOpen ? receivedList.length : 0;
-    const currentMaxItems = Math.max(activeItems1, activeItems2);
+    const headerProps = (open: boolean, toggle: () => void) => ({
+        role: "button" as const,
+        tabIndex: 0,
+        "aria-expanded": open,
+        onClick: toggle,
+        onKeyDown: (e: React.KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggle();
+            }
+        },
+    });
 
     return (
-        <div style={{ '--total-items': currentMaxItems, } as React.CSSProperties} className={`card loan-card-container ${(isOpen || isOpen2) ? 'is-open' : ''}`}>
+        <div className="card loan-card-container">
             <div className="card-head">
                 <h3 className="card-head-title">Préstamos</h3>
-                <button onClick={() => navigate("/loans")} className="btn-ghost">Gestionar →</button>
+                <button onClick={() => navigate("/loans")} className="btn-ghost">
+                    Gestionar <ArrowRight size={14} />
+                </button>
             </div>
 
-            <div className="default-row">
-                <div className="loan-stat-item stack-column">
-                    <div className="header-total givend" onClick={() => setIsOpen2(!isOpen2)}>
-                        <p className="summary-label ">Me deben</p>
+            <div className="default-row loan-container">
+                <div className={`loan-stat-item stack-column ${isGivenOpen ? 'is-open' : ''}`}>
+                    <div
+                        className="header-total givend"
+                        {...headerProps(isGivenOpen, () => setIsGivenOpen(v => !v))}
+                    >
+                        <p className="summary-label">Me deben</p>
                         <strong className="expense">{formatCurrency(loans.totalAmtDue)}</strong>
-                        <span className={`arrow-icon ${isOpen2 ? 'up' : ''}`}>▼</span>
+                        <span className="tooltip-anchor tooltip-left" data-tooltip={isGivenOpen ? "Ocultar detalle" : "Mostrar detalle"}>
+                            <span className={`arrow-icon ${isGivenOpen ? 'up' : ''}`}>▼</span>
+                        </span>
                     </div>
 
-                    <div className="stack-area">
-                        {givendList.map(([name, amount], index) => (
-                            <div
+                    <div
+                        className="stack-area"
+                        style={{ '--items': givenList.length } as React.CSSProperties}
+                    >
+                        {givenList.map(([name, amount], index) => (
+                            <button
+                                type="button"
                                 className="detail-card givend"
                                 key={name}
-                                style={{
-                                    '--index': index,
-                                    opacity: isOpen2 ? 1 : 0,
-                                    pointerEvents: isOpen2 ? 'all' : 'none'
-                                } as React.CSSProperties}
+                                style={{ '--index': index } as React.CSSProperties}
+                                aria-label={`Ver préstamos con ${name}`}
+                                onClick={() => navigate("/loans")}
                             >
                                 <span className="detail-name">{name}</span>
                                 <span className="detail-amount">{formatCurrency(amount)}</span>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </div>
 
                 <div className="loan-divider"></div>
 
-                {/* Columna: Yo debo (Con el Stack) */}
-                <div className="loan-stat-item stack-column">
-
-                    <div className="header-total debt" onClick={() => setIsOpen(!isOpen)}>
+                <div className={`loan-stat-item stack-column ${isReceivedOpen ? 'is-open' : ''}`}>
+                    <div
+                        className="header-total debt"
+                        {...headerProps(isReceivedOpen, () => setIsReceivedOpen(v => !v))}
+                    >
                         <p className="summary-label">Yo debo</p>
                         <strong className="expense">{formatCurrency(loans.totalDebt)}</strong>
-                        <span className={`arrow-icon ${isOpen ? 'up' : ''}`}>▼</span>
+                        <span className="tooltip-anchor tooltip-left" data-tooltip={isReceivedOpen ? "Ocultar detalle" : "Mostrar detalle"}>
+                            <span className={`arrow-icon ${isReceivedOpen ? 'up' : ''}`}>▼</span>
+                        </span>
                     </div>
 
-                    <div className="stack-area">
+                    <div
+                        className="stack-area"
+                        style={{ '--items': receivedList.length } as React.CSSProperties}
+                    >
                         {receivedList.map(([name, amount], index) => (
-                            <div
+                            <button
+                                type="button"
                                 className="detail-card debt"
                                 key={name}
-                                style={{
-                                    '--index': index,
-                                    opacity: isOpen ? 1 : 0,
-                                    pointerEvents: isOpen ? 'all' : 'none'
-                                } as React.CSSProperties}
+                                style={{ '--index': index } as React.CSSProperties}
+                                aria-label={`Ver préstamos con ${name}`}
+                                onClick={() => navigate("/loans")}
                             >
                                 <span className="detail-name">{name}</span>
                                 <span className="detail-amount">{formatCurrency(amount)}</span>
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </div>

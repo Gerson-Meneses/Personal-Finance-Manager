@@ -1,24 +1,47 @@
-import { useDashboard } from "../../../features/dashboard/hooks"
-import BalanceCards from "../../../features/dashboard/components/balanceCard/balanceCard"
-import AccountsList from "../../../features/dashboard/components/accountList"
-import RecentTransactions from "../../../features/dashboard/components/recentTransactions"
-import ExpensesByCategory from "../../../features/dashboard/components/expensesByCategory"
-import QuickStats from "../../../features/dashboard/components/quickStats"
-import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen"
-import "./dashboard.css"
-import LoanStats from "../../../features/dashboard/components/LoanStats/LoanStats"
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import dayjs from "dayjs";
+import "dayjs/locale/es";
+import { useAuthContext } from "../../../features/auth/authContext";
+import { useDashboard } from "../../../features/dashboard/hooks";
+import { useTransactions } from "../../../features/transactions/hooks";
+import BalanceHero from "../../../features/dashboard/components/balanceCard/balanceCard";
+import AccountsList from "../../../features/dashboard/components/accountList";
+import RecentTransactions from "../../../features/dashboard/components/recentTransactions";
+import ExpensesByCategory from "../../../features/dashboard/components/expensesByCategory";
+import QuickStats from "../../../features/dashboard/components/quickStats";
+import LoanStats from "../../../features/dashboard/components/LoanStats/LoanStats";
+import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
+import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
+import TransactionForm from "../../../features/transactions/components/TransactionForm/TransactionForm";
+import InfoModal from "../../../shared/components/InfoModal/InfoModal";
+import "./dashboard.css";
+
+dayjs.locale("es");
+
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default function DashboardPage() {
-    const { dashboardData, loading, error } = useDashboard()
+    const { user } = useAuthContext();
+    const { dashboardData, loading, error, refresh } = useDashboard();
+    const { saveTransaction } = useTransactions();
+    const [txModal, setTxModal] = useState(false);
+    const [txCreated, setTxCreated] = useState(false);
 
-    if (loading) return <LoadingScreen />
+    if (loading) return <LoadingScreen />;
 
     if (error || !dashboardData) {
         return (
-            <div className="dashboard-error">
-                Hubo un problema al cargar los datos.
+            <div className="dashboard">
+                <div className="card dashboard-error">
+                    <p>Hubo un problema al cargar los datos.</p>
+                    <p className="text-muted">{error?.message || "Error inesperado"}</p>
+                    <button className="btn-primary" onClick={() => refresh()}>
+                        Reintentar
+                    </button>
+                </div>
             </div>
-        )
+        );
     }
 
     const {
@@ -35,11 +58,32 @@ export default function DashboardPage() {
         ? [...expensesByCategory].sort((a, b) => b.amount - a.amount)[0]
         : undefined
 
+    const firstName = user?.name?.split(" ")[0];
+    const today = capitalize(dayjs().format("dddd, D [de] MMMM [de] YYYY"));
+
     return (
         <div className="dashboard">
-            {/* Fila 1: balance cards y Quick Stats */}
+            {/* Cabecera: saludo + fecha + CTA */}
+            <header className="dash-header">
+                <div>
+                    <h1>Hola, {firstName ?? "de nuevo"}</h1>
+                    <p className="text-muted">{today}</p>
+                </div>
+                <button
+                    className="btn-primary"
+                    onClick={() => {
+                        saveTransaction.reset();
+                        setTxModal(true);
+                    }}
+                >
+                    <Plus size={18} />
+                    Nueva transacción
+                </button>
+            </header>
+
+            {/* Fila 1: patrimonio + resumen del mes */}
             <section className="grid-auto-tall">
-                <BalanceCards balances={balances} credit={credit} />
+                <BalanceHero balances={balances} credit={credit} />
                 <QuickStats
                     income={month.income}
                     expense={month.expense}
@@ -50,20 +94,39 @@ export default function DashboardPage() {
                 />
             </section>
 
-            {/* Fila 3: cuentas + préstamos */}
+            {/* Fila 2: cuentas + préstamos / categorías / actividad */}
             <section className="grid-auto-tall">
                 <AccountsList accounts={accounts} />
-                <section style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div className="dash-side">
                     <LoanStats loans={loans} />
                     <ExpensesByCategory
                         expenses={expensesByCategory}
                         totalExpense={month.expense}
-                    /><RecentTransactions
+                    />
+                    <RecentTransactions
                         transactions={recentActivity.transactions}
                     />
-                </section>
-
+                </div>
             </section>
+
+            {/* ── Modal: nueva transacción ───────────────────────────── */}
+            <ModalPortal isOpen={txModal} onClose={() => setTxModal(false)}>
+                <TransactionForm
+                    mutation={saveTransaction}
+                    onClose={() => setTxModal(false)}
+                    onSuccess={() => {
+                        setTxModal(false);
+                        setTxCreated(true);
+                    }}
+                />
+            </ModalPortal>
+            <InfoModal
+                isOpen={txCreated}
+                onClose={() => setTxCreated(false)}
+                type="success"
+                title="Transacción creada"
+                message="La transacción se registró correctamente."
+            />
         </div>
     )
 }

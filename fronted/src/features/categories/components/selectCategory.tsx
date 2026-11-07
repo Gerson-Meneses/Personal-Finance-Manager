@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
-import { getIcon } from "../../../shared/utils/GetIcon";
+import { SelectInput } from "../../../shared/components/SelectInput/SelectInput";
 import { useCategories } from "../hooks";
 import { CategoryForm } from "./CategoryForm/CategoryForm";
 import type { Category } from "../types";
@@ -27,6 +27,9 @@ interface SelectCategoryProps
 
     allowCreate?: boolean;
     defaultStyle?: boolean
+
+    /** Nombre precargado al crear una categoría (ej. nombre de la transacción) */
+    defaultName?: string;
 }
 
 export default function SelectCategory({
@@ -47,6 +50,7 @@ export default function SelectCategory({
     required,
     id,
     name,
+    defaultName,
 
     className,
 }: SelectCategoryProps) {
@@ -58,6 +62,8 @@ export default function SelectCategory({
 
     const [showForm, setShowForm] =
         useState(false);
+    const [createName, setCreateName] =
+        useState<string | undefined>(undefined);
 
     const inputId =
         id ?? name ?? "select-category";
@@ -82,6 +88,8 @@ export default function SelectCategory({
                         cat.name ===
                         "PRESTAMOS" ||
                         cat.name ===
+                        "PRÉSTAMOS" ||
+                        cat.name ===
                         "DEVOLUCIÓN DE PRÉSTAMO"
                     )
                 ) {
@@ -99,7 +107,7 @@ export default function SelectCategory({
                 if (
                     visible !==
                     undefined &&
-                    cat.isVisible !==
+                    cat.visible !==
                     visible
                 ) {
                     return false;
@@ -116,20 +124,48 @@ export default function SelectCategory({
             all,
         ]);
 
-    const handleSelectChange = (
-        e: React.ChangeEvent<HTMLSelectElement>
-    ) => {
-        const selected =
-            e.target.value;
+    const options = useMemo(() => {
+        const list: {
+            value: string;
+            label: string;
+            color?: string;
+        }[] = [];
 
+        if (allowCreate) {
+            list.push({
+                value: CREATE_OPTION,
+                label: "+ Nueva categoría",
+            });
+        }
+
+        for (const cat of filteredCategories) {
+            list.push({
+                value: cat.id,
+                label: cat.name,
+                color: cat.color,
+            });
+        }
+
+        return list;
+    }, [allowCreate, filteredCategories]);
+
+    const handleSelectChange = (
+        selected: string
+    ) => {
         if (
             selected === CREATE_OPTION
         ) {
+            setCreateName(defaultName);
             setShowForm(true);
             return;
         }
 
         onChange(selected);
+    };
+
+    const handleCreateQuery = (query: string) => {
+        setCreateName(query || defaultName);
+        setShowForm(true);
     };
 
     const handleSuccess = (
@@ -145,88 +181,26 @@ export default function SelectCategory({
 
     return (
         <>
-            <div
-                className={`
-          ${defaultStyle ? "custom-form-group" : ""}
-          ${error ? "has-error" : ""}
-          ${disabled ? "disabled" : ""}
-          ${className ?? ""}
-        `}
-            >
-                {label && (
-                    <label
-                        htmlFor={inputId}
-                        className="input-label"
-                    >
-                        {icon && getIcon(icon)}
-                        {label}
-                    </label>
-                )}
-
-                <div className={`${defaultStyle ? "input-wrapper" : ""}`}>
-                    {loading ? (
-                        <select
-                            disabled
-
-                        >
-                            <option>
-                                Cargando categorías...
-                            </option>
-                        </select>
-                    ) : (
-                        <select
-                            id={inputId}
-                            name={name}
-                            value={value ?? ""}
-                            onChange={
-                                handleSelectChange
-                            }
-                            disabled={disabled}
-                            required={required}
-
-                        >
-                            <option value="">
-                                {placeholder}
-                            </option>
-
-                            {allowCreate && (
-                                <option
-                                    value={
-                                        CREATE_OPTION
-                                    }
-                                >
-                                    + Nueva categoría
-                                </option>
-                            )}
-
-                            {filteredCategories.map(
-                                (cat) => (
-                                    <option
-                                        key={cat.id}
-                                        value={cat.id}
-                                        style={{
-                                            backgroundColor:
-                                                `${cat.color}22`,
-                                            color:
-                                                cat.color,
-                                            fontWeight:
-                                                500,
-                                        }}
-                                    >
-                                        {cat.name}
-                                    </option>
-                                )
-                            )}
-                        </select>
-                    )}
-                </div>
-
-                {error && (
-                    <span className="error-text">
-                        {error}
-                    </span>
-                )}
-            </div>
+            <SelectInput
+                value={value}
+                onChange={handleSelectChange}
+                placeholder={
+                    loading
+                        ? "Cargando categorías..."
+                        : placeholder
+                }
+                label={label}
+                icon={icon}
+                error={error}
+                required={required}
+                disabled={disabled || loading}
+                defaultStyle={defaultStyle}
+                id={inputId}
+                name={name}
+                options={options}
+                onCreateQuery={allowCreate ? handleCreateQuery : undefined}
+                className={`select-category ${className ?? ""}`}
+            />
 
             {showForm && (
                 <ModalPortal
@@ -239,8 +213,15 @@ export default function SelectCategory({
                         mutation={
                             createCategory
                         }
+                        initialValues={{
+                            name: createName ?? "",
+                            type: type === "INCOME" ? "INCOME" : "EXPENSE",
+                        }}
                         onSuccess={
                             handleSuccess
+                        }
+                        onClose={() =>
+                            setShowForm(false)
                         }
                     />
                 </ModalPortal>

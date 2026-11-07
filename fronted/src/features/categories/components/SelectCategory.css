@@ -1,49 +1,18 @@
+/* Select de categorías sobre el componente compartido SelectInput.
+   (input-wrapper / input-label ya los aporta SelectInput.css) */
 
-
-.input-wrapper {
-    position: relative;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    transition: all 0.2s ease;
-
+/* Letra legible en todas las opciones del menú */
+.select-category .select-input-option {
+    color: #adadad;
 }
 
-.input-wrapper:focus-within,
-.input-wrapper:hover {
-    border-color: #38bdf8;
-    background: rgba(56, 189, 248, 0.05);
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+/* Estados: el acento sigue marcando hover/selección */
+.select-category .select-input-option.is-active,
+.select-category .select-input-option.is-selected {
+    color: #38bdf8;
 }
 
-.input-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-    color: #94a3b8;
-    font-weight: 500;
-}
-
-select {
-    width: fit-content;
-    border: none;
-    color: #f8fafc;
-    font-size: .8rem;
-    transition: all 0.3s ease;
-    outline: none;
-    cursor: pointer;
-    background-color: transparent;
-    padding: .6rem;
-    appearance: none;
-    display: flex;
-    align-items: center;
-    justify-content: center
-}
-
-
-
-option {
-    background-color: #0B1628;
-    cursor: pointer;
+/* Placeholder del trigger también legible */
+.select-category .select-input-value.is-placeholder {
+    color: #adadad;
 }

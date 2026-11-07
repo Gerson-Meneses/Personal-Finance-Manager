@@ -2,18 +2,26 @@
 .loading-screen-overlay {
     position: fixed;
     inset: 0;
-    background: #0f172a;
+    background: #000000;
+    background-image:
+        radial-gradient(ellipse 70% 45% at 50% -10%, rgba(241, 196, 15, 0.045), transparent 60%);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
 }
 
+.loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .spinner {
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
     position: relative;
-    margin: 0 auto 20px;
+    margin: 0 auto 18px;
 }
 
 .double-bounce1,
@@ -46,7 +54,42 @@
 }
 
 .loading-text {
-    color: #f1c40f;
+    color: #94a3b8;
+    font-size: 0.82rem;
     font-weight: 500;
-    letter-spacing: 1px;
+    letter-spacing: 0.04em;
+    margin: 0;
+}
+
+.loading-bar-container {
+    width: 150px;
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    margin-top: 14px;
+}
+
+.loading-bar-progress {
+    width: 40%;
+    height: 100%;
+    border-radius: 999px;
+    background: #f1c40f;
+    animation: loadingSlide 1.2s ease-in-out infinite;
+}
+
+@keyframes loadingSlide {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(350%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loading-bar-progress {
+        animation-duration: 2.4s;
+    }
 }

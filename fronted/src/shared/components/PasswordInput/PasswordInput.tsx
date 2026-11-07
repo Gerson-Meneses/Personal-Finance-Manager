@@ -94,14 +94,14 @@ export const PasswordInput = ({
 
                 <button
                     type="button"
-                    className="password-toggle-btn"
+                    className="password-toggle-btn tooltip-left"
                     disabled={disabled}
                     aria-label={
                         show
                             ? "Ocultar contraseña"
                             : "Mostrar contraseña"
                     }
-                    title={
+                    data-tooltip={
                         show
                             ? "Ocultar contraseña"
                             : "Mostrar contraseña"

@@ -1,0 +1,97 @@
+.info-modal-card {
+    background-color: #0b0d12;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 28px 24px 24px;
+    max-width: 380px;
+    width: 100%;
+    align-self: center;
+    box-sizing: border-box;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    margin-bottom: 4px;
+}
+
+.info-modal-card h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #f8fafc;
+}
+
+.info-modal-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #94a3b8;
+    word-break: break-word;
+}
+
+.info-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 12px;
+    justify-content: center;
+}
+
+.info-confirm-btn,
+.info-cancel-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: filter 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.info-confirm-btn {
+    color: #0f172a;
+}
+
+.info-confirm-btn:not(.with-cancel) {
+    max-width: 180px;
+}
+
+.info-confirm-btn:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
+.info-confirm-btn:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.info-confirm-btn:disabled,
+.info-cancel-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.info-cancel-btn {
+    background-color: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+}
+
+.info-cancel-btn:hover:not(:disabled) {
+    background-color: #334155;
+    color: #f8fafc;
+}

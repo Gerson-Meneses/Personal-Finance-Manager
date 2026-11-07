@@ -23,6 +23,266 @@
     font-weight: 500;
 }
 
+/* ════════════════════════════════════════════════════════
+   SELECT CUSTOM (sin elemento <select>)
+════════════════════════════════════════════════════════ */
+.select-input {
+    position: relative;
+    width: 100%;
+    min-width: 180px;
+}
+
+/* Trigger */
+.select-input-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 0.6rem;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    color: #f8fafc;
+    font-family: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.select-input-trigger:disabled {
+    cursor: default;
+}
+
+.select-input-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.select-input-value.is-placeholder {
+    color: #64748b;
+}
+
+.select-input-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #94a3b8;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.select-input-trigger:hover .select-input-chevron,
+.select-input-chevron.open {
+    color: #38bdf8;
+}
+
+.select-input-chevron.open {
+    transform: rotate(180deg);
+}
+
+/* Menú desplegable (panel = buscador + lista) */
+.select-input-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 100%;
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    overflow: hidden;
+    animation: selectMenuIn 0.15s ease-out;
+}
+
+@keyframes selectMenuIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Posicionamiento automático (evita recortes en modales) */
+.select-input-panel.open-up {
+    top: auto;
+    bottom: calc(100% + 6px);
+
+    animation-name: selectMenuInUp;
+}
+
+@keyframes selectMenuInUp {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.select-input-panel.align-right {
+    left: auto;
+    right: 0;
+}
+
+/* Buscador interno */
+.select-input-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+}
+
+.select-input-search-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f8fafc;
+    font-family: inherit;
+    font-size: 0.85rem;
+}
+
+.select-input-search-input::placeholder {
+    color: #64748b;
+}
+
+.select-input-menu {
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.select-input-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.select-input-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.select-input-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+}
+
+.select-input-empty {
+    padding: 0.6rem;
+    color: #64748b;
+    font-size: 0.82rem;
+    text-align: center;
+}
+
+/* Opciones */
+.select-input-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0.5rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.select-input-option.is-active {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
+}
+
+.select-input-option.is-selected {
+    color: #38bdf8;
+    font-weight: 500;
+}
+
+/* Opción con color propio (ej. categorías):
+   el color se aplica como borde inferior (inline) */
+.select-input-option.has-color {
+    border-radius: 0;
+}
+
+.select-input-option.has-color.is-active {
+    border-color: transparent;
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.select-input-option-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Fila "+ Crear <texto>" */
+.select-input-option.is-create {
+    color: #38bdf8;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0;
+    margin-top: 4px;
+    padding-top: 0.65rem;
+}
+
+/* ─── Variante compacta (toolbars / paneles de filtro) ─── */
+.select-compact .input-wrapper {
+    border-radius: 10px;
+}
+
+.select-compact .select-input {
+    min-width: 0;
+}
+
+.select-compact .select-input-trigger {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.select-compact .select-input-value.is-placeholder {
+    color: #94a3b8;
+}
+
+.select-compact .select-input-trigger:hover {
+    color: #f8fafc;
+}
+
+.select-compact .select-input-chevron {
+    color: #64748b;
+}
+
+.select-compact .select-input-trigger:hover .select-input-chevron {
+    color: #38bdf8;
+}
+
+/* Estados globales reutilizados */
+.has-error .select-input {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2);
+}
+
+/* ════════════════════════════════════════════════════════
+   Selects nativos (otros componentes siguen usándolos)
+════════════════════════════════════════════════════════ */
 select, .select {
     width: fit-content;
     border: none;
@@ -40,7 +300,6 @@ select, .select {
 }
 
 option {
-    background-color: #0B1628;
+    background-color: #0b0d12;
     cursor: pointer;
 }
-

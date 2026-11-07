@@ -5,6 +5,7 @@ import { SlidersHorizontal, X, RotateCcw } from "lucide-react";
 export interface FilterBadgeItem {
     key: string;
     label: string;
+    name?: string;
     color?: string
 }
 
@@ -35,7 +36,7 @@ export const FilterWrapper = <T extends Record<string, any>>({
     onRemoveFilter
 }: FilterWrapperProps<T>) => {
     return (
-        <div className={`w-full bg-[#111a2e] border border-slate-800 rounded-xl p-4 shadow-xl flex flex-col gap-4 ${className}`}>
+        <div className={`w-full bg-[#0b0d12] border border-slate-800 rounded-xl p-4 shadow-xl flex flex-col gap-4 ${className}`}>
 
             {/* 1. BARRA SUPERIOR CONSTANTE */}
             <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -84,13 +85,21 @@ export const FilterWrapper = <T extends Record<string, any>>({
                             key={filter.key}
                             className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700/60 rounded-full pl-3 pr-1.5 py-1 text-xs text-slate-200 transition-all hover:border-slate-600"
                         >
-                            <span>{filter.key}: {filter.label}</span>
+                            {filter.color && (
+                                <span
+                                    className="inline-block h-2 w-2 rounded-full shrink-0"
+                                    style={{ backgroundColor: filter.color }}
+                                    aria-hidden="true"
+                                />
+                            )}
+                            <span>{filter.name ?? filter.key}: {filter.label}</span>
                             {onRemoveFilter && (
                                 <button
                                     type="button"
                                     onClick={() => onRemoveFilter(filter.key)}
-                                    className="p-0.5 rounded-full text-slate-400 hover:bg-slate-700 hover:text-red-400 transition-colors cursor-pointer"
-                                    title="Eliminar filtro"
+                                    className="relative tooltip-left p-0.5 rounded-full text-slate-400 hover:bg-slate-700 hover:text-red-400 transition-colors cursor-pointer"
+                                    aria-label={`Quitar filtro: ${filter.name ?? filter.key}: ${filter.label}`}
+                                    data-tooltip={`Quitar filtro: ${filter.name ?? filter.key}: ${filter.label}`}
                                 >
                                     <X size={12} />
                                 </button>

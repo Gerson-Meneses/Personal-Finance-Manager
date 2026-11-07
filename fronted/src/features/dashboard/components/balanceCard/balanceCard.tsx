@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Wallet, CreditCard, TrendingDown } from "lucide-react";
 import { formatCurrency } from "../../../../shared/utils/formatCurrency";
 import "./balanceCard.css"
-import { getIcon } from "../../../../shared/utils/GetIcon";
 
 interface Props {
   balances: {
@@ -14,52 +13,46 @@ interface Props {
   };
 }
 
-
-export default function BalanceCards({ balances }: Props) {
+export default function BalanceHero({ balances, credit }: Props) {
   const navigate = useNavigate();
-
-  const cards = [
-    {
-      title: "Saldo débito",
-      amount: balances.debit,
-      className: "card-debit",
-      path: "/accounts",
-      icon: "Banknote",
-    },
-    {
-      title: "Saldo crédito",
-      amount: balances.credit,
-      className: "card-credit",
-      path: "/accounts",
-      icon: "CreditCard",
-    },
-  ];
+  const netWorth = balances.debit - credit.debt;
 
   return (
-    <section className="default-row">
-      {cards.map((card, index) => {
-        return (
-          <article
-            key={index}
-            className={`balance-card ${card.className}`}
+    <article className="balance-card dash-hero">
+      <div className="hero-top">
+        <p className="card-label">Patrimonio neto</p>
+        <button className="btn-ghost" onClick={() => navigate("/accounts")}>
+          Ver cuentas <ArrowRight size={14} />
+        </button>
+      </div>
 
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && navigate(card.path)}
-          >
-            <div className="card-head">
-              {getIcon(card.icon, { size: 24 })}
-              <p className="card-label">{card.title}</p>
-            </div>
+      <h2 className="hero-amount">{formatCurrency(netWorth)}</h2>
 
-            <h2 className="card-amount">{formatCurrency(card.amount)}</h2>
+      <div className="hero-stats">
+        <div className="hero-stat">
+          <Wallet size={15} className="text-success" />
+          <div className="hero-stat-text">
+            <span>Efectivo y débito</span>
+            <strong className="text-success">{formatCurrency(balances.debit)}</strong>
+          </div>
+        </div>
 
-            <a href={card.path} className="card-details" onClick={(e) => { e.preventDefault(), e.stopPropagation(), navigate(card.path) }}>
-              Ver detalles <ArrowRight size={16} />
-            </a>
-          </article>
-        );
-      })}
-    </section>
+        <div className="hero-stat">
+          <CreditCard size={15} />
+          <div className="hero-stat-text">
+            <span>Crédito disponible</span>
+            <strong>{formatCurrency(balances.credit)}</strong>
+          </div>
+        </div>
+
+        <div className="hero-stat">
+          <TrendingDown size={15} className="text-danger" />
+          <div className="hero-stat-text">
+            <span>Deuda de crédito</span>
+            <strong className="text-danger">{formatCurrency(credit.debt)}</strong>
+          </div>
+        </div>
+      </div>
+    </article>
   );
 }

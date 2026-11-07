@@ -1,0 +1,169 @@
+.cat-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: min(400px, 90vw);
+    width: 100%;
+    /* Tarjeta del modal — igual que FormContainer/InfoModal:
+       sin esto el cuerpo queda transparente sobre el overlay */
+    background-color: #0b0d12;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+    box-sizing: border-box;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.cat-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.cat-detail-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+}
+
+.cat-detail-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.cat-detail-title h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cat-detail-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 5px;
+}
+
+.cat-detail-badge {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    padding: 1px 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.cat-detail-close {
+    position: relative;
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+.cat-detail-close:hover {
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.cat-detail-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.cat-detail-stat {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.cat-detail-stat span {
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+.cat-detail-stat strong {
+    font-size: 1rem;
+    color: #f8fafc;
+}
+
+.cat-detail-tx h3 {
+    margin: 0 0 8px;
+    font-size: 0.82rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.cat-detail-tx {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.cat-detail-tx-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.cat-detail-tx-row:last-child {
+    border-bottom: none;
+}
+
+.cat-detail-tx-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.cat-detail-tx-name {
+    font-size: 0.85rem;
+    color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cat-detail-tx-date {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.cat-detail-tx-amount {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.cat-detail-tx-amount.in {
+    color: #22c55e;
+}
+.cat-detail-tx-amount.out {
+    color: #ef4444;
+}
+
+.cat-detail-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.cat-detail-link {
+    text-decoration: none;
+    gap: 7px;
+    display: inline-flex;
+    align-items: center;
+}

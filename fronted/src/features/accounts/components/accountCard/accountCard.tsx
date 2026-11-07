@@ -1,81 +1,107 @@
 import "./accountCard.css"
-import type { Account } from "../../types";
+import type { Account, AccountType } from "../../types";
 import { formatCurrency } from "../../../../shared/utils/formatCurrency";
 import { getIcon } from "../../../../shared/utils/GetIcon";
 import { getProgressColor } from "../../../../shared/utils/generateColors";
+import { getCreditDebt, getCreditUsage } from "../../utils";
+import { Nfc } from "lucide-react";
 
 interface Props {
   account: Account;
   onClick?: (id: string) => void;
 }
 
+const TYPE_LABELS: Record<AccountType, string> = {
+  CREDIT: "Crédito",
+  DEBIT: "Débito",
+  CASH: "Efectivo",
+};
+
 export default function AccountCard({ account, onClick }: Props) {
   const {
     id, name, balance, type, color, icon,
-    creditLimit, overdraft
+    creditLimit, overdraft, billingCloseDay, paymentDueDay
   } = account;
   const isCredit = type === "CREDIT";
-  const usedPercentage = isCredit && creditLimit
-    ? Math.min(Math.round(((creditLimit! * ((overdraft || 0) / 100 + 1) - balance) / creditLimit) * 100), 100)
-    : 0;
+  const usedPercentage = getCreditUsage(account);
 
   return (
     <div
-      className="account-card-wrapper"
+      className="account-card"
+      style={{ "--card-color": color } as React.CSSProperties}
       onClick={() => onClick?.(id)}
-      style={{
-        '--card-color': color + "aa",
-        cursor: onClick ? 'pointer' : 'default'
-      } as React.CSSProperties}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (!onClick) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick(id);
+        }
+      }}
     >
-      <div className="card-head">
-        <div className="icon-badge">
-          {icon && getIcon(icon, { color, defaultIcon: "wallet" })}
+      <div className="acc-card-content">
+        {/* ── Fila superior: chip + contactless + tipo ── */}
+        <div className="acc-top">
+          <span className="acc-chip" aria-hidden="true" />
+          <span className="acc-nfc tooltip-anchor tooltip-right" data-tooltip="Pagos sin contacto">
+            <Nfc size={17} aria-hidden="true" />
+          </span>
+          <span className="acc-type">{TYPE_LABELS[type]}</span>
         </div>
 
-
-        <span className="account-type-label">
-          {isCredit ? "Crédito" : "Débito"}
-        </span>
-
-      </div>
-
-
-      <div className="card-body">
-        <h3 className="account-name">{name}</h3>
-        <div className="balance-display">
-          <span className="amount">{formatCurrency(balance)}</span>
+        {/* ── Cuerpo: identidad + saldo ── */}
+        <div className="acc-body">
+          <div className="acc-identity tooltip-top" data-tooltip={name}>
+            <span className="acc-icon" style={{ background: `${color}20` }}>
+              {icon && getIcon(icon, { color, defaultIcon: "wallet" })}
+            </span>
+            <span className="acc-name">{name}</span>
+          </div>
+          <span className="acc-balance">{formatCurrency(balance)}</span>
+          {isCredit && (
+            <span className="acc-sub">
+              Usado: {formatCurrency(getCreditDebt(account))}
+              {creditLimit ? ` de ${formatCurrency(creditLimit)}` : ""}
+              {(overdraft ?? 0) > 0 && (
+                <span className="acc-overdraft">+{overdraft}%</span>
+              )}
+            </span>
+          )}
         </div>
-        {isCredit && <div style={{ display: "block", width: "100%" }} > Usado: {formatCurrency((account.creditLimit! * ((account.overdraft || 0) / 100 + 1) - account.balance))} </div>}
+
+        {/* ── Fila inferior: número enmascarado + fechas ── */}
+        <div className="acc-bottom">
+          <span className="acc-number tooltip-top tooltip-wide" data-tooltip={id}>
+            •••• {id.slice(-4).toUpperCase()}
+          </span>
+          {isCredit && (billingCloseDay || paymentDueDay) && (
+            <span className="tooltip-anchor tooltip-left"
+              data-tooltip={[
+                billingCloseDay && `Cierra día ${billingCloseDay}`,
+                paymentDueDay && `Paga día ${paymentDueDay}`,
+              ].filter(Boolean).join(" · ")}
+            >
+              <span className="acc-meta">
+                {billingCloseDay && `Cierra día ${billingCloseDay}`}
+                {billingCloseDay && paymentDueDay && " · "}
+                {paymentDueDay && `Paga día ${paymentDueDay}`}
+              </span>
+            </span>
+          )}
+        </div>
       </div>
 
-
+      {/* ── Barra de uso del límite (solo crédito) ── */}
       {isCredit && (
-        <div className="card-footer">
-          <div className="progress-info">
-            <span>Uso del límite</span>
-            <span>{usedPercentage}%</span>
-          </div>
-          <div className="progress-bar-bg">
-            <div
-              className={`progress-bar-fill`}
-              style={{ width: `${usedPercentage}%`, background: `${getProgressColor(usedPercentage)}` }}
-
-            ></div>
-          </div>
-          <div className="limit-details">
-            <span>Límite: S/ {creditLimit?.toLocaleString()}</span>
-            {overdraft && overdraft > 0 && <span className="text-warning">+{overdraft}% sob.</span>}
-          </div>
-        </div>
-      )}
-
-      {!isCredit && (
-        <div className="card-footer debit-footer">
-          <div className="status-badge">
-            <div className="dot"></div> Activa
-          </div>
-
+        <div className="acc-usage" aria-hidden="true">
+          <div
+            className="acc-usage-fill"
+            style={{
+              width: `${usedPercentage}%`,
+              background: getProgressColor(usedPercentage),
+            }}
+          />
         </div>
       )}
     </div>

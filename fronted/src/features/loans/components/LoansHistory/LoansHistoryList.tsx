@@ -78,9 +78,9 @@ export const LoanQuickHistory = ({
 
                 <button
                     type="button"
-                    className="lqh-order-btn"
+                    className="lqh-order-btn tooltip-left"
                     onClick={toggleOrder}
-                    title={order === "ASC" ? "Más recientes primero" : "Más antiguos primero"}
+                    data-tooltip={order === "ASC" ? "Más recientes primero" : "Más antiguos primero"}
                 >
                     {order === "ASC"
                         ? getIcon("ArrowUpNarrowWide")

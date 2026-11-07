@@ -112,7 +112,8 @@ export const TypeToggle = <
         tabIndex={disabled ? -1 : 0}
         aria-disabled={disabled}
         onKeyDown={handleKeyDown}
-        className="toggle-wrapper"
+        className="toggle-wrapper tooltip-top"
+        data-tooltip={`${leftOption.label} o ${rightOption.label}`}
         style={
           {
             "--active-color":

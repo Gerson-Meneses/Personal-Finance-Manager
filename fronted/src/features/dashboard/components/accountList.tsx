@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import AccountCard from "../../accounts/components/accountCard/accountCard";
 import type { Account } from "../../accounts/types";
 
@@ -12,7 +13,9 @@ export default function AccountsList({ accounts }: Props) {
     <div className="card">
       <div className="card-head">
         <h3 className="card-head-title">Mis Cuentas</h3>
-        <button className="btn-ghost" onClick={() => navigate("/accounts")} >Gestionar →</button>
+        <button className="btn-ghost" onClick={() => navigate("/accounts")}>
+          Gestionar <ArrowRight size={14} />
+        </button>
       </div>
 
       <div className="grid-auto">
@@ -20,6 +23,10 @@ export default function AccountsList({ accounts }: Props) {
           <AccountCard key={acc.id} account={acc} onClick={(id) => navigate("/accounts/" + id)} ></AccountCard>
         ))}
       </div>
+
+      {accounts.length > 0 && (
+        <p className="dash-hint">Toca una cuenta para ver sus movimientos</p>
+      )}
     </div>
   );
 }

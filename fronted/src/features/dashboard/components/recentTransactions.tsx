@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import TransactionItem from "../../transactions/components/TransactionItem";
 import type { Transaction } from "../../transactions/types";
 
@@ -11,10 +12,10 @@ export default function RecentTransactions({ transactions, messageEmpty }: Props
     const navigate = useNavigate()
     return (
         <div className="card">
-            <div className="card-head" style={{ marginBottom: 14 }}>
+            <div className="card-head">
                 <h3 className="card-head-title">Actividad reciente</h3>
                 <button className="btn-ghost" onClick={() => navigate("/transactions")}>
-                    Ver todo
+                    Ver todo <ArrowRight size={14} />
                 </button>
             </div>
 

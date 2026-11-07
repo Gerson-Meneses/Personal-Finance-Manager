@@ -173,12 +173,13 @@ export const IconPicker = ({
                   key={iconName}
                   type="button"
                   className={`
-                    icon-grid-item
+                    icon-grid-item tooltip-top tooltip-anchor
                     ${value === iconName
                       ? "active"
                       : ""
                     }
                   `}
+                  data-tooltip={iconName}
                   onClick={() => {
                     onChange(iconName);
                     setIsOpen(false);

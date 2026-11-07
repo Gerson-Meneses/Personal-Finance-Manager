@@ -95,7 +95,7 @@ export const VerifyEmailPage = () => {
 
                     {request.isError && (
                         <div className="error-banner">
-                            {(request.error as any)?.message || "Ocurrió un error inesperado"}
+                            {request.error.message || "Ocurrió un error inesperado"}
                         </div>
                     )}
 
@@ -151,7 +151,7 @@ export const VerifyEmailPage = () => {
 
                     {verify.isError && (
                         <div className="error-banner">
-                            {(verify.error as any)?.message || "Código inválido o expirado"}
+                            {verify.error.message || "Código inválido o expirado"}
                         </div>
                     )}
 

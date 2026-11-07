@@ -8,6 +8,7 @@ import { DatePicker } from "../../../../shared/components/DateInput/DateInput";
 import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
 import type { TransactionQuerySchemaOutput } from "../../types";
 import { SearchInput } from "../../../../shared/components/SearchInput/SearchInput";
+import { SelectInput } from "../../../../shared/components/SelectInput/SelectInput";
 
 interface Props {
     query: TransactionQuerySchemaOutput;
@@ -19,6 +20,26 @@ interface Props {
 
 type DateMode = "range" | "exact";
 type AmountMode = "range" | "exact";
+
+const TYPE_OPTIONS: { value: TransactionQuerySchemaOutput["type"]; label: string }[] = [
+    { value: undefined, label: "Todos" },
+    { value: "INCOME", label: "Ingresos" },
+    { value: "EXPENSE", label: "Gastos" },
+    { value: "TRANSFER", label: "Transferencias" },
+    { value: "CREDIT_PAYMENT", label: "Pago tarjeta" },
+];
+
+const KEY_LABELS: Record<string, string> = {
+    type: "Tipo",
+    accountId: "Cuenta",
+    categoryId: "Categoría",
+    date: "Fecha",
+    from: "Desde",
+    to: "Hasta",
+    amount: "Monto",
+    minAmount: "Monto mín.",
+    maxAmount: "Monto máx.",
+};
 
 export default function TransactionFilters({ query, onChange, onReset, search, onSearchChange }: Props) {
     const { categories } = useCategories();
@@ -43,16 +64,35 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
         return value !== undefined && value !== "";
     }).length;
 
-    let activeFilter: FilterBadgeItem[] = []
+    const activeFilter: FilterBadgeItem[] = []
 
-    for (let key in query) {
+    for (const key in query) {
         if (key === "page" || key === "limit" || key === "order") continue;
 
         const queryKey = key as keyof typeof query;
+        const rawValue = String(query[queryKey] ?? "");
+
+        let label = rawValue;
+        let color: string | undefined;
+
+        if (key === "type") {
+            label = TYPE_OPTIONS.find((opt) => opt.value === query.type)?.label ?? rawValue;
+        } else if (key === "categoryId") {
+            const category = categories.find((cat) => cat.id === rawValue);
+            if (category) {
+                label = category.name;
+                color = category.color;
+            }
+        } else if (key === "accountId") {
+            const account = accounts.find((acc) => acc.id === rawValue);
+            if (account) label = account.name;
+        }
 
         activeFilter.push({
             key: key,
-            label: String(query[queryKey])
+            name: KEY_LABELS[key] ?? key,
+            label,
+            color,
         });
     }
 
@@ -78,14 +118,17 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                 />
             }
             orderElement={
-                <select
-                    className="tf-select-small"
+                <SelectInput
+                    compact
+                    label="Ordenar por"
+                    hideLabel
                     value={query.order ?? "DESC"}
-                    onChange={(e) => set("order", e.target.value as "ASC" | "DESC")}
-                >
-                    <option value="DESC">Más recientes</option>
-                    <option value="ASC">Más antiguos</option>
-                </select>
+                    onChange={(v) => set("order", v as "ASC" | "DESC")}
+                    options={[
+                        { value: "DESC", label: "Más recientes" },
+                        { value: "ASC", label: "Más antiguos" },
+                    ]}
+                />
             }
         >
             {/* 🎯 PANEL DESPLEGABLE DE FILTROS AVANZADOS */}
@@ -95,18 +138,12 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                 <div className="tf-group">
                     <span className="tf-group-label">Tipo</span>
                     <div className="tf-chips">
-                        {[
-                            { value: undefined, label: "Todos" },
-                            { value: "INCOME", label: "Ingresos" },
-                            { value: "EXPENSE", label: "Gastos" },
-                            { value: "TRANSFER", label: "Transferencias" },
-                            { value: "CREDIT_PAYMENT", label: "Pago tarjeta" },
-                        ].map((opt) => (
+                        {TYPE_OPTIONS.map((opt) => (
                             <button
                                 key={opt.label}
                                 type="button"
                                 className={`tf-chip ${query.type === opt.value ? "active" : ""}`}
-                                onClick={() => set("type", opt.value as any)}
+                                onClick={() => set("type", opt.value)}
                             >
                                 {opt.label}
                             </button>
@@ -211,37 +248,38 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
 
                 {/* ================= CATEGORÍA Y CUENTA ================= */}
                 <div className="tf-row">
-                    <div className="tf-group" style={{ flex: 1 }}>
-                        <span className="tf-group-label">Categoría</span>
-                        <select
-                            className="tf-select"
-                            value={query.categoryId ?? ""}
-                            onChange={(e) => set("categoryId", e.target.value)}
-                        >
-                            <option value="">Todas</option>
-                            {categories.map((cat) => (
-                                <option key={cat.id} value={cat.id}>
-                                    {cat.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                <div className="tf-group" style={{ flex: 1 }}>
+                    <span className="tf-group-label">Categoría</span>
+                    <SelectInput
+                        label="Categoría"
+                        hideLabel
+                        value={query.categoryId ?? ""}
+                        onChange={(v) => set("categoryId", v)}
+                        placeholder="Todas"
+                        options={categories.map((cat) => ({
+                            value: cat.id,
+                            label: cat.name,
+                            color: cat.color,
+                        }))}
+                        className="tf-field-select"
+                    />
+                </div>
 
-                    <div className="tf-group" style={{ flex: 1 }}>
-                        <span className="tf-group-label">Cuenta</span>
-                        <select
-                            className="tf-select"
-                            value={query.accountId ?? ""}
-                            onChange={(e) => set("accountId", e.target.value)}
-                        >
-                            <option value="">Todas</option>
-                            {accounts.map((acc) => (
-                                <option key={acc.id} value={acc.id}>
-                                    {acc.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                <div className="tf-group" style={{ flex: 1 }}>
+                    <span className="tf-group-label">Cuenta</span>
+                    <SelectInput
+                        label="Cuenta"
+                        hideLabel
+                        value={query.accountId ?? ""}
+                        onChange={(v) => set("accountId", v)}
+                        placeholder="Todas"
+                        options={accounts.map((acc) => ({
+                            value: acc.id,
+                            label: acc.name,
+                        }))}
+                        className="tf-field-select"
+                    />
+                </div>
                 </div>
 
                 <div className="tf-divider" />

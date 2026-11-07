@@ -88,11 +88,16 @@ export const LoanCard = ({ loan, search = "" }: LoanCardProps) => {
 
                         <div className="loan-card__bottom-row">
                             <div className="loan-card__meta-group">
-                                <HighlightText
-                                    text={dateFormatted}
-                                    term={search}
-                                    className="loan-card__date"
-                                />
+                                <span
+                                    className="tooltip-anchor tooltip-top"
+                                    data-tooltip={dayjs(startDate).format("dddd, D [de] MMMM [de] YYYY")}
+                                >
+                                    <HighlightText
+                                        text={dateFormatted}
+                                        term={search}
+                                        className="loan-card__date"
+                                    />
+                                </span>
                                 <span className="loan-card__divider">•</span>
                                 <span
                                     className="loan-card__meta-badge"

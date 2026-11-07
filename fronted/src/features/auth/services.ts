@@ -1,5 +1,5 @@
 import { apiFetch } from "../../shared/api";
-import type { DataAuth, LoginOutput, RegisterOotput, ResetPasswordOutput, VerifyEmailCodeOutput, VerifyEmailRequestOutput} from "./types";
+import type { ChangeEmailOutput, ChangePasswordOutput, DataAuth, LoginOutput, MessageResponse, RegisterOotput, ResetPasswordOutput, UpdateProfileOutput, UpdateProfileResponse, VerifyEmailCodeOutput, VerifyEmailRequestOutput} from "./types";
 
 const BASE_PATH = '/auth';
 
@@ -42,6 +42,26 @@ export const resetPasswordRequest = async (data: VerifyEmailRequestOutput): Prom
 
 export const resetPasswordConfirm = async (data: ResetPasswordOutput): Promise<void> => {
     await apiFetch("/auth/resetPassword", { method: "POST", body: data })
+}
+
+export const updateProfile = async (data: UpdateProfileOutput): Promise<UpdateProfileResponse> => {
+    return await apiFetch<UpdateProfileResponse>(`${BASE_PATH}/profile`, { method: "PATCH", body: data })
+}
+
+export const changeEmailCode = async (): Promise<MessageResponse> => {
+    return await apiFetch<MessageResponse>(`${BASE_PATH}/changeEmail/code`, { method: "POST" })
+}
+
+export const changeEmail = async (data: ChangeEmailOutput): Promise<MessageResponse> => {
+    return await apiFetch<MessageResponse>(`${BASE_PATH}/changeEmail`, { method: "POST", body: data })
+}
+
+export const changePasswordCode = async (): Promise<MessageResponse> => {
+    return await apiFetch<MessageResponse>(`${BASE_PATH}/changePassword/code`, { method: "POST" })
+}
+
+export const changePassword = async (data: ChangePasswordOutput): Promise<MessageResponse> => {
+    return await apiFetch<MessageResponse>(`${BASE_PATH}/changePassword`, { method: "POST", body: data })
 }
 
 export const logout = () => {

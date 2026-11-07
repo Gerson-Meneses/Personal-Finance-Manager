@@ -46,6 +46,7 @@ export const CreateLoanPaymentForm = ({ loanId, loan, initialValues, onSuccess, 
 
   // Observamos el monto actual que escribe el usuario para calcular el impacto en vivo
   const currentAmountInput = useWatch({ control, name: "amount" }) || 0;
+  const selectedDate = useWatch({ control, name: "date" });
 
   useEffect(() => {
     if (!isSuccess) return;
@@ -202,7 +203,7 @@ export const CreateLoanPaymentForm = ({ loanId, loan, initialValues, onSuccess, 
                 onChange={field.onChange}
                 error={fieldState.error?.message}
                 disabled={isPending}
-                selectedDate={useWatch({ control, name: "date" })}
+                selectedDate={selectedDate}
               />
             )}
           />

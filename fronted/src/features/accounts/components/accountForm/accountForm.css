@@ -194,18 +194,20 @@
     gap: 7px;
     padding: 11px 22px;
     border-radius: var(--radius-lg);
-    border: 0.5px solid rgba(163, 45, 45, 0.3);
-    background: rgba(252, 235, 235, 0.5);
-    color: #A32D2D;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.08);
+    color: #f87171;
     font-size: 13px;
     font-weight: 500;
+    font-family: inherit;
     cursor: pointer;
-    transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+    transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
 .btn-icon-delete:hover:not(:disabled) {
-    background: rgba(240, 149, 149, 0.25);
-    border-color: rgba(163, 45, 45, 0.55);
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.55);
+    color: #fca5a5;
     transform: scale(0.98);
 }
 

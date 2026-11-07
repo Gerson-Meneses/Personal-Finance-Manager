@@ -73,7 +73,6 @@ export const RegisterPage = () => {
         <form
             className="form-default-container login-form"
             onSubmit={handleSubmit}
-            style={{ margin: "10vh" }}
         >
             <div className="form-default-row">
                 <h1>Registro</h1>

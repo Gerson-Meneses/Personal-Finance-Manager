@@ -3,6 +3,7 @@ import { useAccounts } from "../../../../features/accounts/hooks";
 import { useTransactions } from "../../../../features/transactions/hooks";
 import LoadingScreen from "../../../../shared/components/LoadingScreen/LoadingScreen";
 import TransactionItem from "../../../../features/transactions/components/TransactionItem";
+import TransactionForm from "../../../../features/transactions/components/TransactionForm/TransactionForm";
 import './AccountDetails.css'
 import { useEffect, useState } from "react";
 import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal";
@@ -20,17 +21,19 @@ import { ListHistory } from "../../../../shared/components/ListHistory/ListHisto
 export function AccountDetail() {
     const { id } = useParams();
     const { account, error, loading, saveAccount, deleteAccount } = useAccounts(id);
-    let { transactions, loading: txLoading } = useTransactions({ accountId: id });
+    const { transactions: accountTx, loading: txLoading, saveTransaction } = useTransactions({ accountId: id });
     const { transactions: trans, loading: tx2Loading } = useTransactions({ relatedAccountId: id });
     const { createTransfer } = useTransfers()
     const navigate = useNavigate()
 
-    transactions = [...transactions, ...trans]
+    const transactions = [...accountTx, ...trans]
 
     const [showModal, setShowModal] = useState(false)
     const [editModal, setEditModal] = useState(false)
     const [errorTrashModal, setErrorTrashModal] = useState(false)
     const [info, setInfo] = useState(false)
+    const [txModal, setTxModal] = useState(false)
+    const [txCreated, setTxCreated] = useState(false)
 
     const { error: errorTrash, isSuccess } = deleteAccount;
 
@@ -65,6 +68,15 @@ export function AccountDetail() {
                     <div className="card action-card mt-6">
                         <h3>• Acciones Rápidas</h3>
                         <div className="action-buttons">
+                            <button
+                                onClick={() => {
+                                    saveTransaction.reset()
+                                    setTxModal(true)
+                                }}
+                                className="btn-primary"
+                            >
+                                Nueva transacción
+                            </button>
                             <button onClick={() => setShowModal(true)} className="btn-primary ">
                                 {isCredit ? "Pagar Tarjeta" : "Transferir Dinero"}
                             </button>
@@ -115,8 +127,22 @@ export function AccountDetail() {
                 )}
             </ModalPortal>
 
+            {/* Modal nueva transacción — cuenta preseleccionada */}
+            <ModalPortal isOpen={txModal} onClose={() => setTxModal(false)}>
+                <TransactionForm
+                    mutation={saveTransaction}
+                    defaultAccountId={account.id}
+                    onClose={() => setTxModal(false)}
+                    onSuccess={() => {
+                        setTxModal(false)
+                        setTxCreated(true)
+                    }}
+                />
+            </ModalPortal>
+
             <InfoModal isOpen={errorTrashModal} onClose={() => setErrorTrashModal(false)} type="error" title="Hubo un error al eliminar la cuenta" message={errorTrash?.message} ></InfoModal>
             <InfoModal isOpen={info} onClose={() => setInfo(false)} type="success" title="Cuenta Eliminada exitosamente" message="Se redirigira a la vista de cuentas." ></InfoModal>
+            <InfoModal isOpen={txCreated} onClose={() => setTxCreated(false)} type="success" title="Transacción creada" message="La transacción se registró correctamente." ></InfoModal>
 
         </div >
     );

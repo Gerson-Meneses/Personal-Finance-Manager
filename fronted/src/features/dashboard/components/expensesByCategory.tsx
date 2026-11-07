@@ -41,7 +41,15 @@ export default function ExpensesByCategory({ expenses, totalExpense }: Props) {
                             : 0
 
                         return (
-                            <div key={category.id} className="cat-row">
+                            <button
+                                type="button"
+                                key={category.id}
+                                className="cat-row"
+                                aria-label={`Ver transacciones de ${category.name}`}
+                                onClick={() =>
+                                    navigate(`/transactions?categoryId=${category.id}`)
+                                }
+                            >
                                 <div className="cat-row-left">
                                     <div
                                         className="cat-icon"
@@ -76,7 +84,7 @@ export default function ExpensesByCategory({ expenses, totalExpense }: Props) {
                                         }}
                                     />
                                 </div>
-                            </div>
+                            </button>
                         )
                     })}
                 </div>

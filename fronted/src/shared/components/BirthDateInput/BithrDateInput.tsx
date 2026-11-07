@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { getIcon } from "../../utils/GetIcon";
 import { generateYears, getDaysInMonth, months } from "../../utils/dateUtils";
+import { SelectInput } from "../SelectInput/SelectInput";
 import './BirthDateInput.css'
 
 interface BirthDateValue {
@@ -47,49 +48,49 @@ export const BirthDateInput = ({
                 {getIcon("Cake")} Fecha de Nacimiento
             </label>
 
-            <div className={`birthdate-selects ${disabled ? 'disabled' : ''}`}>
+            <div className="birthdate-selects">
 
-                <div className={`birthdate-select-wrapper ${!day ? 'placeholder' : ''}`}>
-                    <select
-                        value={day}
-                        onChange={(e) => update("day", e.target.value)}
-                        disabled={disabled}
-                        required={required}
-                    >
-                        <option value="">Día</option>
-                        {days.map(d => (
-                            <option key={d} value={String(d).padStart(2, "0")}>{d}</option>
-                        ))}
-                    </select>
-                </div>
+                <SelectInput
+                    label="Día"
+                    hideLabel
+                    placeholder="Día"
+                    value={day}
+                    onChange={(val) => update("day", val)}
+                    options={days.map((d) => ({
+                        value: String(d).padStart(2, "0"),
+                        label: String(d),
+                    }))}
+                    disabled={disabled}
+                    required={required}
+                />
 
-                <div className={`birthdate-select-wrapper ${!month ? 'placeholder' : ''}`}>
-                    <select
-                        value={month}
-                        onChange={(e) => update("month", e.target.value)}
-                        disabled={disabled}
-                        required={required}
-                    >
-                        <option value="">Mes</option>
-                        {months.map(m => (
-                            <option key={m.value} value={m.value}>{m.label}</option>
-                        ))}
-                    </select>
-                </div>
+                <SelectInput
+                    label="Mes"
+                    hideLabel
+                    placeholder="Mes"
+                    value={month}
+                    onChange={(val) => update("month", val)}
+                    options={months.map((m) => ({
+                        value: m.value,
+                        label: m.label,
+                    }))}
+                    disabled={disabled}
+                    required={required}
+                />
 
-                <div className={`birthdate-select-wrapper ${!year ? 'placeholder' : ''}`}>
-                    <select
-                        value={year}
-                        onChange={(e) => update("year", e.target.value)}
-                        disabled={disabled}
-                        required={required}
-                    >
-                        <option value="">Año</option>
-                        {years.map(y => (
-                            <option key={y} value={y}>{y}</option>
-                        ))}
-                    </select>
-                </div>
+                <SelectInput
+                    label="Año"
+                    hideLabel
+                    placeholder="Año"
+                    value={year}
+                    onChange={(val) => update("year", val)}
+                    options={years.map((y) => ({
+                        value: String(y),
+                        label: String(y),
+                    }))}
+                    disabled={disabled}
+                    required={required}
+                />
 
             </div>
 

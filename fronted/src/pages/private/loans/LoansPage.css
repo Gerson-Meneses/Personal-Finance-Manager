@@ -140,7 +140,7 @@
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 15px;
   padding: 20px;
-  background-color: #131d2e;
+  background-color: #0b0d12;
   border-top: 1px solid #334155;
 }
 

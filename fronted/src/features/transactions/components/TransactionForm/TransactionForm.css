@@ -58,7 +58,6 @@
     font-weight: 600;
     letter-spacing: 0.02em;
     color: #fff;
-    flex: 1;                /* ocupa el espacio junto al botón eliminar */
     justify-content: center;
     position: relative;
     overflow: hidden;
@@ -103,38 +102,6 @@
 
 
 /* ============================================================
-   DELETE BUTTON
-   ============================================================ */
-.btn-icon-delete {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 11px 20px;
-    border-radius: 14px;
-    border: 0.5px solid rgba(163, 45, 45, 0.28);
-    background: rgba(252, 235, 235, 0.55);
-    color: #A32D2D;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    transition:
-        background    150ms cubic-bezier(0.4, 0, 0.2, 1),
-        border-color  150ms cubic-bezier(0.4, 0, 0.2, 1),
-        transform     150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-icon-delete:hover:not(:disabled) {
-    background:   rgba(240, 149, 149, 0.22);
-    border-color: rgba(163, 45, 45, 0.50);
-    transform: scale(0.98);
-}
-
-.btn-icon-delete:active  { transform: scale(0.95); }
-.btn-icon-delete:disabled { opacity: 0.5; cursor: not-allowed; }
-
-
-/* ============================================================
    INPUT FOCUS — scoped al form
    ============================================================ */
 .tx-form.expense input:focus,
@@ -176,21 +143,6 @@
     gap: 12px;
 }
 
-/* Fila de acciones — botones al final */
-.form-actions-container {
-    padding-top: 6px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-/* Cuando solo hay el botón submit (sin delete), que ocupe todo */
-.form-actions-container:has(.btn-submit.tx:only-child),
-.form-actions-container > *:only-child {
-    width: 100%;
-}
-
 
 /* ============================================================
    RESPONSIVE — Mobile first
@@ -201,19 +153,6 @@
     .form-default-grid-2col {
         grid-template-columns: 1fr;
         gap: 12px;
-    }
-
-    /* Acciones: submit arriba, delete abajo */
-    .form-actions-container {
-        flex-direction: column-reverse;
-        align-items: stretch;
-    }
-
-    .btn-submit.tx,
-    .btn-icon-delete {
-        width: 100%;
-        justify-content: center;
-        flex: unset;
     }
 }
 

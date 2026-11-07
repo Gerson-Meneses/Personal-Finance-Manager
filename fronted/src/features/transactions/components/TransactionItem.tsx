@@ -3,8 +3,10 @@ import './styles.css'
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import { getIcon } from "../../../shared/utils/GetIcon";
 import { useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "./TransactionForm/TransactionForm";
+import InfoModal from "../../../shared/components/InfoModal/InfoModal";
 import { useTransactions } from "../hooks";
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
@@ -26,28 +28,44 @@ interface Props {
 }
 
 export default function TransactionItem({ transaction, currentAccountId, search = "", hideFields }: Props) {
+    const { saveTransaction, deleteTransaction } = useTransactions()
+    const [modalEditOpen, setModalEditOpen] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+
+    if (!transaction) return <>Error</>
+
     const {
         name, amount, type, date, category, account, description, relatedAccount
     } = transaction;
 
-    if (!transaction) return <>Error</>
-
-    let fromAccount = account
-    let toAccount = relatedAccount
+    const fromAccount = account
+    const toAccount = relatedAccount
 
     const isOutgoingTransfer = type === "TRANSFER" && fromAccount?.id === currentAccountId;
     const isIncomingTransfer = type === "TRANSFER" && toAccount?.id === currentAccountId;
     const isNegative = type === "EXPENSE" || isOutgoingTransfer || type === "CREDIT_PAYMENT";
 
-    const { saveTransaction } = useTransactions()
-    const [modalEditOpen, setModalEditOpen] = useState(false);
-
     const dateFormatted = dayjs(date).format("dddd D");
+    const timeFormatted = transaction.time
+        ? transaction.time.slice(0, 5)
+        : dayjs(date).format("HH:mm");
+
+    const openEdit = () => {
+        // Limpia isSuccess/error de la operación anterior para que
+        // no se monte el SuccessToast viejo al abrir la edición.
+        saveTransaction.reset();
+        setModalEditOpen(true);
+    };
+
+    const handleDelete = () => {
+        deleteTransaction.mutate(transaction.id, {
+            onSuccess: () => setConfirmDelete(false),
+        });
+    };
 
     return (
         <>
             <div
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); setModalEditOpen(true) }}
                 className={`tx-item-card animate-fade-in ${type.toLowerCase()}`}
                 style={{ borderLeft: `3px solid ${category?.color}` }}
             >
@@ -85,11 +103,20 @@ export default function TransactionItem({ transaction, currentAccountId, search 
                         <div className="tx-bottom-row">
                             <div className="tx-meta-group">
                                 {!hideFields?.date && (
-                                    <HighlightText
-                                        text={dateFormatted}
-                                        term={search}
-                                        className="tx-date"
-                                    />
+                                    <>
+                                        <span
+                                            className="tooltip-anchor tooltip-top"
+                                            data-tooltip={dayjs(date).format("dddd, D [de] MMMM [de] YYYY")}
+                                        >
+                                            <HighlightText
+                                                text={dateFormatted}
+                                                term={search}
+                                                className="tx-date"
+                                            />
+                                        </span>
+                                        <span className="tx-divider">•</span>
+                                        <span className="tx-time">{timeFormatted}</span>
+                                    </>
                                 )}
 
                                 {!hideFields?.category && category?.name && (
@@ -115,6 +142,28 @@ export default function TransactionItem({ transaction, currentAccountId, search 
                                     </>
                                 )}
                             </div>
+
+                            <div className="tx-actions">
+                                <button
+                                    type="button"
+                                    className="tx-action-btn edit tooltip-top"
+                                    onClick={openEdit}
+                                    aria-label={`Editar transacción ${name}`}
+                                    data-tooltip="Editar"
+                                >
+                                    <Pencil size={13} />
+                                </button>
+                                <button
+                                    type="button"
+                                    className="tx-action-btn delete tooltip-top"
+                                    onClick={() => setConfirmDelete(true)}
+                                    aria-label={`Eliminar transacción ${name}`}
+                                    data-tooltip="Eliminar"
+                                    disabled={deleteTransaction.isPending}
+                                >
+                                    <Trash2 size={13} />
+                                </button>
+                            </div>
                         </div>
 
                         {!hideFields?.description && description && (
@@ -134,6 +183,18 @@ export default function TransactionItem({ transaction, currentAccountId, search 
                     onClose={() => setModalEditOpen(false)}
                 />
             </ModalPortal>
+
+            <InfoModal
+                isOpen={confirmDelete}
+                onClose={() => setConfirmDelete(false)}
+                onConfirm={handleDelete}
+                type="error"
+                title="Eliminar transacción"
+                message="¿Seguro que deseas eliminar esta transacción? Esta acción no se puede deshacer."
+                confirmText={deleteTransaction.isPending ? "Eliminando…" : "Eliminar"}
+                cancelText="Cancelar"
+                confirmDisabled={deleteTransaction.isPending}
+            />
         </>
     );
 }

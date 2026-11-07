@@ -2,6 +2,7 @@ import { useState } from "react";
 import { getIcon } from "../../utils/GetIcon";
 
 import type { BaseInputProps } from "../types";
+import { SelectInput } from "../SelectInput/SelectInput";
 
 import "./SelectOrInputText.css";
 
@@ -48,19 +49,45 @@ export const SelectOrInputText = ({
             !options.includes(value ?? "")
         );
 
-    const handleSelectChange = (
-        e: React.ChangeEvent<HTMLSelectElement>
+    const handleChange = (
+        selected: string
     ) => {
-        const val = e.target.value;
-
-        if (val === CUSTOM_OPTION) {
+        if (selected === CUSTOM_OPTION) {
             setIsCustomMode(true);
             onChange("");
             return;
         }
 
-        onChange(val);
+        onChange(selected);
     };
+
+    if (!isCustomMode && options.length > 0) {
+        return (
+            <SelectInput
+                value={value}
+                onChange={handleChange}
+                label={label}
+                icon={icon}
+                error={error}
+                required={required}
+                disabled={disabled}
+                id={inputId}
+                name={name}
+                placeholder="Selecciona una opción"
+                options={[
+                    ...options.map((opt) => ({
+                        value: opt,
+                        label: opt,
+                    })),
+                    {
+                        value: CUSTOM_OPTION,
+                        label: "+ Otro (escribir nombre)",
+                    },
+                ]}
+                className={className ?? ""}
+            />
+        );
+    }
 
     return (
         <div
@@ -82,62 +109,34 @@ export const SelectOrInputText = ({
             )}
 
             <div className="input-wrapper-select">
-                {isCustomMode || options.length === 0 ? (
-                    <div className="custom-input-container">
-                        <input
-                            id={inputId}
-                            name={name}
-                            type="text"
-                            className="text-input"
-                            value={value ?? ""}
-                            disabled={disabled}
-                            required={required}
-                            placeholder={placeholder}
-                            onChange={(e) =>
-                                onChange(e.target.value)
-                            }
-                        />
-
-                        {options.length > 0 && (
-                            <button
-                                type="button"
-                                className="back-to-list-btn"
-                                title="Volver a la lista"
-                                disabled={disabled}
-                                onClick={() => setIsCustomMode(false)}
-                            >
-                                {getIcon("List")}
-                            </button>
-                        )}
-                    </div>
-                ) : (
-                    <select
+                <div className="custom-input-container">
+                    <input
                         id={inputId}
                         name={name}
-                        className="custom-select"
+                        type="text"
+                        className="text-input"
                         value={value ?? ""}
                         disabled={disabled}
                         required={required}
-                        onChange={handleSelectChange}
-                    >
-                        <option value="">
-                            -- Selecciona una opción --
-                        </option>
+                        placeholder={placeholder}
+                        onChange={(e) =>
+                            onChange(e.target.value)
+                        }
+                    />
 
-                        {options.map((opt) => (
-                            <option
-                                key={opt}
-                                value={opt}
-                            >
-                                {opt}
-                            </option>
-                        ))}
-
-                        <option value={CUSTOM_OPTION}>
-                            ➕ Otro (Escribir nombre)
-                        </option>
-                    </select>
-                )}
+                    {options.length > 0 && (
+                        <button
+                            type="button"
+                            className="back-to-list-btn tooltip-left"
+                            aria-label="Volver a la lista"
+                            data-tooltip="Volver a la lista"
+                            disabled={disabled}
+                            onClick={() => setIsCustomMode(false)}
+                        >
+                            {getIcon("List")}
+                        </button>
+                    )}
+                </div>
             </div>
 
             {error && (
@@ -147,4 +146,4 @@ export const SelectOrInputText = ({
             )}
         </div>
     );
-};
+}

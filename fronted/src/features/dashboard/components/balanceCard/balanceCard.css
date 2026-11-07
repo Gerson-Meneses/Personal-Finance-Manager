@@ -1,6 +1,6 @@
-/* ─── Balance card individual ─────────────────────────── */
+/* ── Balance card base (usada también por accountPage) ─────── */
 .balance-card {
-    background: #0d1a2ead;
+    background: #0b0d12;
     border-radius: 14px;
     padding: 18px 20px;
     border: 1px solid rgba(255, 255, 255, 0.07);
@@ -44,15 +44,6 @@
     margin: 0;
 }
 
-.card-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .card-amount {
     font-size: 1.6rem;
     font-weight: 600;
@@ -61,17 +52,109 @@
     font-family: 'JetBrains Mono', monospace;
 }
 
-.card-details {
-    font-size: 0.72rem;
-    color: #475569;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    text-decoration: none;
-    transition: color 0.2s;
-    cursor: pointer;
+/* ── Hero: patrimonio neto ─────────────────────────────────── */
+.dash-hero::before {
+    background: linear-gradient(#22c55e, #3b82f6);
 }
 
-.balance-card:hover .card-details {
-    color: #f1c40f;
+/* Brillo sutil del color de la deuda/crédito — esquina superior derecha */
+.dash-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        85% 130% at 100% 0%,
+        rgba(59, 130, 246, 0.16) 0%,
+        transparent 55%
+    );
+    pointer-events: none;
+    transform-origin: top right;
+    transition: transform 0.4s ease;
+}
+
+.dash-hero:hover::after {
+    transform: scale(1.2);
+}
+
+.hero-top,
+.hero-amount,
+.hero-stats {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.hero-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.4rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #f8fafc;
+    margin: 10px 0 16px;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 8px;
+}
+
+.hero-stat {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+}
+
+.hero-stat svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #94a3b8;
+}
+
+.hero-stat-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.hero-stat-text span {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hero-stat-text strong {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+    .hero-amount {
+        font-size: 1.8rem;
+    }
+
+    .hero-stats {
+        flex-direction: column;
+    }
 }

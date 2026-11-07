@@ -1,13 +1,12 @@
 import { useMemo, useState } from "react";
 import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal";
-import { getIcon } from "../../../../shared/utils/GetIcon";
 import { formatCurrency } from "../../../../shared/utils/formatCurrency";
+import { SelectInput } from "../../../../shared/components/SelectInput/SelectInput";
 import { useAccounts } from "../../hooks";
 import AccountForm from "../accountForm/accountForm";
 import type { Account, AccountType } from "../../types";
 
 
-import "./selectAccount.css";
 import type { BaseInputProps } from "../../../../shared/components/types";
 
 const CREATE_OPTION = "__CREATE_ACCOUNT__";
@@ -31,6 +30,9 @@ interface SelectAccountProps
     allowCreate?: boolean;
 
     defaultStyle?: boolean
+
+    /** Nombre precargado al crear una cuenta */
+    defaultName?: string;
 }
 
 export const SelectAccount = ({
@@ -52,12 +54,15 @@ export const SelectAccount = ({
     id,
     name,
     className,
+    defaultName,
 }: SelectAccountProps) => {
     const { accounts, loading, saveAccount } =
         useAccounts();
 
     const [showForm, setShowForm] =
         useState(false);
+    const [createName, setCreateName] =
+        useState<string | undefined>(undefined);
 
     const inputId =
         id ?? name ?? "select-account";
@@ -102,15 +107,44 @@ export const SelectAccount = ({
         noAccountId,
     ]);
 
-    const handleSelectChange = (
-        e: React.ChangeEvent<HTMLSelectElement>
-    ) => {
-        const selected =
-            e.target.value;
+    const options = useMemo(() => {
+        const list: {
+            value: string;
+            label: string;
+        }[] = [];
 
+        if (allowCreate) {
+            list.push({
+                value: CREATE_OPTION,
+                label: "+ Nueva cuenta",
+            });
+        }
+
+        for (const acc of filteredAccounts) {
+            list.push({
+                value: acc.id,
+                label:
+                    acc.name +
+                    (!noRenderBalance
+                        ? `: ${formatCurrency(acc.balance)}`
+                        : ""),
+            });
+        }
+
+        return list;
+    }, [
+        allowCreate,
+        filteredAccounts,
+        noRenderBalance,
+    ]);
+
+    const handleSelectChange = (
+        selected: string
+    ) => {
         if (
             selected === CREATE_OPTION
         ) {
+            setCreateName(defaultName);
             setShowForm(true);
             return;
         }
@@ -118,95 +152,40 @@ export const SelectAccount = ({
         onChange(selected);
     };
 
+    const handleCreateQuery = (query: string) => {
+        setCreateName(query || defaultName);
+        setShowForm(true);
+    };
+
     const handleSuccess = (
         newAccount?: Account
     ) => {
         if (newAccount) onChange(String(newAccount.id));
-        console.log("New account created:", newAccount);
         setShowForm(false);
     };
 
     return (
         <>
-            <div
-                className={`
-          ${defaultStyle ? "custom-form-group" : ""}
-          ${error ? "has-error" : ""}
-          ${disabled ? "disabled" : ""}
-          ${className ?? ""}
-        `}
-            >
-                {label && (
-                    <label
-                        htmlFor={inputId}
-                        className="input-label"
-                    >
-                        {icon && getIcon(icon)}
-                        {label}
-                    </label>
-                )}
-
-                <div className={`${defaultStyle ? "input-wrapper" : ""}`}>
-                    {loading ? (
-                        <select
-                            disabled
-
-                        >
-                            <option>
-                                Cargando cuentas...
-                            </option>
-                        </select>
-                    ) : (
-                        <select
-                            id={inputId}
-                            name={name}
-                            value={value ?? ""}
-                            onChange={
-                                handleSelectChange
-                            }
-                            required={required}
-                            disabled={disabled}
-
-                        >
-                            <option value="">
-                                {placeholder}
-                            </option>
-
-                            {allowCreate && (
-                                <option
-                                    value={
-                                        CREATE_OPTION
-                                    }
-                                >
-                                    + Nueva cuenta
-                                </option>
-                            )}
-
-                            {filteredAccounts.map(
-                                (acc) => (
-                                    <option
-                                        key={acc.id}
-                                        value={acc.id}
-                                    >
-                                        {acc.name}
-
-                                        {!noRenderBalance &&
-                                            `: ${formatCurrency(
-                                                acc.balance
-                                            )}`}
-                                    </option>
-                                )
-                            )}
-                        </select>
-                    )}
-                </div>
-
-                {error && (
-                    <span className="error-text">
-                        {error}
-                    </span>
-                )}
-            </div>
+            <SelectInput
+                value={value}
+                onChange={handleSelectChange}
+                placeholder={
+                    loading
+                        ? "Cargando cuentas..."
+                        : placeholder
+                }
+                label={label}
+                icon={icon}
+                error={error}
+                required={required}
+                disabled={disabled || loading}
+                defaultStyle={defaultStyle}
+                id={inputId}
+                name={name}
+                options={options}
+                onCreateQuery={allowCreate ? handleCreateQuery : undefined}
+                className={`select-account ${className ?? ""}`}
+            />
 
             {showForm && (
                 <ModalPortal
@@ -217,8 +196,12 @@ export const SelectAccount = ({
                 >
                     <AccountForm
                         mutation={saveAccount}
+                        initialName={createName}
                         onSuccess={
                             handleSuccess
+                        }
+                        onClose={() =>
+                            setShowForm(false)
                         }
                     />
                 </ModalPortal>

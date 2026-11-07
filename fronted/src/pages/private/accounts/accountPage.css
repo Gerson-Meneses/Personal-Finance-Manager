@@ -1,0 +1,44 @@
+/* Toolbar de cuentas — mismo patrón que .categories-toolbar */
+.accounts-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.accounts-toolbar .si-wrapper {
+    min-width: 200px;
+}
+
+.acc-select.custom-form-group {
+    flex: 0 0 auto;
+    width: fit-content;
+}
+
+.acc-select.select-compact .select-input-trigger,
+.acc-select.select-compact .select-input-value.is-placeholder {
+    color: #f8fafc;
+}
+
+/* Resumen — balance-card compartidas con el dashboard */
+.accounts-summary .balance-card {
+    min-height: 110px;
+}
+
+.accounts-summary .balance-card .card-head {
+    margin-bottom: 0;
+}
+
+/* Tercer widget: patrimonio neto (acento amarillo) */
+.card-net::before {
+    background: #f1c40f;
+}
+
+/* Estado de error de carga */
+.accounts-error-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}

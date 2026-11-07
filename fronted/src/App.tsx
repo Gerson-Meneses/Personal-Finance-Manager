@@ -15,6 +15,8 @@ import { VerifyEmailPage } from "./pages/public/verifyEmail/VerifyEmail";
 import { ResetPasswordPage } from "./pages/public/ResetPassword/ResetPassword";
 import "./App.css"
 import { LoansByLender } from "./pages/private/loans/LoansByLender/LoansByLender";
+import ProfilePage from "./pages/private/profile/profilePage";
+import AdminPanelPage from "./pages/private/admin/adminPanelPage";
 
 
 export default function App() {
@@ -39,6 +41,8 @@ export default function App() {
         <Route path="/loans" element={< LoansPage />} ></Route>
         <Route path="/loans/:lender" element={< LoansByLender />} ></Route>
         <Route path="/transactions" element={< TransactionsPage />} ></Route>
+        <Route path="/perfil" element={< ProfilePage />} ></Route>
+        <Route path="/admin" element={< AdminPanelPage />} ></Route>
 
       </Route>
 

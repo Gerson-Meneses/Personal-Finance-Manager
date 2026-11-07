@@ -69,14 +69,17 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                 />
             }
             orderElement={
-                <select
-                    className="tf-select-small"
+                <SelectInput
+                    compact
+                    label="Ordenar por"
+                    hideLabel
                     value={query.order ?? "DESC"}
-                    onChange={(e) => set("order", e.target.value as "ASC" | "DESC")}
-                >
-                    <option value="DESC">Más recientes</option>
-                    <option value="ASC">Más antiguos</option>
-                </select>
+                    onChange={(v) => set("order", v as "ASC" | "DESC")}
+                    options={[
+                        { value: "DESC", label: "Más recientes" },
+                        { value: "ASC", label: "Más antiguos" },
+                    ]}
+                />
             }
         >
             {/* 🎯 PANEL DESPLEGABLE DE FILTROS AVANZADOS */}

@@ -1,27 +1,83 @@
-/* En tu ModalPortal.css */
 .modal-overlay {
   display: flex;
   position: fixed;
   z-index: 999999;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7); /* Un pelín más oscuro para dar más foco al modal */
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(6px);
   top: 0;
   left: 0;
-  justify-content: center; /* Centrado horizontal */
-  align-items: center;     /* 🎯 CAMBIO CLAVE: Centrado vertical */
-  padding: 20px;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  animation: modalOverlayIn 0.2s ease both;
 }
 
 .modal-content {
   width: 100%;
-  max-width: 500px; /* Controla el ancho máximo del formulario */
+  max-width: 440px;
   display: flex;
-  max-height: 90vh;
   flex-direction: column;
+  max-height: 90vh;
   margin: auto;
   overflow-y: auto;
-   overflow-x: hidden; 
-  /* Eliminamos borders, paddings y backgrounds de aquí */
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  animation: modalContentIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes modalOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalContentIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Móvil: modal como bottom sheet */
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 12px 12px 16px;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    margin: 0;
+    max-height: 88vh;
+    animation-name: modalSheetIn;
+  }
+}
+
+@keyframes modalSheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay,
+  .modal-content {
+    animation: none;
+  }
 }

@@ -32,7 +32,17 @@ export interface Category {
   type: TransactionType;
   color: string;
   icon?: string;
-  isVisible: boolean;
+  visible: boolean;
   isBase: boolean;
+  transactionCount?: number;
+  totalAmount?: number;
   transactions?: Transaction[];
+}
+
+export interface CategorySuggestion {
+  id: string;
+  name: string;
+  color: string;
+  icon: string | null;
+  type: TransactionType;
 }

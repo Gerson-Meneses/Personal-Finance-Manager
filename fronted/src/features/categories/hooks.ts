@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as service from "./services"
-import type { Category, CategorySchemaOutput } from "./types"
+import type { Category, CategorySchemaOutput, CategorySuggestion, UpdateCategoryInput } from "./types"
+import type { TransactionType } from "../transactions/types"
 import type { Data, DataError } from "../../shared/dataApiInterface";
 
 
@@ -20,14 +22,19 @@ export const useCategories = () => {
     onSuccess: invalidate
   });
 
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutation<void, DataError<string>, string>({
     mutationFn: service.deleteCategory,
     onSuccess: invalidate
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string, data: Partial<CategorySchemaOutput> }) =>
-      service.updateCategory(id, data),
+  const updateMutation = useMutation<Category, DataError<CategorySchemaOutput>, CategorySchemaOutput | UpdateCategoryInput>({
+    mutationFn: (data: CategorySchemaOutput | UpdateCategoryInput) => {
+      if (!("categoryId" in data)) {
+        throw new Error("Falta el id de la categoría a actualizar");
+      }
+      const { categoryId, ...payload } = data;
+      return service.updateCategory(categoryId, payload);
+    },
     onSuccess: invalidate
   });
 
@@ -36,9 +43,36 @@ export const useCategories = () => {
     categories: categoriesQuery.data?.data ?? [],
     total: categoriesQuery.data?.meta.total ?? 0,
     loading: categoriesQuery.isLoading,
+    isError: categoriesQuery.isError,
+    error: categoriesQuery.error,
     createCategory: createMutation,
     deleteCategory: deleteMutation,
-    updateCategory: updateMutation.mutateAsync,
+    updateCategory: updateMutation,
     refetch: categoriesQuery.refetch
   };
 };
+
+/**
+ * Sugiere la categoría más usada en el historial para el nombre indicado.
+ * El texto se debouncea (400 ms) para no golpear el backend en cada tecla.
+ */
+export const useCategorySuggestion = (name: string, type: TransactionType, enabled = true) => {
+  const [debouncedName, setDebouncedName] = useState("");
+
+  useEffect(() => {
+    const trimmed = name.trim();
+    const timer = setTimeout(() => setDebouncedName(trimmed), 400);
+    return () => clearTimeout(timer);
+  }, [name]);
+
+  const active = enabled && debouncedName.length >= 2;
+
+  return useQuery<{ suggestion: CategorySuggestion | null }>({
+    queryKey: ["categorySuggest", debouncedName, type],
+    queryFn: () => service.suggestCategory(debouncedName, type),
+    enabled: active,
+    staleTime: 30_000,
+    retry: false,
+  });
+};
+

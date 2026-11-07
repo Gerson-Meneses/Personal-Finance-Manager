@@ -16,10 +16,10 @@ export const SuccessToast = ({ isSucces, children, successText = "¡Logrado!" }:
     },[isSucces])
 
     useEffect(() => {
-        if (show) {
-            setTimeout(() => setShow(false), 3000)
-        }
-    }, [show])
+        if (!show) return;
+        const id = setTimeout(() => setShow(false), 3000);
+        return () => clearTimeout(id);
+    }, [show]);
 
     return (
         <div className="btn-container">

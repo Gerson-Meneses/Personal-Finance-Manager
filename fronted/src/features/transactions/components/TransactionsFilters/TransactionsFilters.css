@@ -57,20 +57,6 @@
     flex-shrink: 0;
 }
 
-.tf-select-small {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 0.5rem 0.75rem;
-    color: #94a3b8;
-    font-size: 0.8rem;
-    font-family: inherit;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
-}
-.tf-select-small:hover { border-color: #38bdf8; color: #f8fafc; }
-
 /* Toggle filtros */
 .tf-filter-toggle {
     display: flex;
@@ -96,7 +82,7 @@
 
 .tf-active-count {
     background: #38bdf8;
-    color: #020120;
+    color: #000000;
     font-size: 0.65rem;
     font-weight: 700;
     border-radius: 50%;
@@ -126,7 +112,7 @@
 
 /* ─── Panel ───────────────────────────────────────────── */
 .tf-panel {
-    background: #0d1a2e;
+    background: #0b0d12;
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 14px;
     padding: 20px;
@@ -183,8 +169,7 @@
     color: #64748b;
 }
 
-.tf-field input,
-.tf-select {
+.tf-field input {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
@@ -198,11 +183,17 @@
     box-sizing: border-box;
 }
 .tf-field input:hover,
-.tf-field input:focus,
-.tf-select:hover,
-.tf-select:focus {
+.tf-field input:focus {
     border-color: #38bdf8;
     background: rgba(56, 189, 248, 0.04);
+}
+
+.tf-field-select.custom-form-group {
+    width: 100%;
+}
+
+.tf-field-select .select-input {
+    min-width: 0;
 }
 
 .tf-field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
@@ -260,5 +251,4 @@
 @media (max-width: 640px) {
     .tf-top-bar { flex-direction: column; align-items: stretch; }
     .tf-controls { justify-content: flex-end; }
-    .tf-select-small { flex: 1; }
 }

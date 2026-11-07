@@ -7,7 +7,6 @@ import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal";
 import { CreateLoanPaymentForm } from "../../../LoanPayments/PayLoanForm/PayLoanForm";
 import type { LoanPayment } from "../../../LoanPayments/types";
 import { TruncateText } from "../../../../shared/components/TruncateText/TruncateText";
-import Tippy from "@tippyjs/react";
 
 interface LoanPaymentsListProps {
     loan?: Loan;
@@ -21,11 +20,14 @@ export const LoanPaymentsList = ({ loan, payments, isGiven }: LoanPaymentsListPr
         <div className="loan-payments-section">
 
             <h4 className="loan-payments__title section-header">Historial de Pagos ({payments.length})
-                <Tippy placement="left" content={<span className="tooltip" >Agregar Pago</span>}>
-                    <button className="btn-circle" onClick={() => setShowModal(true)}>
-                        {getIcon("plus", { size: 16, color: "#dad305" })}
-                    </button>
-                </Tippy>
+                <button
+                    className="btn-circle tooltip-left"
+                    data-tooltip="Agregar Pago"
+                    onClick={() => setShowModal(true)}
+                    aria-label="Agregar pago"
+                >
+                    {getIcon("plus", { size: 16, color: "#dad305" })}
+                </button>
             </h4>
 
             {payments.length === 0 ? (

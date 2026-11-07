@@ -24,9 +24,10 @@ export function SearchInput({ value, onChange, placeholder = "Buscar..." }: Prop
 
             {value && (
                 <button
-                    className="si-clear"
+                    className="si-clear tooltip-left"
                     type="button"
                     aria-label="Limpiar búsqueda"
+                    data-tooltip="Limpiar búsqueda"
                     onClick={() => onChange("")}
                 >
                     {getIcon("X")}
