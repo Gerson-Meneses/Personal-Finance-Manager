@@ -15,7 +15,7 @@ import { ColorPicker } from "../../../../shared/components/ColorPicker/ColorPick
 import { IconPicker } from "../../../../shared/components/IconPicker/IconPicker";
 import "./accountForm.css";
 import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
-import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
+import { useToast } from "../../../../shared/Hooks/useToast";
 import { useAccounts } from "../../hooks";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -85,8 +85,9 @@ export default function AccountForm({
     onSuccess,
     onClose,
 }: PropsAccountForm) {
-    const { mutateAsync, isPending, error, isSuccess } = mutation;
+    const { mutateAsync, isPending, error } = mutation;
     const { deleteAccount } = useAccounts();
+    const toast = useToast();
     const [confirmDelete, setConfirmDelete] = useState(false);
 
     const {
@@ -140,32 +141,30 @@ export default function AccountForm({
 
     /* ---------- submit ---------- */
     const onSubmit = async (data: AccountSchemaOutput) => {
-        console.log("Submitting account data:", data);
-        let newAccount: Account;
-        if (isEdit && account) {
-            const updateData: UpdateAccountOutput = { ...data, accountId: account.id };
-            newAccount = await mutateAsync(updateData, {
+        try {
+            if (isEdit && account) {
+                const updateData: UpdateAccountOutput = { ...data, accountId: account.id };
+                const updated = await mutateAsync(updateData);
+                toast.success("Cuenta actualizada");
+                onSuccess?.(updated);
+                return;
+            }
+            const created = await mutateAsync(data, {
+                onSuccess: () => {
+                    reset(defaultDebitValues);
+                },
             });
-            console.log("Account updated:", newAccount);
-            return;
+            toast.success(isCredit ? "Cuenta de crédito creada" : "Cuenta de débito creada");
+            onSuccess?.(created);
+        } catch {
+            // El error queda en mutation.error y se muestra en el formulario
         }
-        newAccount = await mutateAsync(data, {
-            onSuccess: () => {
-                reset(defaultDebitValues);
-            },
-        });
-        onSuccess?.(newAccount);
-        console.log("New account created:", newAccount);
     };
 
     /* ---------- helpers ---------- */
     const headerIcon = isCredit
         ? <ArrowUpCircle size={20} />
         : <ArrowDownCircle size={20} />;
-
-    const successText = isCredit
-        ? "Cuenta de Crédito guardada con éxito."
-        : "Cuenta de Débito guardada con éxito.";
 
     return (
         <>
@@ -352,19 +351,17 @@ export default function AccountForm({
                 <div className="form-default-row form-actions-container">
 
                     {!fieldsDisabled?.all && (
-                        <SuccessToast successText={successText} isSucces={isSuccess}>
-                            <button
-                                type="submit"
-                                className={`btn-submit ${accountType.toLowerCase()}`}
-                                disabled={isPending || !isDirty || !isValid}
-                            >
-                                {isCredit
-                                    ? <CreditCard size={15} />
-                                    : <Wallet size={15} />
-                                }
-                                {isEdit ? "Actualizar" : "Crear cuenta"}
-                            </button>
-                        </SuccessToast>
+                        <button
+                            type="submit"
+                            className={`btn-submit ${accountType.toLowerCase()}`}
+                            disabled={isPending || !isDirty || !isValid}
+                        >
+                            {isCredit
+                                ? <CreditCard size={15} />
+                                : <Wallet size={15} />
+                            }
+                            {isEdit ? "Actualizar" : "Crear cuenta"}
+                        </button>
                     )}
 
                     {(!fieldsHidden?.delete && account) && (
@@ -391,6 +388,7 @@ export default function AccountForm({
                     deleteAccount.mutate(account.id, {
                         onSuccess: () => {
                             setConfirmDelete(false);
+                            toast.success("Cuenta eliminada");
                             onClose?.();
                         },
                     });

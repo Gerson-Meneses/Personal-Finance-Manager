@@ -113,10 +113,17 @@ option { background-color: #0b0d12; cursor: pointer; }
     font-size: 0.72rem;
     font-weight: 500;
     line-height: 1.2;
-    white-space: nowrap;
+    /* Se ajusta en líneas y nunca es más ancho que la pantalla: un tooltip
+       invisible que sobresale igual cuenta como desborde horizontal */
+    width: max-content;
+    max-width: min(260px, calc(100vw - 32px));
+    white-space: normal;
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
+    /* display:none evita que un tooltip oculto (pero con layout) ensanche
+       el documento y provoque scroll horizontal en móvil */
+    display: none;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
     transition:
         opacity 0.12s ease,
@@ -154,6 +161,7 @@ option { background-color: #0b0d12; cursor: pointer; }
     border-left: 6px solid #1e293b;
     opacity: 0;
     visibility: hidden;
+    display: none;
     pointer-events: none;
     transition: opacity 0.12s ease, visibility 0s linear 0.12s;
 }
@@ -169,6 +177,7 @@ option { background-color: #0b0d12; cursor: pointer; }
     border-top: 6px solid #1e293b;
     opacity: 0;
     visibility: hidden;
+    display: none;
     pointer-events: none;
     transition: opacity 0.12s ease, visibility 0s linear 0.12s;
 }
@@ -184,12 +193,14 @@ option { background-color: #0b0d12; cursor: pointer; }
     border-right: 6px solid #1e293b;
     opacity: 0;
     visibility: hidden;
+    display: none;
     pointer-events: none;
     transition: opacity 0.12s ease, visibility 0s linear 0.12s;
 }
 
 /* ── Estados: teclado (inmediato) y mantener presionado (tras 250ms) ── */
 [data-tooltip]:focus-visible::after {
+    display: block;
     opacity: 1;
     visibility: visible;
     transition:
@@ -199,6 +210,7 @@ option { background-color: #0b0d12; cursor: pointer; }
 }
 
 [data-tooltip]:active::after {
+    display: block;
     opacity: 1;
     visibility: visible;
     transition:
@@ -208,12 +220,14 @@ option { background-color: #0b0d12; cursor: pointer; }
 }
 
 [data-tooltip]:focus-visible::before {
+    display: block;
     opacity: 1;
     visibility: visible;
     transition: opacity 0.12s ease, visibility 0s linear 0s;
 }
 
 [data-tooltip]:active::before {
+    display: block;
     opacity: 1;
     visibility: visible;
     transition: opacity 0.12s ease 0.25s, visibility 0s linear 0.25s;
@@ -222,6 +236,7 @@ option { background-color: #0b0d12; cursor: pointer; }
 /* Solo punteros con hover real (evita que se quede pegado tras tocar en móvil) */
 @media (hover: hover) and (pointer: fine) {
     [data-tooltip]:hover::after {
+        display: block;
         opacity: 1;
         visibility: visible;
         transition:
@@ -231,6 +246,7 @@ option { background-color: #0b0d12; cursor: pointer; }
     }
 
     [data-tooltip]:hover::before {
+        display: block;
         opacity: 1;
         visibility: visible;
         transition: opacity 0.12s ease, visibility 0s linear 0s;
@@ -261,7 +277,7 @@ option { background-color: #0b0d12; cursor: pointer; }
 /* ── Textos largos: envuelve en varias líneas (anclado a la izquierda arriba) ── */
 .tooltip-wide[data-tooltip]::after {
     width: max-content;
-    max-width: 340px;
+    max-width: min(340px, calc(100vw - 32px));
     white-space: normal;
     overflow-wrap: break-word;
 }

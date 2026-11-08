@@ -92,14 +92,14 @@
 /* Grid inferior: Impacto en vivo del pago */
 .loan-context-summary__footer-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   padding-top: 10px;
   gap: 16px;
 }
 
 @media (max-width: 480px) {
   .loan-context-summary__footer-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

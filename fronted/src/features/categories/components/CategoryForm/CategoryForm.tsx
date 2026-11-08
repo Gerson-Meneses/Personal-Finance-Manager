@@ -12,7 +12,7 @@ import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle"
 import { TextInput } from "../../../../shared/components/TextInput/TextInput";
 import { ColorPicker } from "../../../../shared/components/ColorPicker/ColorPicker";
 import { IconPicker } from "../../../../shared/components/IconPicker/IconPicker";
-import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
+import { useToast } from "../../../../shared/Hooks/useToast";
 import { FormContainer } from "../../../../shared/components/FormContainer/FormContainer";
 import InfoModal from "../../../../shared/components/InfoModal/InfoModal";
 import { useCategories } from "../../hooks";
@@ -64,8 +64,9 @@ export const CategoryForm = ({
     onSuccess,
     onClose,
 }: PropsCategoryForm) => {
-    const { mutateAsync, isPending, error, isSuccess } = mutation;
+    const { mutateAsync, isPending, error } = mutation;
     const { deleteCategory } = useCategories();
+    const toast = useToast();
     const [confirmDelete, setConfirmDelete] = useState(false);
 
     const {
@@ -130,6 +131,7 @@ export const CategoryForm = ({
             if (isEdit && category) {
                 const updateData: UpdateCategoryInput = { ...data, categoryId: category.id };
                 const result = await mutateAsync(updateData);
+                toast.success("Categoría actualizada");
                 onSuccess?.(result);
                 return;
             }
@@ -141,6 +143,7 @@ export const CategoryForm = ({
                 },
             });
 
+            toast.success("Categoría creada");
             onSuccess?.(result);
         } catch {
             // El error queda en mutation.error y se muestra en la UI (banner o campo)
@@ -149,7 +152,6 @@ export const CategoryForm = ({
 
     /* ---------- derived ---------- */
     const headerIcon = isIncome ? <TrendingUp size={20} /> : <TrendingDown size={20} />;
-    const successText = `Categoría ${isEdit ? "actualizada" : "creada"} con éxito.`;
     const typeModifier = isIncome ? "income" : "expense";
     const knownFields = Object.keys(defaultValues);
     const hasUnmappedDetails = !!error?.details && Object.keys(error.details).some((key) => !knownFields.includes(key));
@@ -257,19 +259,17 @@ export const CategoryForm = ({
 
                 {/* ── ACTIONS ──────────────────────────────────────────────── */}
                 <div className="form-default-row form-actions-container">
-                    <SuccessToast isSucces={isSuccess} successText={successText}>
-                        <button
-                            type="submit"
-                            className={`btn-submit ${typeModifier}`}
-                            disabled={isPending || !isDirty || !isValid}
-                        >
-                            {isIncome ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                            {isPending
-                                ? "Guardando…"
-                                : isEdit ? "Actualizar" : "Crear categoría"
-                            }
-                        </button>
-                    </SuccessToast>
+                    <button
+                        type="submit"
+                        className={`btn-submit ${typeModifier}`}
+                        disabled={isPending || !isDirty || !isValid}
+                    >
+                        {isIncome ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                        {isPending
+                            ? "Guardando…"
+                            : isEdit ? "Actualizar" : "Crear categoría"
+                        }
+                    </button>
 
                     {isEdit && category && !category.isBase && (
                         <button
@@ -295,6 +295,7 @@ export const CategoryForm = ({
                     deleteCategory.mutate(category.id, {
                         onSuccess: () => {
                             setConfirmDelete(false);
+                            toast.success("Categoría eliminada");
                             onClose?.();
                         },
                     });

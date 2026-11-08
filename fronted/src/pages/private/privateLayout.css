@@ -18,6 +18,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 .header-logo {
@@ -48,6 +50,9 @@
     font-weight: 500;
     color: #f8fafc;
     line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .header-user-name {
@@ -64,6 +69,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0;
 }
 
 /* ─── Nav principal del header ─────────────────────────── */
@@ -256,8 +262,13 @@ main {
 
 @media (max-width: 640px) {
     .app-header {
-        padding: 0 1rem;
+        padding: 0 12px;
+        gap: 8px;
         height: 52px;
+    }
+
+    .header-right {
+        gap: 8px;
     }
 
     /* La nav del header no cabe: se reemplaza por el menú hamburguesa */
@@ -334,6 +345,8 @@ main {
     /* En móvil ocultamos el texto del logout y solo mostramos el avatar */
     .header-logout-btn {
         display: block;
+        padding: 6px 8px;
+        line-height: 0;
     }
 
     /* El avatar en móvil actúa como trigger del menú (o solo está de adorno) */
@@ -351,6 +364,25 @@ main {
     .fab {
         width: 48px;
         height: 48px;
+    }
+}
+
+/* Teléfonos chicos (320–480px): el header no puede pasar del ancho.
+   Se oculta el nombre del usuario (el avatar ya muestra sus iniciales). */
+@media (max-width: 480px) {
+    .header-user-name {
+        display: none;
+    }
+
+    .header-logo {
+        width: 2.2em;
+        height: 2.2em;
+    }
+}
+
+@media (max-width: 360px) {
+    .header-logo {
+        display: none;
     }
 }
 

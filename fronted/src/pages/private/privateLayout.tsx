@@ -4,8 +4,8 @@ import { matchPath, NavLink, Navigate, Outlet, useLocation, useNavigate } from "
 import { useState } from "react";
 import { ArrowLeft, ArrowLeftRight, HandCoins, Home, Menu, Plus, ShieldCheck, Tags, Wallet, X } from "lucide-react";
 import ModalPortal from "../../shared/components/ModalPortal/ModalPortal";
-import InfoModal from "../../shared/components/InfoModal/InfoModal";
 import TransactionForm from "../../features/transactions/components/TransactionForm/TransactionForm";
+import { AddAnotherTransactionPrompt } from "../../features/transactions/components/AddAnotherTransactionPrompt";
 import { useTransactions } from "../../features/transactions/hooks";
 import LoadingScreen from "../../shared/components/LoadingScreen/LoadingScreen";
 import "./privateLayout.css"
@@ -23,7 +23,7 @@ export function PrivateLayout() {
   const navigate = useNavigate()
   const { saveTransaction } = useTransactions()
   const [modal, setModal] = useState(false)
-  const [createdInfo, setCreatedInfo] = useState(false)
+  const [askAnother, setAskAnother] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const isAdmin = useIsAdmin()
 
@@ -180,8 +180,7 @@ export function PrivateLayout() {
             className="fab tooltip-left"
             data-tooltip="Agregar Transacción"
             onClick={() => {
-              // Limpia isSuccess/error de una creación anterior: si no,
-              // al reabrir se montaría el SuccessToast viejo (flash).
+              // Limpia el error de una creación anterior antes de reabrir el formulario
               saveTransaction.reset()
               setModal(true)
             }}
@@ -197,19 +196,20 @@ export function PrivateLayout() {
             onClose={() => setModal(false)}
             onSuccess={() => {
               setModal(false)
-              setCreatedInfo(true)
+              setAskAnother(true)
             }}
             defaultAccountId={defaultAccountId}
           />
         </ModalPortal>
 
-        <InfoModal
-          isOpen={createdInfo}
-          onClose={() => setCreatedInfo(false)}
-          type="success"
-          title="Transacción creada"
-          message="La transacción se registró correctamente."
-          buttonText="Entendido"
+        <AddAnotherTransactionPrompt
+          isOpen={askAnother}
+          onClose={() => setAskAnother(false)}
+          onAddAnother={() => {
+            setAskAnother(false)
+            saveTransaction.reset()
+            setModal(true)
+          }}
         />
       </main>
 

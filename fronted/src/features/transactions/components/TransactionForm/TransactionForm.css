@@ -131,7 +131,7 @@
 /* Grilla 2 columnas (compartida, reafirmada aquí) */
 .form-default-grid-2col {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
 }
 
@@ -151,7 +151,7 @@
 /* Tablet y móvil: colapsa la grilla de 2 col a 1 */
 @media (max-width: 600px) {
     .form-default-grid-2col {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 12px;
     }
 }

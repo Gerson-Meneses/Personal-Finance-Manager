@@ -14,7 +14,7 @@ import LoanStats from "../../../features/dashboard/components/LoanStats/LoanStat
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "../../../features/transactions/components/TransactionForm/TransactionForm";
-import InfoModal from "../../../shared/components/InfoModal/InfoModal";
+import { AddAnotherTransactionPrompt } from "../../../features/transactions/components/AddAnotherTransactionPrompt";
 import "./dashboard.css";
 
 dayjs.locale("es");
@@ -26,7 +26,7 @@ export default function DashboardPage() {
     const { dashboardData, loading, error, refresh } = useDashboard();
     const { saveTransaction } = useTransactions();
     const [txModal, setTxModal] = useState(false);
-    const [txCreated, setTxCreated] = useState(false);
+    const [askAnother, setAskAnother] = useState(false);
 
     if (loading) return <LoadingScreen />;
 
@@ -116,16 +116,18 @@ export default function DashboardPage() {
                     onClose={() => setTxModal(false)}
                     onSuccess={() => {
                         setTxModal(false);
-                        setTxCreated(true);
+                        setAskAnother(true);
                     }}
                 />
             </ModalPortal>
-            <InfoModal
-                isOpen={txCreated}
-                onClose={() => setTxCreated(false)}
-                type="success"
-                title="Transacción creada"
-                message="La transacción se registró correctamente."
+            <AddAnotherTransactionPrompt
+                isOpen={askAnother}
+                onClose={() => setAskAnother(false)}
+                onAddAnother={() => {
+                    setAskAnother(false);
+                    saveTransaction.reset();
+                    setTxModal(true);
+                }}
             />
         </div>
     )

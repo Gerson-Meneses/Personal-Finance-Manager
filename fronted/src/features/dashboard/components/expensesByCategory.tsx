@@ -37,7 +37,7 @@ export default function ExpensesByCategory({ expenses, totalExpense }: Props) {
                 <div className="cat-list">
                     {sorted.map(({ category, amount, total }) => {
                         const pct = totalExpense > 0
-                            ? Math.round((amount / totalExpense) * 100)
+                            ? Math.min(100, Math.round((amount / totalExpense) * 100))
                             : 0
 
                         return (

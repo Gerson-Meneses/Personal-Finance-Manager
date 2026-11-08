@@ -1,6 +1,5 @@
 import { useState } from "react";
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
-import { SuccessToast } from "../../../shared/components/SuccesToast/SuccesToast";
 import { Plus } from "lucide-react";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import LoanForm from "../../../features/loans/components/CreateLoanForm/loanForm";
@@ -10,7 +9,6 @@ import { useLoansQuery, useLoanSummary } from "../../../features/loans/hooks";
 export const LoansPage = () => {
     const { summary = [], isLoading } = useLoanSummary({ status: "PENDING" });
     const { createLoan } = useLoansQuery()
-    const [toast, setToast] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const lenders = summary.map(item => item.lender);
@@ -28,12 +26,10 @@ export const LoansPage = () => {
                     <p className="text-muted">Gestiona tus préstamos y pagos</p>
                     <p className="text-muted">Total: 0</p>
                 </div>
-                <SuccessToast isSucces={toast} successText="Préstamo creado con éxito">
-                    <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-                        <Plus size={20} />
-                        Nuevo Préstamo
-                    </button>
-                </SuccessToast>
+                <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
+                    <Plus size={20} />
+                    Nuevo Préstamo
+                </button>
             </header>
 
             <div className="grid-auto">
@@ -44,10 +40,7 @@ export const LoansPage = () => {
                 <LoanForm
                     mutation={createLoan}
                     lenders={uniqueLenders}
-                    onSuccess={() => {
-                        setToast(true);
-                        setIsModalOpen(false); // Cierra el modal automáticamente al éxito
-                    }}
+                    onSuccess={() => setIsModalOpen(false)}
                 />
             </ModalPortal>
         </div>

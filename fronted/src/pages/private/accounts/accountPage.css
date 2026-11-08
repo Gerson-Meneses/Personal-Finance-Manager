@@ -79,16 +79,12 @@
     }
 
     .accounts-toolbar .si-wrapper,
-    .accounts-toolbar .btn-container {
+    .accounts-toolbar .btn-primary {
         grid-column: 1 / -1;
     }
 
     .accounts-toolbar .si-wrapper {
         width: 100%;
-    }
-
-    .accounts-toolbar .btn-container {
-        display: block;
     }
 
     .accounts-toolbar .btn-primary {

@@ -1,0 +1,96 @@
+/* ════════════════════════════════════════════════════════
+   TOAST — aviso breve y no bloqueante
+   Va justo debajo del header para no tapar el FAB ni los
+   controles inferiores, y por encima de los modales.
+════════════════════════════════════════════════════════ */
+.toast-region {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000000;
+  width: min(380px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+@media (min-width: 641px) {
+  .toast-region {
+    top: 96px;
+  }
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px 10px 12px;
+  background: #111318;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.7);
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  animation: toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.toast-icon {
+  flex-shrink: 0;
+}
+
+.toast--success .toast-icon {
+  color: #22c55e;
+}
+
+.toast--error .toast-icon {
+  color: #f87171;
+}
+
+.toast--info .toast-icon {
+  color: #f1c40f;
+}
+
+.toast-message {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  display: flex;
+  padding: 4px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.toast-close:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

@@ -1,10 +1,11 @@
 /* ════════════════════════════════════════════════════════
-   MODAL
-   El overlay es el único contenedor con scroll. La card no
-   tiene max-height ni overflow, así los popovers internos
-   (selects, calendario, selector de ícono) nunca quedan
-   recortados por el modal.
-   ════════════════════════════════════════════════════════ */
+   MODAL — centrado en todos los anchos.
+   El overlay es el único contenedor con scroll: si la tarjeta
+   es más alta que la pantalla, el overlay scrollea y la tarjeta
+   nunca queda cortada. Sin max-height ni overflow en la tarjeta,
+   para que los popovers internos (selects, calendario, íconos)
+   no se recorten.
+════════════════════════════════════════════════════════ */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -12,7 +13,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 16px;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
   background: rgba(0, 0, 0, 0.72);
@@ -21,14 +23,14 @@
 }
 
 .modal-content {
-  /* margin:auto centra la card; si no cabe en pantalla, el margen
-     se anula y la card arranca desde arriba (scrollable, nunca cortada) */
+  /* margin:auto centra la tarjeta. Si no cabe en pantalla, el auto
+     margin se anula y la tarjeta arranca arriba para poder scrollear */
   margin: auto;
   width: 100%;
   max-width: 440px;
   display: flex;
   flex-direction: column;
-  animation: modalContentIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: modalContentIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes modalOverlayIn {
@@ -44,7 +46,7 @@
 @keyframes modalContentIn {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.97);
+    transform: translateY(10px) scale(0.98);
   }
 
   to {
@@ -53,29 +55,10 @@
   }
 }
 
-/* Móvil: modal como bottom sheet */
 @media (max-width: 480px) {
   .modal-overlay {
-    align-items: flex-end;
-    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .modal-content {
-    max-width: none;
-    margin: auto 0 0;
-    animation-name: modalSheetIn;
-  }
-}
-
-@keyframes modalSheetIn {
-  from {
-    opacity: 0;
-    transform: translateY(48px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
+    padding: 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   }
 }
 

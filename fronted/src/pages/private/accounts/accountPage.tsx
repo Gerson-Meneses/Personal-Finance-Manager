@@ -8,7 +8,6 @@ import { getCreditDebt } from "../../../features/accounts/utils";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import AccountCard from "../../../features/accounts/components/accountCard/accountCard";
 import AccountForm from "../../../features/accounts/components/accountForm/accountForm";
-import { SuccessToast } from "../../../shared/components/SuccesToast/SuccesToast";
 import { SearchInput } from "../../../shared/components/SearchInput/SearchInput";
 import { SelectInput } from "../../../shared/components/SelectInput/SelectInput";
 import "./accountPage.css";
@@ -19,7 +18,6 @@ type SortMode = "name-asc" | "name-desc" | "balance-desc" | "balance-asc";
 export function AccountPage() {
   const { accounts, loading, error, refetch, saveAccount } = useAccounts();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [toast, setToast] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [sort, setSort] = useState<SortMode>("name-asc");
@@ -98,12 +96,10 @@ export function AccountPage() {
           ]}
           className="acc-select"
         />
-        <SuccessToast isSucces={toast} successText="Cuenta creada con exito" >
-          <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-            <Plus size={20} />
-            Nueva Cuenta
-          </button>
-        </SuccessToast>
+        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
+          <Plus size={20} />
+          Nueva Cuenta
+        </button>
       </div>
     </header>
   );
@@ -192,10 +188,7 @@ export function AccountPage() {
 
         <AccountForm
           mutation={saveAccount}
-          onSuccess={() => {
-            setIsModalOpen(false);
-            setToast(true);
-          }}
+          onSuccess={() => setIsModalOpen(false)}
         />
 
       </ModalPortal>

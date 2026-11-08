@@ -2,7 +2,6 @@ import { useState } from "react"
 import dayjs from "dayjs"
 import { TextInput } from "../../../shared/components/TextInput/TextInput"
 import { BirthDateInput } from "../../../shared/components/BirthDateInput/BithrDateInput"
-import InfoModal from "../../../shared/components/InfoModal/InfoModal"
 import { useUpdateProfile } from "../../../features/auth/useProfile"
 import { UpdateProfileSchema, type UpdateProfileOutput, type User } from "../../../features/auth/types"
 import type { DetailsError } from "../../../shared/dataApiInterface"
@@ -55,8 +54,6 @@ export function ProfileDataCard({ user, showToast, onUserUpdated }: Props) {
     const [editing, setEditing] = useState(false)
     const [form, setForm] = useState<FormData>(() => toForm(user))
     const [errors, setErrors] = useState<DetailsError<UpdateProfileOutput> | null>(null)
-    const [confirmOpen, setConfirmOpen] = useState(false)
-    const [pendingPayload, setPendingPayload] = useState<UpdateProfileOutput | null>(null)
 
     const todayBirthDate = birthDateToString(form.birthDate)
     const todayBirthDateRef = dayjs(user.birthDate).format("YYYY-MM-DD")
@@ -91,6 +88,8 @@ export function ProfileDataCard({ user, showToast, onUserUpdated }: Props) {
         setEditing(false)
     }
 
+    /* Guardar directo: no pide confirmación (no es destructivo). El aviso
+       de éxito llega como toast y el formulario se cierra solo. */
     const handleSaveClick = () => {
         const parsed = UpdateProfileSchema.safeParse(rawPayload)
         if (!parsed.success) {
@@ -106,32 +105,15 @@ export function ProfileDataCard({ user, showToast, onUserUpdated }: Props) {
             return
         }
         setErrors(null)
-        setPendingPayload(parsed.data)
-        setConfirmOpen(true)
-    }
-
-    const handleConfirm = () => {
-        if (!pendingPayload) return
-        update.mutate(pendingPayload, {
+        update.mutate(parsed.data, {
             onSuccess: () => {
-                setConfirmOpen(false)
-                setPendingPayload(null)
                 setEditing(false)
                 setErrors(null)
-                showToast("Perfil actualizado correctamente")
+                showToast("Perfil actualizado")
                 onUserUpdated()
-            },
-            onError: () => {
-                setConfirmOpen(false)
-                setPendingPayload(null)
             },
         })
     }
-
-    const changedFields = Object.keys(rawPayload) as (keyof UpdateProfileOutput)[]
-    const confirmMessage = changedFields.length
-        ? `Se actualizarán los siguientes datos: ${changedFields.map(f => FIELD_LABELS[f]).join(", ")}.`
-        : "No hay cambios para guardar."
 
     const viewRows: { label: string; value: string }[] = [
         { label: "Teléfono", value: String(user.phone ?? "—") },
@@ -236,18 +218,6 @@ export function ProfileDataCard({ user, showToast, onUserUpdated }: Props) {
                     </div>
                 </div>
             )}
-
-            <InfoModal
-                isOpen={confirmOpen}
-                onClose={() => { if (!update.isPending) setConfirmOpen(false) }}
-                title="Confirmar cambios"
-                message={confirmMessage}
-                type="info"
-                onConfirm={handleConfirm}
-                confirmText="Guardar"
-                cancelText="Cancelar"
-                confirmDisabled={update.isPending}
-            />
         </section>
     )
 }

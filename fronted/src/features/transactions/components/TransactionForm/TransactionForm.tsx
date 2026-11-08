@@ -14,8 +14,8 @@ import { useCategories, useCategorySuggestion } from "../../../categories/hooks"
 import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
 import { TextInput } from "../../../../shared/components/TextInput/TextInput";
 import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle";
-import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
 import { FormContainer } from "../../../../shared/components/FormContainer/FormContainer";
+import { useToast } from "../../../../shared/Hooks/useToast";
 
 import {
   TransactionSchema,
@@ -178,7 +178,8 @@ export default function TransactionForm({
   onClose,
   defaultAccountId,
 }: PropsTransactionForm) {
-  const { mutate, isPending, error, isSuccess } = mutation;
+  const { mutate, isPending, error } = mutation;
+  const toast = useToast();
 
   const initialValues = useMemo<TransactionInput>(() => ({
     ...createDefaultValues(),
@@ -343,11 +344,17 @@ export default function TransactionForm({
         ...data,
         transactionId: transaction.id,
       };
-      mutate(updateData, { onSuccess: () => onSuccess?.() });
+      mutate(updateData, {
+        onSuccess: () => {
+          toast.success("Transacción actualizada");
+          onSuccess?.();
+        },
+      });
       return;
     }
     mutate(data, {
       onSuccess: () => {
+        toast.success(`${typeLabel} registrado`);
         reset(initialValues);
         onSuccess?.();
       },
@@ -539,22 +546,17 @@ export default function TransactionForm({
         {/* ── ACTIONS ──────────────────────────────────────────────── */}
         <div className="form-default-row form-actions-container">
           {!fieldsDisabled?.all && (
-            <SuccessToast
-              successText={`${typeLabel} guardado con éxito.`}
-              isSucces={isSuccess}
+            <button
+              type="submit"
+              className={`btn-submit tx ${typeClass}`}
+              disabled={isPending || !isValid || (!isEdit && !isDirty)}
             >
-              <button
-                type="submit"
-                className={`btn-submit tx ${typeClass}`}
-                disabled={isPending || !isValid || (!isEdit && !isDirty)}
-              >
-                {isExpense
-                  ? <TrendingDown size={14} />
-                  : <TrendingUp size={14} />
-                }
-                {isEdit ? "Actualizar" : `Crear ${typeLabel.toLowerCase()}`}
-              </button>
-            </SuccessToast>
+              {isExpense
+                ? <TrendingDown size={14} />
+                : <TrendingUp size={14} />
+              }
+              {isEdit ? "Actualizar" : `Crear ${typeLabel.toLowerCase()}`}
+            </button>
           )}
         </div>
 

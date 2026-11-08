@@ -12,7 +12,7 @@ import { NumericInput } from "../../../shared/components/NumericInput/NumericInp
 import { SelectAccount } from "../../accounts/components/selectAccount/selectAccount";
 import { DatePicker, TimePicker } from "../../../shared/components/DateInput/DateInput";
 import { TextInput } from "../../../shared/components/TextInput/TextInput";
-import { SuccessToast } from "../../../shared/components/SuccesToast/SuccesToast";
+import { useToast } from "../../../shared/Hooks/useToast";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import dayjs from "dayjs";
 import "./PayLoanForm.css";
@@ -28,6 +28,7 @@ interface Props {
 export const CreateLoanPaymentForm = ({ loanId, loan, initialValues, onSuccess, onClose }: Props) => {
   const { createPayment } = useLoanPayments();
   const { mutate, isPending, error, isSuccess, reset: resetMutation } = createPayment;
+  const toast = useToast();
 
   const {
     control,
@@ -56,6 +57,7 @@ export const CreateLoanPaymentForm = ({ loanId, loan, initialValues, onSuccess, 
       id: loanId,
     });
     resetMutation();
+    toast.success("Pago registrado");
     onSuccess?.();
   }, [isSuccess]);
 
@@ -229,16 +231,14 @@ export const CreateLoanPaymentForm = ({ loanId, loan, initialValues, onSuccess, 
 
         {/* ── ACCIONES / BOTÓN ACCIÓN ── */}
         <div className="form-actions-container spec-payment-actions">
-          <SuccessToast isSucces={isSuccess} successText="Pago registrado con éxito.">
-            <button
-              type="submit"
-              className={`btn-submit quickpay ${isPending ? "is-pending" : ""}`}
-              disabled={isPending || !isDirty || !isValid}
-            >
-              <CheckCircle2 size={16} />
-              {isPending ? "Procesando abono..." : "Confirmar e Inyectar Pago"}
-            </button>
-          </SuccessToast>
+          <button
+            type="submit"
+            className={`btn-submit quickpay ${isPending ? "is-pending" : ""}`}
+            disabled={isPending || !isDirty || !isValid}
+          >
+            <CheckCircle2 size={16} />
+            {isPending ? "Procesando abono..." : "Confirmar e Inyectar Pago"}
+          </button>
         </div>
       </form>
     </FormContainer>

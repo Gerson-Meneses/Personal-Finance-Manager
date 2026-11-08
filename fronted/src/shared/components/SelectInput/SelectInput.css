@@ -32,6 +32,12 @@
     min-width: 0;
 }
 
+/* Con el menú abierto, el campo sube por encima de los campos vecinos
+   (fecha, hora, monto) para que el menú nunca quede debajo de ellos */
+.select-input.is-open {
+    z-index: 60;
+}
+
 /* Trigger */
 .select-input-trigger {
     display: flex;
@@ -39,6 +45,8 @@
     justify-content: space-between;
     gap: 8px;
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     padding: 0.6rem;
     background: transparent;
     border: none;
@@ -56,6 +64,7 @@
 }
 
 .select-input-value {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -90,7 +99,8 @@
     left: 0;
     width: max-content;
     min-width: 100%;
-    max-width: min(320px, calc(100vw - 32px));
+    /* Nunca sobresale de la tarjeta del modal ni del viewport */
+    max-width: min(320px, calc(100vw - 48px));
     background: #1e293b;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;

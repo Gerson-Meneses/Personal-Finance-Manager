@@ -12,6 +12,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 import { TruncateText } from "../../../shared/components/TruncateText/TruncateText";
 import { HighlightText } from "../../../shared/components/Highlighttext/Highlighttext";
+import { useToast } from "../../../shared/Hooks/useToast";
 
 dayjs.locale('es')
 
@@ -29,6 +30,7 @@ interface Props {
 
 export default function TransactionItem({ transaction, currentAccountId, search = "", hideFields }: Props) {
     const { saveTransaction, deleteTransaction } = useTransactions()
+    const toast = useToast()
     const [modalEditOpen, setModalEditOpen] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -51,15 +53,17 @@ export default function TransactionItem({ transaction, currentAccountId, search 
         : dayjs(date).format("HH:mm");
 
     const openEdit = () => {
-        // Limpia isSuccess/error de la operación anterior para que
-        // no se monte el SuccessToast viejo al abrir la edición.
+        // Limpia el error/éxito de la operación anterior antes de abrir la edición.
         saveTransaction.reset();
         setModalEditOpen(true);
     };
 
     const handleDelete = () => {
         deleteTransaction.mutate(transaction.id, {
-            onSuccess: () => setConfirmDelete(false),
+            onSuccess: () => {
+                setConfirmDelete(false);
+                toast.success("Transacción eliminada");
+            },
         });
     };
 
@@ -181,6 +185,7 @@ export default function TransactionItem({ transaction, currentAccountId, search 
                     isEdit
                     mutation={saveTransaction}
                     onClose={() => setModalEditOpen(false)}
+                    onSuccess={() => setModalEditOpen(false)}
                 />
             </ModalPortal>
 

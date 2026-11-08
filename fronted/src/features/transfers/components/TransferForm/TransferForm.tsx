@@ -17,8 +17,8 @@ import { SelectAccount } from "../../../accounts/components/selectAccount/select
 import { DatePicker, TimePicker } from "../../../../shared/components/DateInput/DateInput";
 import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
 import { TextInput } from "../../../../shared/components/TextInput/TextInput";
-import { SuccessToast } from "../../../../shared/components/SuccesToast/SuccesToast";
 import { FormContainer } from "../../../../shared/components/FormContainer/FormContainer";
+import { useToast } from "../../../../shared/Hooks/useToast";
 
 import "./TransferForm.css";
 
@@ -50,6 +50,7 @@ const buildDefaults = (account?: Account): TransferInput => ({
 /* ------------------------------------------------------------------ */
 export default function TransferForm({ mutation, account, onSuccess, onClose }: Props) {
     const { mutateAsync, isPending, error, isSuccess, reset: resetMutation } = mutation;
+    const toast = useToast();
 
     const {
         control,
@@ -75,10 +76,12 @@ export default function TransferForm({ mutation, account, onSuccess, onClose }: 
 
     /* ---------- submit ---------- */
     const onSubmit = async (data: TransferOutput) => {
-        const result = await mutateAsync(data, {
-            onSuccess: (tx) => onSuccess?.(tx),
+        await mutateAsync(data, {
+            onSuccess: (tx) => {
+                toast.success("Transferencia realizada");
+                onSuccess?.(tx);
+            },
         });
-        void result;
     };
 
     return (
@@ -202,19 +205,14 @@ export default function TransferForm({ mutation, account, onSuccess, onClose }: 
 
                 {/* ── ACTIONS ──────────────────────────────────────────────── */}
                 <div className="form-default-row form-actions-container">
-                    <SuccessToast
-                        isSucces={isSuccess}
-                        successText="Transferencia realizada con éxito."
+                    <button
+                        type="submit"
+                        className="btn-submit transfer"
+                        disabled={isPending || !isDirty || !isValid}
                     >
-                        <button
-                            type="submit"
-                            className="btn-submit transfer"
-                            disabled={isPending || !isDirty || !isValid}
-                        >
-                            <ArrowLeftRight size={15} />
-                            {isPending ? "Procesando…" : "Confirmar transferencia"}
-                        </button>
-                    </SuccessToast>
+                        <ArrowLeftRight size={15} />
+                        {isPending ? "Procesando…" : "Confirmar transferencia"}
+                    </button>
                 </div>
 
             </form>

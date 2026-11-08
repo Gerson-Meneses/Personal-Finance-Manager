@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import type { BaseInputProps } from "../types";
 import { getIcon } from "../../utils/GetIcon";
@@ -56,7 +56,8 @@ export const SelectInput = ({
     searchable,
     onCreateQuery,
 }: SelectAccountProps) => {
-    const inputId = id ?? name ?? "select-input";
+    const generatedId = useId();
+    const inputId = id ?? name ?? `select-${generatedId.replace(/:/g, "")}`;
 
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
@@ -158,6 +159,25 @@ export const SelectInput = ({
     }, [open]);
 
     useEffect(() => {
+        if (!open) return;
+
+        /* Escape cierra el menú (haya o no foco dentro) y no el modal */
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key !== "Escape") return;
+            e.stopPropagation();
+            closeMenu();
+        };
+
+        document.addEventListener("keydown", handleEscape, true);
+        return () =>
+            document.removeEventListener(
+                "keydown",
+                handleEscape,
+                true
+            );
+    }, [open]);
+
+    useEffect(() => {
         if (!open || activeIndex < 0) return;
         const active =
             menuRef.current?.querySelector(
@@ -203,6 +223,8 @@ export const SelectInput = ({
             case "Escape":
                 if (open) {
                     e.preventDefault();
+                    /* Evita que el modal contenedor también se cierre */
+                    e.stopPropagation();
                     closeMenu();
                 }
                 break;
@@ -247,6 +269,7 @@ export const SelectInput = ({
             }
             case "Escape":
                 e.preventDefault();
+                e.stopPropagation();
                 closeMenu();
                 break;
             case "Tab":
@@ -277,7 +300,7 @@ export const SelectInput = ({
 
             <div
                 ref={rootRef}
-                className={`${defaultStyle ? "input-wrapper" : ""} select-input`}
+                className={`${defaultStyle ? "input-wrapper" : ""} select-input ${open ? "is-open" : ""}`}
             >
                 <button
                     type="button"

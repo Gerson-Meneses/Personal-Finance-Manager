@@ -9,7 +9,7 @@ import { SearchInput } from "../../../shared/components/SearchInput/SearchInput"
 import { useClientSearch } from "../../../shared/Hooks/UseClientSearch";
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
 import InfoModal from "../../../shared/components/InfoModal/InfoModal";
-import { SuccessToast } from "../../../shared/components/SuccesToast/SuccesToast";
+import { useToast } from "../../../shared/Hooks/useToast";
 import "./adminPanel.css";
 
 function getInitials(name: string) {
@@ -38,14 +38,9 @@ export default function AdminPanelPage() {
 
   const [pendingDelete, setPendingDelete] = useState<AdminUser | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const toast = useToast();
 
   const visible = useMemo(() => filtered(users), [filtered, users]);
-
-  const showToast = (text: string) => {
-    setToast(text);
-    window.setTimeout(() => setToast(null), 3000);
-  };
 
   if (!isAdmin) return <Navigate to="/" replace />;
 
@@ -75,7 +70,7 @@ export default function AdminPanelPage() {
     if (!pendingDelete || deleteUser.isPending) return;
     deleteUser.mutate(pendingDelete.id, {
       onSettled: () => setPendingDelete(null),
-      onSuccess: () => showToast("Usuario eliminado"),
+      onSuccess: () => toast.success("Usuario eliminado"),
       onError: (err) => setDeleteError(err.message || "No se pudo eliminar el usuario"),
     });
   };
@@ -98,12 +93,10 @@ export default function AdminPanelPage() {
             onChange={setSearch}
             placeholder="Buscar por nombre, email o país..."
           />
-          <SuccessToast isSucces={toast !== null} successText={toast ?? ""}>
-            <button type="button" className="btn-secondary" onClick={() => refetch()}>
-              <RefreshCw size={15} aria-hidden="true" />
-              Actualizar
-            </button>
-          </SuccessToast>
+          <button type="button" className="btn-secondary" onClick={() => refetch()}>
+            <RefreshCw size={15} aria-hidden="true" />
+            Actualizar
+          </button>
         </div>
       </header>
 

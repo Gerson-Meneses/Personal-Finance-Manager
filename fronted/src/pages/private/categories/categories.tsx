@@ -7,7 +7,7 @@ import type { Category } from "../../../features/categories/types";
 import { getIcon } from "../../../shared/utils/GetIcon";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
-import { SuccessToast } from "../../../shared/components/SuccesToast/SuccesToast";
+import { useToast } from "../../../shared/Hooks/useToast";
 import { SearchInput } from "../../../shared/components/SearchInput/SearchInput";
 import { SelectInput } from "../../../shared/components/SelectInput/SelectInput";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
@@ -128,14 +128,9 @@ export default function CategoriesPage() {
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Category | null>(null);
     const [detail, setDetail] = useState<Category | null>(null);
-    const [toast, setToast] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
-
-    const showToast = (text: string) => {
-        setToast(text);
-        window.setTimeout(() => setToast(null), 3000);
-    };
+    const toast = useToast();
 
     const visible = useMemo(() => {
         const q = normalizeText(search);
@@ -171,6 +166,7 @@ export default function CategoriesPage() {
             // Cierra en ambos casos: en éxito desaparece, en error se muestra
             // el banner deleteError detrás del modal.
             onSettled: () => setPendingDelete(null),
+            onSuccess: () => toast.success("Categoría eliminada"),
             onError: (err) => setDeleteError(err.message || "No se pudo eliminar la categoría"),
         });
     };
@@ -240,19 +236,17 @@ export default function CategoriesPage() {
                         ]}
                         className="cat-sort-select"
                     />
-                    <SuccessToast isSucces={toast !== null} successText={toast ?? ""}>
-                        <button
-                            type="button"
-                            className="btn-primary"
-                            onClick={() => {
-                                setDeleteError(null);
-                                setShowForm(true);
-                            }}
-                        >
-                            <Plus size={18} />
-                            Nueva categoría
-                        </button>
-                    </SuccessToast>
+                    <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => {
+                            setDeleteError(null);
+                            setShowForm(true);
+                        }}
+                    >
+                        <Plus size={18} />
+                        Nueva categoría
+                    </button>
                 </div>
             </header>
 
@@ -321,10 +315,7 @@ export default function CategoriesPage() {
             <ModalPortal isOpen={showForm} onClose={() => setShowForm(false)}>
                 <CategoryForm
                     mutation={createCategory}
-                    onSuccess={() => {
-                        setShowForm(false);
-                        showToast("Categoría creada con éxito");
-                    }}
+                    onSuccess={() => setShowForm(false)}
                     onClose={() => setShowForm(false)}
                 />
             </ModalPortal>
@@ -336,10 +327,7 @@ export default function CategoriesPage() {
                         mutation={updateCategory}
                         category={editing}
                         isEdit
-                        onSuccess={() => {
-                            setEditing(null);
-                            showToast("Categoría actualizada con éxito");
-                        }}
+                        onSuccess={() => setEditing(null)}
                         onClose={() => setEditing(null)}
                     />
                 )}

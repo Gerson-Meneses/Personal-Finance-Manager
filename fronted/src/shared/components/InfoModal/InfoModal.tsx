@@ -37,9 +37,9 @@ export default function InfoModal({
 
     // Mapeo de colores e iconos por defecto
     const config = {
-        success: { icon: <CheckCircle size={30} />, color: "#22c55e" },
-        error: { icon: <AlertCircle size={30} />, color: "#ef4444" },
-        info: { icon: <Info size={30} />, color: "#f1c40f" },
+        success: { icon: <CheckCircle size={22} />, color: "#22c55e" },
+        error: { icon: <AlertCircle size={22} />, color: "#ef4444" },
+        info: { icon: <Info size={22} />, color: "#f1c40f" },
     };
 
     const themeColor = customColor || config[type].color;
@@ -49,7 +49,7 @@ export default function InfoModal({
             <div className="info-modal-card">
 
                 <div className="info-icon" style={{ color: themeColor }}>
-                    {icon ? getIcon(icon, { size: 30 }) : config[type].icon}
+                    {icon ? getIcon(icon, { size: 22 }) : config[type].icon}
                 </div>
 
                 <h2>{title}</h2>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal";
 import { formatCurrency } from "../../../../shared/utils/formatCurrency";
 import { SelectInput } from "../../../../shared/components/SelectInput/SelectInput";
@@ -64,8 +64,9 @@ export const SelectAccount = ({
     const [createName, setCreateName] =
         useState<string | undefined>(undefined);
 
+    const generatedId = useId();
     const inputId =
-        id ?? name ?? "select-account";
+        id ?? name ?? `select-account-${generatedId.replace(/:/g, "")}`;
 
     const filteredAccounts = useMemo(() => {
         return accounts.filter((acc) => {

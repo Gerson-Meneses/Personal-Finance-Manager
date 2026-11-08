@@ -186,7 +186,7 @@
    ============================================================ */
 @media (max-width: 480px) {
     .form-default-grid-2col {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 10px;
     }
 }

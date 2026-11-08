@@ -18,8 +18,8 @@ import { SelectAccount } from "../../accounts/components/selectAccount/selectAcc
 import { NumericInput } from "../../../shared/components/NumericInput/NumericInput";
 import { DatePicker, TimePicker } from "../../../shared/components/DateInput/DateInput";
 import { TextInput } from "../../../shared/components/TextInput/TextInput";
-import { SuccessToast } from "../../../shared/components/SuccesToast/SuccesToast";
 import { FormContainer } from "../../../shared/components/FormContainer/FormContainer";
+import { useToast } from "../../../shared/Hooks/useToast";
 
 import "./CreditPaymentForm.css";
 
@@ -49,6 +49,7 @@ const buildDefaults = (cardName: string): PaymentCreditCardInput => ({
 /* ------------------------------------------------------------------ */
 export default function PaymentCreditCardForm({ cardId, cardName, onSuccess, onClose }: Props) {
     const { mutate, isPending, error, isSuccess, reset: resetMutation } = usePayCreditCard();
+    const toast = useToast();
 
     const {
         control,
@@ -67,6 +68,7 @@ export default function PaymentCreditCardForm({ cardId, cardName, onSuccess, onC
         if (!isSuccess) return;
         reset(buildDefaults(cardName));
         resetMutation();
+        toast.success(`Pago de "${cardName}" registrado`);
         onSuccess?.();
     }, [isSuccess]);
 
@@ -171,19 +173,14 @@ export default function PaymentCreditCardForm({ cardId, cardName, onSuccess, onC
 
                 {/* ── ACTIONS ──────────────────────────────────────────────── */}
                 <div className="form-actions-container">
-                    <SuccessToast
-                        isSucces={isSuccess}
-                        successText={`Pago de "${cardName}" registrado con éxito.`}
+                    <button
+                        type="submit"
+                        className="btn-submit payment"
+                        disabled={isPending || !isDirty || !isValid}
                     >
-                        <button
-                            type="submit"
-                            className="btn-submit payment"
-                            disabled={isPending || !isDirty || !isValid}
-                        >
-                            <CheckCircle2 size={15} />
-                            {isPending ? "Procesando…" : "Confirmar pago"}
-                        </button>
-                    </SuccessToast>
+                        <CheckCircle2 size={15} />
+                        {isPending ? "Procesando…" : "Confirmar pago"}
+                    </button>
                 </div>
 
             </form>

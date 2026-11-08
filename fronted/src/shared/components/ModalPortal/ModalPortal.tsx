@@ -18,7 +18,15 @@ export default function ModalPortal({ children, isOpen, onClose }: Props) {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       const overlays = document.querySelectorAll(".modal-overlay");
-      if (overlays[overlays.length - 1] === overlayRef.current) onClose();
+      if (overlays[overlays.length - 1] === overlayRef.current) {
+        /* Si hay un desplegable abierto dentro del modal, Escape lo cierra
+           a él (el propio control lo gestiona) y no el modal entero */
+        const hasOpenPopover = overlayRef.current?.querySelector(
+          ".select-input-panel, .dx-popover, .icon-popover"
+        );
+        if (hasOpenPopover) return;
+        onClose();
+      }
     };
 
     document.addEventListener("keydown", onKeyDown);

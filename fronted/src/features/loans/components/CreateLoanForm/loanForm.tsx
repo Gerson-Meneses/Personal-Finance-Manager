@@ -23,7 +23,7 @@ import { SelectAccount }      from "../../../accounts/components/selectAccount/s
 import { SelectOrInputText }  from "../../../../shared/components/SelectOrInputText/SelectOrInputText";
 import { DatePicker, TimePicker } from "../../../../shared/components/DateInput/DateInput";
 import { TextInput }          from "../../../../shared/components/TextInput/TextInput";
-import { SuccessToast }       from "../../../../shared/components/SuccesToast/SuccesToast";
+import { useToast }           from "../../../../shared/Hooks/useToast";
 import { FormContainer }      from "../../../../shared/components/FormContainer/FormContainer";
 
 import "./LoanForm.css";
@@ -58,6 +58,7 @@ const defaultValues: CreateLoanInput = {
 /* ------------------------------------------------------------------ */
 export default function LoanForm({ lenders = [], mutation, onSuccess, onClose, initialData }: Props) {
     const { mutateAsync, isPending, error, isSuccess, reset: resetMutation } = mutation;
+    const toast = useToast();
 
     const {
         control,
@@ -80,6 +81,7 @@ export default function LoanForm({ lenders = [], mutation, onSuccess, onClose, i
         if (!isSuccess) return;
         reset(defaultValues);
         resetMutation();
+        toast.success("Préstamo guardado");
         onSuccess?.();
     }, [isSuccess]);
 
@@ -256,20 +258,15 @@ export default function LoanForm({ lenders = [], mutation, onSuccess, onClose, i
 
                 {/* ── ACTIONS ──────────────────────────────────────────────── */}
                 <div className="form-actions-container">
-                    <SuccessToast
-                        isSucces={isSuccess}
-                        successText="Préstamo guardado con éxito."
+                    <button
+                        type="submit"
+                        className={`btn-submit loan ${typeClass}`}
+                        disabled={isPending || !isDirty || !isValid}
+                        aria-busy={isPending}
                     >
-                        <button
-                            type="submit"
-                            className={`btn-submit loan ${typeClass}`}
-                            disabled={isPending || !isDirty || !isValid}
-                            aria-busy={isPending}
-                        >
-                            <CheckCircle2 size={14} />
-                            {isPending ? "Guardando…" : "Crear préstamo"}
-                        </button>
-                    </SuccessToast>
+                        <CheckCircle2 size={14} />
+                        {isPending ? "Guardando…" : "Crear préstamo"}
+                    </button>
                 </div>
 
             </form>

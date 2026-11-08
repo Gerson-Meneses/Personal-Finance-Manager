@@ -109,7 +109,7 @@
     }
 
     .categories-toolbar .si-wrapper,
-    .categories-toolbar .btn-container {
+    .categories-toolbar .btn-primary {
         grid-column: 1 / -1;
     }
 

@@ -20,7 +20,7 @@ import { NumericInput } from "../../shared/components/NumericInput/NumericInput"
 import { SelectAccount } from "../accounts/components/selectAccount/selectAccount";
 import { DatePicker, TimePicker } from "../../shared/components/DateInput/DateInput";
 import { TextInput } from "../../shared/components/TextInput/TextInput";
-import { SuccessToast } from "../../shared/components/SuccesToast/SuccesToast";
+import { useToast } from "../../shared/Hooks/useToast";
 import { FormContainer } from "../../shared/components/FormContainer/FormContainer";
 
 import "./QuickPayForm.css";
@@ -41,6 +41,7 @@ interface Props {
 export const QuickPayForm = ({ lender, type, onSuccess, onClose }: Props) => {
     const { quickPay } = useLoanPayments();
     const { mutate, isPending, error, isSuccess, reset: resetMutation } = quickPay;
+    const toast = useToast();
 
     const {
         control,
@@ -73,6 +74,7 @@ export const QuickPayForm = ({ lender, type, onSuccess, onClose }: Props) => {
         if (!isSuccess) return;
         reset({ ...initialQuickPay, lender, type: type ?? initialQuickPay.type });
         resetMutation();
+        toast.success("Pago registrado");
         onSuccess?.();
     }, [isSuccess]);
 
@@ -216,19 +218,14 @@ export const QuickPayForm = ({ lender, type, onSuccess, onClose }: Props) => {
 
                 {/* ── ACTIONS ──────────────────────────────────────────────── */}
                 <div className="form-actions-container">
-                    <SuccessToast
-                        isSucces={isSuccess}
-                        successText="Pago registrado con éxito."
+                    <button
+                        type="submit"
+                        className={`btn-submit quickpay ${typeClass}`}
+                        disabled={isPending || !isDirty || !isValid}
                     >
-                        <button
-                            type="submit"
-                            className={`btn-submit quickpay ${typeClass}`}
-                            disabled={isPending || !isDirty || !isValid}
-                        >
-                            <CheckCircle2 size={14} />
-                            {isPending ? "Guardando…" : "Guardar Pago"}
-                        </button>
-                    </SuccessToast>
+                        <CheckCircle2 size={14} />
+                        {isPending ? "Guardando…" : "Guardar Pago"}
+                    </button>
                 </div>
 
             </form>

@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -73,7 +74,8 @@ export const IconPicker = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const inputId = id ?? name ?? "icon-picker";
+  const generatedId = useId();
+  const inputId = id ?? name ?? `icon-picker-${generatedId.replace(/:/g, "")}`;
 
   /* Abre hacia arriba / alineado a la derecha si no hay espacio */
   const placement = usePopoverPlacement(isOpen, containerRef, popoverRef);
@@ -104,6 +106,21 @@ export const IconPicker = ({
       );
     };
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    /* Escape cierra el selector de iconos y no el modal contenedor */
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      setIsOpen(false);
+    };
+
+    document.addEventListener("keydown", handleEscape, true);
+    return () =>
+      document.removeEventListener("keydown", handleEscape, true);
+  }, [isOpen]);
 
   const filteredIcons = useMemo(() => {
     if (!search) return icons;

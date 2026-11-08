@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useAuthContext } from "../../../features/auth/authContext"
 import { useVerifyEmail } from "../../../features/auth/useVerifyAccount"
 import { apiFetch } from "../../../shared/api"
+import { useToast } from "../../../shared/Hooks/useToast"
 import type { User } from "../../../features/auth/types"
 import { CodeFlowModal } from "./CodeFlowModal"
 import { ProfileDataCard } from "./ProfileDataCard"
@@ -15,19 +16,13 @@ function getInitials(name: string) {
 export default function ProfilePage() {
     const { user, setUser } = useAuthContext()
     const verify = useVerifyEmail()
+    const toast = useToast()
 
     const [verifyOpen, setVerifyOpen] = useState(false)
-    const [toast, setToast] = useState<string | null>(null)
-
-    useEffect(() => {
-        if (!toast) return
-        const id = setTimeout(() => setToast(null), 3000)
-        return () => clearTimeout(id)
-    }, [toast])
 
     if (!user) return null
 
-    const showToast = (message: string) => setToast(message)
+    const showToast = (message: string) => toast.success(message)
 
     const refreshUser = async () => {
         try {
@@ -111,7 +106,6 @@ export default function ProfilePage() {
                 />
             )}
 
-            {toast && <div className="profile-toast">{toast}</div>}
         </div>
     )
 }
