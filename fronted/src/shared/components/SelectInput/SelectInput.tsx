@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { BaseInputProps } from "../types";
 import { getIcon } from "../../utils/GetIcon";
 import { HighlightText } from "../Highlighttext/Highlighttext";
+import { usePopoverPlacement } from "../../Hooks/usePopoverPlacement";
 
 import "./SelectInput.css";
 import "../../../index.css";
@@ -31,49 +32,10 @@ interface Row extends Options {
     isCreate?: boolean;
 }
 
-interface ClipBounds {
-    top: number;
-    bottom: number;
-    left: number;
-    right: number;
-}
-
 const CREATE_QUERY_VALUE = "__CREATE_QUERY__";
 
 const removeDiacritics = (str: string) =>
     str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-const getClipBounds = (
-    el: HTMLElement
-): ClipBounds => {
-    let node = el.parentElement;
-
-    while (node) {
-        const style = getComputedStyle(node);
-
-        if (
-            style.overflowY !== "visible" ||
-            style.overflowX !== "visible"
-        ) {
-            const rect = node.getBoundingClientRect();
-            return {
-                top: rect.top,
-                bottom: rect.bottom,
-                left: rect.left,
-                right: rect.right,
-            };
-        }
-
-        node = node.parentElement;
-    }
-
-    return {
-        top: 0,
-        bottom: window.innerHeight,
-        left: 0,
-        right: window.innerWidth,
-    };
-};
 
 export const SelectInput = ({
     value = "",
@@ -99,15 +61,14 @@ export const SelectInput = ({
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
-    const [menuPos, setMenuPos] = useState({
-        up: false,
-        alignRight: false,
-    });
 
     const rootRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
     const menuRef = useRef<HTMLUListElement>(null);
     const searchRef = useRef<HTMLInputElement>(null);
+
+    /* Abre el menú hacia arriba / alineado a la derecha si no hay espacio */
+    const menuPos = usePopoverPlacement(open, rootRef, panelRef);
 
     const selectedOption = options.find(
         (op) => op.value === (value ?? "")
@@ -204,46 +165,6 @@ export const SelectInput = ({
             );
         active?.scrollIntoView({ block: "nearest" });
     }, [open, activeIndex]);
-
-    /* Evita que el menú quede recortado (modales con overflow) */
-    useEffect(() => {
-        if (!open) return;
-
-        const frame = requestAnimationFrame(() => {
-            const root = rootRef.current;
-            const panel = panelRef.current;
-            if (!root || !panel) return;
-
-            const trigger = root.getBoundingClientRect();
-            const box = panel.getBoundingClientRect();
-            const bounds = getClipBounds(root);
-
-            const spaceBelow =
-                bounds.bottom - trigger.bottom;
-            const spaceAbove =
-                trigger.top - bounds.top;
-            const up =
-                box.height + 8 > spaceBelow &&
-                spaceAbove > spaceBelow;
-
-            const spaceRight =
-                bounds.right - trigger.right;
-            const spaceLeft =
-                trigger.left - bounds.left;
-            const alignRight =
-                box.width > spaceRight + 8 &&
-                spaceLeft > spaceRight;
-
-            setMenuPos((prev) =>
-                prev.up === up &&
-                prev.alignRight === alignRight
-                    ? prev
-                    : { up, alignRight }
-            );
-        });
-
-        return () => cancelAnimationFrame(frame);
-    }, [open]);
 
     const handleTriggerKeyDown = (
         e: React.KeyboardEvent<HTMLButtonElement>

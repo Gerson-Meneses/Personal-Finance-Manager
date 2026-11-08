@@ -176,6 +176,28 @@
   text-transform: capitalize;
 }
 
+/* Móvil: tarjeta de movimiento más compacta */
+@media (max-width: 480px) {
+  .tx-item-card {
+    padding: 10px 12px;
+  }
+
+  .tx-main-content {
+    gap: 12px;
+  }
+
+  .tx-icon-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .tx-action-btn {
+    width: 26px;
+    height: 26px;
+  }
+}
+
 .tx-time {
   font-size: 0.75rem;
   color: #64748b;

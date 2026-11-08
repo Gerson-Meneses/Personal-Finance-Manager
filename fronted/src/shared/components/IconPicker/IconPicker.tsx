@@ -8,6 +8,7 @@ import {
 import * as LucideIcons from "lucide-react";
 
 import { getIcon } from "../../utils/GetIcon";
+import { usePopoverPlacement } from "../../Hooks/usePopoverPlacement";
 
 import type { BaseInputProps } from "../types";
 
@@ -70,8 +71,12 @@ export const IconPicker = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   const inputId = id ?? name ?? "icon-picker";
+
+  /* Abre hacia arriba / alineado a la derecha si no hay espacio */
+  const placement = usePopoverPlacement(isOpen, containerRef, popoverRef);
 
   useEffect(() => {
     const handleClickOutside = (
@@ -153,7 +158,16 @@ export const IconPicker = ({
         </button>
 
         {isOpen && (
-          <div className="icon-popover">
+          <div
+            ref={popoverRef}
+            className={[
+              "icon-popover",
+              placement.up ? "open-up" : "",
+              placement.alignRight ? "align-right" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
             {!iconsOnly && (
               <input
                 autoFocus

@@ -1,3 +1,12 @@
+/* ── Header: título + herramientas ───────────────────── */
+.accounts-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
 /* Toolbar de cuentas — mismo patrón que .categories-toolbar */
 .accounts-toolbar {
     display: flex;
@@ -7,7 +16,7 @@
 }
 
 .accounts-toolbar .si-wrapper {
-    min-width: 200px;
+    width: 220px;
 }
 
 .acc-select.custom-form-group {
@@ -20,9 +29,16 @@
     color: #f8fafc;
 }
 
-/* Resumen — balance-card compartidas con el dashboard */
+/* ── Resumen: tres saldos ────────────────────────────── */
+.accounts-summary.default-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    width: 100%;
+}
+
 .accounts-summary .balance-card {
-    min-height: 110px;
+    min-height: 104px;
 }
 
 .accounts-summary .balance-card .card-head {
@@ -41,4 +57,74 @@
     align-items: center;
     gap: 8px;
     text-align: center;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 900px) {
+    .accounts-toolbar .si-wrapper {
+        width: 180px;
+    }
+}
+
+@media (max-width: 640px) {
+    .accounts-header {
+        gap: 14px;
+    }
+
+    .accounts-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        width: 100%;
+        gap: 8px;
+    }
+
+    .accounts-toolbar .si-wrapper,
+    .accounts-toolbar .btn-container {
+        grid-column: 1 / -1;
+    }
+
+    .accounts-toolbar .si-wrapper {
+        width: 100%;
+    }
+
+    .accounts-toolbar .btn-container {
+        display: block;
+    }
+
+    .accounts-toolbar .btn-primary {
+        width: 100%;
+    }
+
+    .acc-select.custom-form-group {
+        width: 100%;
+    }
+
+    /* Saldos: carrusel horizontal con snap en vez de tres columnas apretadas */
+    .accounts-summary.default-row {
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: 80%;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-padding-inline: 16px;
+        scrollbar-width: none;
+        margin: 0 -16px;
+        padding: 2px 16px 6px;
+        box-sizing: border-box;
+    }
+
+    .accounts-summary.default-row::-webkit-scrollbar {
+        display: none;
+    }
+
+    .accounts-summary .balance-card {
+        scroll-snap-align: start;
+        min-height: 0;
+        padding: 14px 16px;
+    }
+
+    .accounts-summary .card-amount {
+        font-size: 1.35rem;
+        margin-bottom: 0;
+    }
 }

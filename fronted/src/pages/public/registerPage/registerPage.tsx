@@ -108,8 +108,8 @@ export const RegisterPage = () => {
                 />
             </div>
 
-            {/* Teléfono y País */}
-            <div className="form-default-row">
+            {/* Teléfono y País (2 columnas en escritorio, apiladas en móvil) */}
+            <div className="register-row-2">
                 <TextInput
                     name="phone"
                     label="Teléfono"

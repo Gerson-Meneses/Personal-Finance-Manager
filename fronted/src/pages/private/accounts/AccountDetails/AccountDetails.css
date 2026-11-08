@@ -24,7 +24,78 @@
     border-radius: 10px;
 }
 
-/* ─── Botones de acción específicos ───────────────────── */
+/* Layout propio de la vista (más específico que .detail-layout global) */
+.account-detail .detail-layout {
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+}
+
+/* Tarjeta de acciones rápidas */
+.account-detail .action-card {
+    padding: 18px;
+}
+
+.account-detail .action-card h3 {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+}
+
+.account-detail .action-card .action-buttons {
+    margin-top: 14px;
+    gap: 8px;
+}
+
+/* Todos los botones de acción con la misma geometría */
+.account-detail .action-buttons > button {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.account-detail .action-buttons > button:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.account-detail .action-buttons > .btn-primary {
+    font-weight: 600;
+}
+
+.account-detail .action-buttons > .btn-icon-edit {
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: #38bdf8;
+}
+
+.account-detail .action-buttons > .btn-icon-edit:hover {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: rgba(56, 189, 248, 0.5);
+}
+
+.account-detail .action-buttons > .btn-icon-delete {
+    background: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    color: #f87171;
+}
+
+.account-detail .action-buttons > .btn-icon-delete:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+    transform: none;
+}
+
+/* ─── Botones de acción específicos (legado) ──────────── */
 .action-btn-edit {
     background: rgba(37, 99, 235, 0.12) !important;
     border-color: rgba(37, 99, 235, 0.3) !important;
@@ -46,4 +117,24 @@
 .action-btn-delete:hover {
     background: rgba(239, 68, 68, 0.15) !important;
     border-color: #ef4444 !important;
+}
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 900px) {
+    .account-detail .detail-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    /* Acciones en dos columnas para no apilar cuatro botones */
+    .account-detail .action-card .action-buttons {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .account-detail .action-buttons > button {
+        font-size: 0.85rem;
+        padding: 10px 12px;
+    }
 }

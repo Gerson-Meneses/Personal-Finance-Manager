@@ -13,9 +13,18 @@
 /* Centra el bloque sin recortarlo si el contenido supera el viewport */
 .public-shell {
     margin: auto;
+    width: 100%;
+    max-width: 420px;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    /* stretch: el contenido de la página ocupa el ancho disponible.
+       Con center se encogía al contenido y el form desbordaba en móvil. */
+    align-items: stretch;
+}
+
+.public-shell > .public-brand {
+    align-self: center;
 }
 
 /* â”€â”€â”€ Marca â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -63,6 +72,7 @@ form.form-default-container.login-form {
     border-radius: 16px;
     background-color: #0b0d12;
     width: min(420px, 100%);
+    margin: 0 auto;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -96,10 +106,19 @@ form.form-default-container.login-form {
 
 /* â”€â”€â”€ Rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 form.login-form .form-default-row {
-    display: flex;
+    /* Una columna que ocupa todo el ancho: los inputs nunca se salen */
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
-    align-items: flex-start;
-    /* top-align para que los errores no desplacen */
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+/* Dos campos lado a lado (teléfono / país) */
+form.login-form .register-row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
     margin-bottom: 1rem;
     position: relative;
 }
@@ -509,6 +528,14 @@ form.login-form .form-default-row {
 
     .password-rules {
         grid-template-columns: 1fr;
+    }
+
+    form.login-form .register-row-2 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .login-form h1 {
+        margin-bottom: 1.25rem;
     }
 
     .auth-title {

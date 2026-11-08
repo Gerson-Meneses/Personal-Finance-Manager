@@ -54,7 +54,7 @@
 .list-history__date-label {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #475569; /* Gris oscuro sutil */
+  color: #64748b; /* Gris sutil legible sobre fondo oscuro */
   text-transform: capitalize; /* Convierte "jueves 4" -> "Jueves 4" */
   letter-spacing: 0.02em;
   margin-bottom: 4px;

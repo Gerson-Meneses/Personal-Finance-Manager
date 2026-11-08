@@ -1,22 +1,22 @@
-
-
 .icon-picker-container {
+    position: relative;
     width: fit-content;
+    max-width: 100%;
 }
 
 .icon-trigger {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 10px;
     width: fit-content;
+    max-width: 100%;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 0.6rem;
     border-radius: 12px;
     color: #f8fafc;
     cursor: pointer;
-    width: fit-content;
-    position: relative;
 }
 
 .icon-trigger:hover,
@@ -25,63 +25,75 @@
     background: rgba(56, 189, 248, 0.05);
 }
 
+/* Popover: debajo del disparador por defecto.
+   Clases .open-up / .align-right las asigna usePopoverPlacement. */
 .icon-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 99;
+    box-sizing: border-box;
+    width: min(256px, calc(100vw - 32px));
+    padding: 12px;
     background: #1e293b;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 12px;
-    width: 240px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
-    width: fit-content;
-    position: absolute;
-    bottom: 75%;
-    right: -15%;
-    z-index: 99;
+    border-radius: 14px;
+    box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.6);
 }
 
-.icon-popover::before {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 8px;
-    border-style: solid;
-    border-color: #1e293b transparent transparent transparent;
+.icon-popover.open-up {
+    top: auto;
+    bottom: calc(100% + 8px);
+}
+
+.icon-popover.align-right {
+    left: auto;
+    right: 0;
 }
 
 .icon-search-input {
-    width: fit-content;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    padding: 6px;
-    color: white;
+    border-radius: 8px;
+    padding: 8px 10px;
     margin-bottom: 10px;
+    color: #f8fafc;
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.icon-search-input:focus {
+    border-color: #38bdf8;
 }
 
 .icon-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
 }
 
 .icon-grid-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: transparent;
     border: 1px solid transparent;
     padding: 8px;
-    border-radius: 6px;
+    border-radius: 8px;
     color: #94a3b8;
     cursor: pointer;
-    display: flex;
-    justify-content: center;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .icon-grid-item:hover,
 .icon-grid-item.active {
     background: rgba(56, 189, 248, 0.1);
     color: #38bdf8;
-    border-color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.5);
 }
 
 .disabled {

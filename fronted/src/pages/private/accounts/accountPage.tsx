@@ -60,7 +60,7 @@ export function AccountPage() {
   if (loading) return <LoadingScreen />;
 
   const header = (
-    <header className="page-header card">
+    <header className="page-header card accounts-header">
       <div>
         <h1>Mis Cuentas</h1>
         <p className="text-muted">Gestiona tus bancos, efectivo y tarjetas</p>

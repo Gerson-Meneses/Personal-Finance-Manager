@@ -58,7 +58,7 @@ export function AccountDetail() {
     const isCredit = account.type === "CREDIT";
 
     return (
-        <div className="page-container animate-fade-in">
+        <div className="page-container account-detail animate-fade-in">
 
             <div className="detail-layout">
                 {/* COLUMNA IZQUIERDA: Info de Cuenta */}
@@ -87,8 +87,8 @@ export function AccountDetail() {
                     </div>
                 </aside>
                 {/* COLUMNA DERECHA: Movimientos */}
-                <main className="detail-main">
-                    <section className="card">
+                <section className="detail-main">
+                    <div className="card">
                         <ListHistory<Transaction>
                             title="Últimos Movimientos"
                             items={transactions}
@@ -101,9 +101,8 @@ export function AccountDetail() {
                                 />
                             )}
                         />
-                      
-                    </section>
-                </main>
+                    </div>
+                </section>
             </div>
 
             {/* Modales */}

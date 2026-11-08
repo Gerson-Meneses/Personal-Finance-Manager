@@ -71,6 +71,16 @@ function usePopoverPlacement(
         bottom: window.innerHeight - margin,
       };
 
+      // Dentro de un modal, el popover debe quedar dentro de la card
+      const modalCard = field.closest<HTMLElement>(".modal-content");
+      if (modalCard) {
+        const bounds = modalCard.getBoundingClientRect();
+        clip.left = Math.max(clip.left, bounds.left);
+        clip.top = Math.max(clip.top, bounds.top);
+        clip.right = Math.min(clip.right, bounds.right);
+        clip.bottom = Math.min(clip.bottom, bounds.bottom);
+      }
+
       let ancestor: HTMLElement | null = field;
       while (ancestor && ancestor !== document.body) {
         const style = window.getComputedStyle(ancestor);

@@ -11,6 +11,10 @@ body {
         radial-gradient(ellipse 55% 40% at 95% 105%, rgba(56, 189, 248, 0.04), transparent 65%);
     color: #ededed;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 ::selection {

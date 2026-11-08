@@ -1,29 +1,33 @@
+/* ════════════════════════════════════════════════════════
+   MODAL
+   El overlay es el único contenedor con scroll. La card no
+   tiene max-height ni overflow, así los popovers internos
+   (selects, calendario, selector de ícono) nunca quedan
+   recortados por el modal.
+   ════════════════════════════════════════════════════════ */
 .modal-overlay {
-  display: flex;
   position: fixed;
+  inset: 0;
   z-index: 999999;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(6px);
-  top: 0;
-  left: 0;
-  justify-content: center;
+  display: flex;
   align-items: center;
-  padding: 16px;
+  justify-content: center;
+  padding: 20px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
   animation: modalOverlayIn 0.2s ease both;
 }
 
 .modal-content {
+  /* margin:auto centra la card; si no cabe en pantalla, el margen
+     se anula y la card arranca desde arriba (scrollable, nunca cortada) */
+  margin: auto;
   width: 100%;
   max-width: 440px;
   display: flex;
   flex-direction: column;
-  max-height: 90vh;
-  margin: auto;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
   animation: modalContentIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -52,13 +56,13 @@
 /* Móvil: modal como bottom sheet */
 @media (max-width: 480px) {
   .modal-overlay {
-    padding: 12px 12px 16px;
     align-items: flex-end;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
   }
 
   .modal-content {
-    margin: 0;
-    max-height: 88vh;
+    max-width: none;
+    margin: auto 0 0;
     animation-name: modalSheetIn;
   }
 }
