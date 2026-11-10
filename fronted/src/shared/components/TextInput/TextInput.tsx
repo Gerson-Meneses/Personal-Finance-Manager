@@ -16,6 +16,8 @@ interface TextInputProps
 
   autoSelect?: boolean;
 
+  autoFocus?: boolean;
+
   rows?: number;
 }
 
@@ -37,6 +39,8 @@ export const TextInput = ({
   autoResize = false,
 
   autoSelect = false,
+
+  autoFocus = false,
 
   rows = 2,
 
@@ -101,6 +105,7 @@ export const TextInput = ({
             placeholder={placeholder}
             required={required}
             disabled={disabled}
+            autoFocus={autoFocus}
             style={
               inputWidth
                 ? { width: inputWidth }
@@ -120,6 +125,7 @@ export const TextInput = ({
             placeholder={placeholder}
             required={required}
             disabled={disabled}
+            autoFocus={autoFocus}
             rows={rows}
             onFocus={handleFocus}
             onChange={(e) =>

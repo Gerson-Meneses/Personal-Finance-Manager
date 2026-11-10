@@ -34,6 +34,9 @@ interface Row extends Options {
 
 const CREATE_QUERY_VALUE = "__CREATE_QUERY__";
 
+/** Solo estos selects abren el buscador (y el teclado) automáticamente. */
+const AUTO_SEARCH_THRESHOLD = 12;
+
 const removeDiacritics = (str: string) =>
     str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
@@ -62,6 +65,7 @@ export const SelectInput = ({
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [activeIndex, setActiveIndex] = useState(-1);
+    const [searchMode, setSearchMode] = useState(false);
 
     const rootRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
@@ -76,9 +80,8 @@ export const SelectInput = ({
     );
 
     const term = search.trim();
-    const showSearch =
-        (searchable ?? options.length > 4) &&
-        options.length > 0;
+    const canSearch = searchable !== false && options.length > 0;
+    const autoSearch = canSearch && options.length > AUTO_SEARCH_THRESHOLD;
 
     const filteredOptions = useMemo(() => {
         const normalized = removeDiacritics(term);
@@ -108,7 +111,8 @@ export const SelectInput = ({
         if (disabled) return;
         setSearch("");
         setOpen(true);
-        if (showSearch) {
+        setSearchMode(autoSearch);
+        if (autoSearch) {
             setActiveIndex(-1);
         } else {
             setActiveIndex(
@@ -122,7 +126,24 @@ export const SelectInput = ({
     const closeMenu = () => {
         setOpen(false);
         setSearch("");
+        setSearchMode(false);
         setActiveIndex(-1);
+    };
+
+    /** Primer clic abre el listado; segundo clic entra en modo búsqueda. */
+    const handleTriggerClick = () => {
+        if (!open) {
+            openMenu();
+            return;
+        }
+
+        if (canSearch && !searchMode) {
+            setSearchMode(true);
+            setActiveIndex(-1);
+            return;
+        }
+
+        closeMenu();
     };
 
     const selectRow = (row: Row) => {
@@ -311,9 +332,7 @@ export const SelectInput = ({
                     aria-expanded={open}
                     aria-required={required}
                     aria-label={label || placeholder}
-                    onClick={() =>
-                        open ? closeMenu() : openMenu()
-                    }
+                    onClick={handleTriggerClick}
                     onKeyDown={handleTriggerKeyDown}
                 >
                     <span
@@ -347,7 +366,7 @@ export const SelectInput = ({
                             .filter(Boolean)
                             .join(" ")}
                     >
-                        {showSearch && (
+                        {searchMode && (
                             <div className="select-input-search">
                                 {getIcon("Search", { size: 14 })}
                                 <input

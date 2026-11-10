@@ -219,6 +219,8 @@ export default function AccountForm({
                                 onChange={field.onChange}
                                 error={fieldState.error?.message}
                                 disabled={isPending || fieldsDisabled?.name || fieldsDisabled?.all}
+                                autoFocus={!account}
+                                autoSelect={!!initialName}
                             />
                         )}
                     />
