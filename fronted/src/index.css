@@ -5,12 +5,12 @@ body {
     padding: 0;
     margin: 0;
     min-height: 100vh;
-    background-color: #000000;
+    background-color: var(--bg-canvas);
     background-image:
         radial-gradient(ellipse 75% 45% at 50% -10%, rgba(241, 196, 15, 0.045), transparent 60%),
         radial-gradient(ellipse 55% 40% at 95% 105%, rgba(56, 189, 248, 0.04), transparent 65%);
-    color: #ededed;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-primary);
+    font-family: var(--font-ui);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -42,11 +42,11 @@ form {
 }
 
 /* ─── Tokens de color (utilidades) ───────────────────── */
-.text-success  { color: #22c55e !important; }
-.text-danger   { color: #ef4444 !important; }
-.text-warning  { color: #f1c40f !important; }
-.text-muted    { color: #94a3b8 !important; }
-.text-primary  { color: #f8fafc !important; }
+.text-success  { color: var(--success) !important; }
+.text-danger   { color: var(--danger) !important; }
+.text-warning  { color: var(--warning) !important; }
+.text-muted    { color: var(--text-secondary) !important; }
+.text-primary  { color: var(--text-primary) !important; }
 
 .bg-success-soft { background: rgba(0, 230, 118, 0.1) !important; }
 .bg-danger-soft { background: #ff52521a !important; }
@@ -56,7 +56,7 @@ form {
 
 /* ─── Tipografía ──────────────────────────────────────── */
 .amount-font {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-weight: 600;
 }
 
@@ -64,10 +64,10 @@ form {
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0px 1000px #0b0d12 inset !important;
-    -webkit-text-fill-color: #f8fafc !important;
+    -webkit-box-shadow: 0 0 0px 1000px var(--bg-surface) inset !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
     transition: background-color 5000s ease-in-out 0s;
-    caret-color: #f8fafc;
+    caret-color: var(--text-primary);
 }
 
 /* ─── Calendar picker ─────────────────────────────────── */
@@ -105,9 +105,9 @@ option { background-color: #0b0d12; cursor: pointer; }
     content: attr(data-tooltip);
     position: absolute;
     z-index: 1000;
-    background: #1e293b;
-    color: #cbd5e1;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
     padding: 6px 10px;
     border-radius: 8px;
     font-size: 0.72rem;
@@ -158,7 +158,7 @@ option { background-color: #0b0d12; cursor: pointer; }
     transform: translateY(-50%);
     border-top: 5px solid transparent;
     border-bottom: 5px solid transparent;
-    border-left: 6px solid #1e293b;
+    border-left: 6px solid var(--bg-elevated);
     opacity: 0;
     visibility: hidden;
     display: none;
@@ -174,7 +174,7 @@ option { background-color: #0b0d12; cursor: pointer; }
     transform: translateX(-50%);
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
-    border-top: 6px solid #1e293b;
+    border-top: 6px solid var(--bg-elevated);
     opacity: 0;
     visibility: hidden;
     display: none;
@@ -190,7 +190,7 @@ option { background-color: #0b0d12; cursor: pointer; }
     transform: translateY(-50%);
     border-top: 5px solid transparent;
     border-bottom: 5px solid transparent;
-    border-right: 6px solid #1e293b;
+    border-right: 6px solid var(--bg-elevated);
     opacity: 0;
     visibility: hidden;
     display: none;
@@ -306,7 +306,7 @@ option { background-color: #0b0d12; cursor: pointer; }
 }
 
 
-/* En pantallas t�ctiles solo se muestra el tooltip manteniendo presionado
+/* En pantallas t�ctiles solo se muestra el tooltip manteniendo presionado
    (regla :active con delay). El foco de teclado no debe dejar tooltips fijos. */
 @media (hover: none) and (pointer: coarse) {
     [data-tooltip]:focus-visible::after,
