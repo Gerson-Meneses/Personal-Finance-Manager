@@ -238,6 +238,57 @@ export function PrivateLayout() {
         />
       </main>
 
+      {/* Navegación inferior móvil */}
+      <nav className="bottom-nav" aria-label="Navegación móvil">
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) => `bottom-nav__item ${isActive ? "is-active" : ""}`}
+        >
+          <Home size={20} />
+          <span>Inicio</span>
+        </NavLink>
+
+        <NavLink
+          to="/transactions"
+          className={({ isActive }) => `bottom-nav__item ${isActive ? "is-active" : ""}`}
+        >
+          <ArrowLeftRight size={20} />
+          <span>Movs.</span>
+        </NavLink>
+
+        <button
+          type="button"
+          className="bottom-nav__fab"
+          aria-label="Nueva transacción"
+          onClick={() => {
+            saveTransaction.reset();
+            setModal(true);
+          }}
+        >
+          <Plus size={22} />
+        </button>
+
+        <NavLink
+          to="/recurring"
+          className={({ isActive }) => `bottom-nav__item ${isActive ? "is-active" : ""}`}
+        >
+          <CalendarClock size={20} />
+          <span>Previstos</span>
+        </NavLink>
+
+        <button
+          type="button"
+          className={`bottom-nav__item ${menuOpen ? "is-active" : ""}`}
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
+        >
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          <span>Más</span>
+        </button>
+      </nav>
+
       <footer className="app-footer">GEMA© 2026</footer>
     </>
   )

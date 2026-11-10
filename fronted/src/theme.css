@@ -64,9 +64,8 @@ body {
 
 :root[data-theme="light"] .app-header,
 :root[data-theme="light"] .app-footer {
-    background-color: rgba(255, 255, 255, 0.92);
+    background-color: var(--bg-surface);
     border-color: var(--border-subtle);
-    backdrop-filter: blur(12px);
 }
 
 :root[data-theme="light"] .header-app-name,
@@ -441,4 +440,52 @@ body {
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
+}
+
+/* Admin, perfil y estados */
+:root[data-theme="light"] .admin-table th {
+    color: var(--text-tertiary);
+    border-color: var(--border-subtle);
+}
+
+:root[data-theme="light"] .admin-table td {
+    color: var(--text-primary);
+    border-color: var(--border-subtle);
+}
+
+:root[data-theme="light"] .admin-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+:root[data-theme="light"] .admin-error-banner,
+:root[data-theme="light"] .error-banner,
+:root[data-theme="light"] .cat-error-banner,
+:root[data-theme="light"] .form-error-banner {
+    background: rgba(220, 38, 38, 0.06);
+    border-color: rgba(220, 38, 38, 0.22);
+    color: #b91c1c;
+}
+
+:root[data-theme="light"] .empty-state {
+    border-color: rgba(15, 23, 42, 0.14);
+    color: var(--text-tertiary);
+}
+
+:root[data-theme="light"] .empty-state p {
+    color: var(--text-tertiary);
+}
+
+:root[data-theme="light"] .profile-identity h2,
+:root[data-theme="light"] .profile-row-value,
+:root[data-theme="light"] .profile-card-header h3 {
+    color: var(--text-primary);
+}
+
+:root[data-theme="light"] .profile-row-label,
+:root[data-theme="light"] .profile-email {
+    color: var(--text-tertiary);
+}
+
+:root[data-theme="light"] .profile-row {
+    border-color: var(--border-subtle);
 }
