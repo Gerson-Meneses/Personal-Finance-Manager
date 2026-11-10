@@ -7,6 +7,7 @@ import type { User } from "../../../features/auth/types"
 import { CodeFlowModal } from "./CodeFlowModal"
 import { ProfileDataCard } from "./ProfileDataCard"
 import { ProfileSecurityCard } from "./ProfileSecurityCard"
+import { Sparkles } from "lucide-react"
 import "./profilePage.css"
 
 function getInitials(name: string) {
@@ -57,6 +58,14 @@ export default function ProfilePage() {
                     <h1>Mi perfil</h1>
                     <p className="text-muted">Datos de tu cuenta</p>
                 </div>
+                <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => window.dispatchEvent(new Event("finance:open-onboarding"))}
+                >
+                    <Sparkles size={15} />
+                    Ver tutorial
+                </button>
             </header>
 
             <section className="card profile-identity-card">

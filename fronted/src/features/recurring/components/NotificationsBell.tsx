@@ -29,7 +29,7 @@ export function NotificationsBell() {
     }, [open]);
 
     return (
-        <div className="notif-bell" ref={ref}>
+        <div className="notif-bell" data-tour="notifications" ref={ref}>
             <button
                 type="button"
                 className="notif-bell__btn tooltip-left"

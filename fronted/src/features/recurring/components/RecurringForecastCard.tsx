@@ -17,7 +17,7 @@ export function RecurringForecastCard() {
     const incomeShare = (projection.expectedIncome / total) * 100;
 
     return (
-        <article className="card recurring-forecast">
+        <article className="card recurring-forecast" data-tour="forecast">
             <div className="recurring-forecast__head">
                 <h3 className="card-head-title">
                     <CalendarClock size={15} />

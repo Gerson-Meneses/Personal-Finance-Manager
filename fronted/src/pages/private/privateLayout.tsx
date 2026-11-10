@@ -2,12 +2,13 @@ import { useAuthContext } from "../../features/auth/authContext";
 import { useLogout } from "../../features/auth/useLogout";
 import { matchPath, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { ArrowLeft, ArrowLeftRight, CalendarClock, HandCoins, Home, Menu, PiggyBank, Plus, ShieldCheck, Tags, Wallet, X } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, CalendarClock, HandCoins, Home, Menu, PiggyBank, Plus, ShieldCheck, Sparkles, Tags, Wallet, X } from "lucide-react";
 import ModalPortal from "../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "../../features/transactions/components/TransactionForm/TransactionForm";
 import { AddAnotherTransactionPrompt } from "../../features/transactions/components/AddAnotherTransactionPrompt";
 import { NotificationsBell } from "../../features/recurring/components/NotificationsBell";
 import { ThemeToggle } from "../../shared/theme/ThemeToggle";
+import { OnboardingTour } from "../../components/OnboardingTour/OnboardingTour";
 import { useTransactions } from "../../features/transactions/hooks";
 import LoadingScreen from "../../shared/components/LoadingScreen/LoadingScreen";
 import "./privateLayout.css"
@@ -53,7 +54,7 @@ export function PrivateLayout() {
           </div>
         </div>
 
-        <nav className="header-nav" aria-label="Navegación principal">
+        <nav className="header-nav" aria-label="Navegación principal" data-tour="nav">
           <NavLink to="/" end className="header-nav-link">
             <Home size={17} />
             <span>Inicio</span>
@@ -177,6 +178,17 @@ export function PrivateLayout() {
               <span>Tema</span>
               <ThemeToggle />
             </div>
+            <button
+              type="button"
+              className="header-mobile-link header-mobile-tutorial"
+              onClick={() => {
+                setMenuOpen(false);
+                window.dispatchEvent(new Event("finance:open-onboarding"));
+              }}
+            >
+              <Sparkles size={18} />
+              <span>Ver tutorial</span>
+            </button>
           </nav>
         )}
       </header>
@@ -203,6 +215,7 @@ export function PrivateLayout() {
 
           <button
             className="fab tooltip-left"
+            data-tour="new-transaction"
             data-tooltip="Agregar Transacción"
             onClick={() => {
               // Limpia el error de una creación anterior antes de reabrir el formulario
@@ -239,7 +252,7 @@ export function PrivateLayout() {
       </main>
 
       {/* Navegación inferior móvil */}
-      <nav className="bottom-nav" aria-label="Navegación móvil">
+      <nav className="bottom-nav" aria-label="Navegación móvil" data-tour="bottom-nav">
         <NavLink
           to="/"
           end
@@ -260,6 +273,7 @@ export function PrivateLayout() {
         <button
           type="button"
           className="bottom-nav__fab"
+          data-tour="new-transaction-mobile"
           aria-label="Nueva transacción"
           onClick={() => {
             saveTransaction.reset();
@@ -288,6 +302,8 @@ export function PrivateLayout() {
           <span>Más</span>
         </button>
       </nav>
+
+      <OnboardingTour userId={user.id} autoStart={isHome} />
 
       <footer className="app-footer">GEMA© 2026</footer>
     </>
