@@ -50,7 +50,8 @@ function buildDataSourceOptions(): DataSourceOptions {
     const sslEnv = process.env.DB_SSL // 'true' | 'false'
 
     // 1) Parámetros individuales (DB_HOST) → configuración local/ explícita
-    if (process.env.DB_HOST) {
+    // DATABASE_URL tiene prioridad si ambas variables existen (Render).
+    if (process.env.DB_HOST && !process.env.DATABASE_URL) {
         return {
             ...commonOptions,
             type: 'postgres',
