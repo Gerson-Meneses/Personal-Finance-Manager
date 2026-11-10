@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import dayjs from "dayjs";
 import { useCategories } from "../../../categories/hooks";
 import { useAccounts } from "../../../accounts/hooks";
 import { FilterWrapper, type FilterBadgeItem } from "../../../../shared/components/FilterWrapper/FilterWrapper";
@@ -9,6 +10,7 @@ import { NumericInput } from "../../../../shared/components/NumericInput/Numeric
 import type { TransactionQuerySchemaOutput } from "../../types";
 import { SearchInput } from "../../../../shared/components/SearchInput/SearchInput";
 import { SelectInput } from "../../../../shared/components/SelectInput/SelectInput";
+import { formatCurrency } from "../../../../shared/utils/formatCurrency";
 
 interface Props {
     query: TransactionQuerySchemaOutput;
@@ -20,6 +22,7 @@ interface Props {
 
 type DateMode = "range" | "exact";
 type AmountMode = "range" | "exact";
+type Period = "all" | "today" | "7d" | "month" | "lastMonth";
 
 const TYPE_OPTIONS: { value: TransactionQuerySchemaOutput["type"]; label: string }[] = [
     { value: undefined, label: "Todos" },
@@ -29,9 +32,26 @@ const TYPE_OPTIONS: { value: TransactionQuerySchemaOutput["type"]; label: string
     { value: "CREDIT_PAYMENT", label: "Pago tarjeta" },
 ];
 
+const ORDER_OPTIONS = [
+    { value: "date-DESC", label: "Más recientes", orderBy: "date" as const, order: "DESC" as const },
+    { value: "date-ASC", label: "Más antiguos", orderBy: "date" as const, order: "ASC" as const },
+    { value: "amount-DESC", label: "Mayor monto", orderBy: "amount" as const, order: "DESC" as const },
+    { value: "amount-ASC", label: "Menor monto", orderBy: "amount" as const, order: "ASC" as const },
+    { value: "name-ASC", label: "Nombre A-Z", orderBy: "name" as const, order: "ASC" as const },
+];
+
+const PERIOD_OPTIONS: { value: Period; label: string }[] = [
+    { value: "all", label: "Todo" },
+    { value: "today", label: "Hoy" },
+    { value: "7d", label: "7 días" },
+    { value: "month", label: "Este mes" },
+    { value: "lastMonth", label: "Mes anterior" },
+];
+
 const KEY_LABELS: Record<string, string> = {
     type: "Tipo",
     accountId: "Cuenta",
+    relatedAccountId: "Cuenta relacionada",
     categoryId: "Categoría",
     date: "Fecha",
     from: "Desde",
@@ -39,57 +59,106 @@ const KEY_LABELS: Record<string, string> = {
     amount: "Monto",
     minAmount: "Monto mín.",
     maxAmount: "Monto máx.",
+    search: "Búsqueda",
 };
+
+const formatDate = (value?: string) => (value ? dayjs(value).format("DD/MM/YYYY") : "");
 
 export default function TransactionFilters({ query, onChange, onReset, search, onSearchChange }: Props) {
     const { categories } = useCategories();
     const { accounts } = useAccounts();
     const [open, setOpen] = useState(false);
 
-    // Inicialización del estado local de los toggles basado en lo que venga de la URL
     const [dateMode, setDateMode] = useState<DateMode>(query.date ? "exact" : "range");
     const [amountMode, setAmountMode] = useState<AmountMode>(query.amount ? "exact" : "range");
 
-    // Función helper para actualizar campos del esquema de forma inmutable
+    // `value || undefined` rompía filtros con 0/false; solo vaciamos strings vacíos.
     const set = <K extends keyof TransactionQuerySchemaOutput>(
         key: K,
         value: TransactionQuerySchemaOutput[K]
     ) => {
-        onChange({ ...query, [key]: value || undefined });
+        onChange({ ...query, [key]: value === "" ? undefined : value });
     };
 
-    // Calculamos los filtros activos dinámicamente ignorando los de control técnico (page, limit, order)
+    const period = useMemo<Period>(() => {
+        const today = dayjs().format("YYYY-MM-DD");
+        const from = query.from;
+        const to = query.to;
+        if (!from && !to) return "all";
+        if (from === today && to === today) return "today";
+        if (from === dayjs().subtract(6, "day").format("YYYY-MM-DD") && to === today) return "7d";
+        if (from === dayjs().startOf("month").format("YYYY-MM-DD") && to === today) return "month";
+        if (
+            from === dayjs().subtract(1, "month").startOf("month").format("YYYY-MM-DD") &&
+            to === dayjs().subtract(1, "month").endOf("month").format("YYYY-MM-DD")
+        ) return "lastMonth";
+        return "all";
+    }, [query.from, query.to]);
+
+    const applyPeriod = (value: Period) => {
+        const today = dayjs();
+        const next = { ...query, date: undefined };
+
+        if (value === "all") {
+            next.from = undefined;
+            next.to = undefined;
+        } else if (value === "today") {
+            next.from = today.format("YYYY-MM-DD");
+            next.to = today.format("YYYY-MM-DD");
+        } else if (value === "7d") {
+            next.from = today.subtract(6, "day").format("YYYY-MM-DD");
+            next.to = today.format("YYYY-MM-DD");
+        } else if (value === "month") {
+            next.from = today.startOf("month").format("YYYY-MM-DD");
+            next.to = today.format("YYYY-MM-DD");
+        } else {
+            const previous = today.subtract(1, "month");
+            next.from = previous.startOf("month").format("YYYY-MM-DD");
+            next.to = previous.endOf("month").format("YYYY-MM-DD");
+        }
+
+        onChange({ ...next, page: 1 });
+    };
+
+    const orderValue = `${query.orderBy ?? "date"}-${query.order ?? "DESC"}`;
+
     const activeCount = Object.entries(query).filter(([key, value]) => {
-        if (key === "page" || key === "limit" || key === "order") return false;
+        if (["page", "limit", "order", "orderBy"].includes(key)) return false;
         return value !== undefined && value !== "";
     }).length;
 
-    const activeFilter: FilterBadgeItem[] = []
+    const activeFilter: FilterBadgeItem[] = [];
 
     for (const key in query) {
-        if (key === "page" || key === "limit" || key === "order") continue;
+        if (["page", "limit", "order", "orderBy"].includes(key)) continue;
 
         const queryKey = key as keyof typeof query;
-        const rawValue = String(query[queryKey] ?? "");
+        const rawValue = query[queryKey];
+        if (rawValue === undefined || rawValue === "") continue;
 
-        let label = rawValue;
+        let label = String(rawValue);
         let color: string | undefined;
 
         if (key === "type") {
-            label = TYPE_OPTIONS.find((opt) => opt.value === query.type)?.label ?? rawValue;
+            label = TYPE_OPTIONS.find((opt) => opt.value === query.type)?.label ?? label;
         } else if (key === "categoryId") {
             const category = categories.find((cat) => cat.id === rawValue);
             if (category) {
                 label = category.name;
                 color = category.color;
             }
-        } else if (key === "accountId") {
+        } else if (key === "accountId" || key === "relatedAccountId") {
             const account = accounts.find((acc) => acc.id === rawValue);
             if (account) label = account.name;
+        } else if (["amount", "minAmount", "maxAmount"].includes(key)) {
+            const amount = Number(rawValue);
+            if (!Number.isNaN(amount)) label = formatCurrency(amount);
+        } else if (key === "from" || key === "to" || key === "date") {
+            label = formatDate(String(rawValue));
         }
 
         activeFilter.push({
-            key: key,
+            key,
             name: KEY_LABELS[key] ?? key,
             label,
             color,
@@ -97,9 +166,8 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
     }
 
     const removeFilter = (key: keyof typeof query) => {
-        const { [key]: _, ...rest } = query
-        onChange(rest)
-    }
+        onChange({ ...query, [key]: undefined });
+    };
 
     return (
         <FilterWrapper
@@ -114,7 +182,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                 <SearchInput
                     value={search}
                     onChange={onSearchChange}
-                    placeholder="Buscar por nombre, categoría, fecha..."
+                    placeholder="Buscar por nombre, categoría, cuenta..."
                 />
             }
             orderElement={
@@ -122,17 +190,36 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                     compact
                     label="Ordenar por"
                     hideLabel
-                    value={query.order ?? "DESC"}
-                    onChange={(v) => set("order", v as "ASC" | "DESC")}
-                    options={[
-                        { value: "DESC", label: "Más recientes" },
-                        { value: "ASC", label: "Más antiguos" },
-                    ]}
+                    value={orderValue}
+                    onChange={(value) => {
+                        const option = ORDER_OPTIONS.find((opt) => opt.value === value);
+                        if (!option) return;
+                        onChange({ ...query, orderBy: option.orderBy, order: option.order });
+                    }}
+                    options={ORDER_OPTIONS.map(({ value, label }) => ({ value, label }))}
                 />
             }
         >
-            {/* 🎯 PANEL DESPLEGABLE DE FILTROS AVANZADOS */}
             <div className="space-y-4">
+
+                {/* ================= PERIODO RÁPIDO ================= */}
+                <div className="tf-group">
+                    <span className="tf-group-label">Periodo</span>
+                    <div className="tf-chips">
+                        {PERIOD_OPTIONS.map((opt) => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                className={`tf-chip ${period === opt.value ? "active" : ""}`}
+                                onClick={() => applyPeriod(opt.value)}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="tf-divider" />
 
                 {/* ================= TIPO ================= */}
                 <div className="tf-group">
@@ -153,7 +240,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
 
                 <div className="tf-divider" />
 
-                {/* ================= FECHA Y MONTO (LAYOUT EN PARALELO) ================= */}
+                {/* ================= FECHA Y MONTO ================= */}
                 <div className="grid-auto-tall">
                     <RangeExactGroup
                         label="Fecha"
@@ -201,7 +288,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                         icon="DollarSign"
                         mode={amountMode}
                         onModeChange={(mode) => {
-                            amountMode !== mode && setAmountMode(mode);
+                            setAmountMode(mode);
                             onChange(mode === "exact"
                                 ? { ...query, minAmount: undefined, maxAmount: undefined }
                                 : { ...query, amount: undefined }
@@ -246,40 +333,56 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
 
                 <div className="tf-divider" />
 
-                {/* ================= CATEGORÍA Y CUENTA ================= */}
+                {/* ================= CATEGORÍA, CUENTA Y RELACIONADA ================= */}
                 <div className="tf-row">
-                <div className="tf-group" style={{ flex: 1 }}>
-                    <span className="tf-group-label">Categoría</span>
-                    <SelectInput
-                        label="Categoría"
-                        hideLabel
-                        value={query.categoryId ?? ""}
-                        onChange={(v) => set("categoryId", v)}
-                        placeholder="Todas"
-                        options={categories.map((cat) => ({
-                            value: cat.id,
-                            label: cat.name,
-                            color: cat.color,
-                        }))}
-                        className="tf-field-select"
-                    />
-                </div>
+                    <div className="tf-group tf-group--third">
+                        <span className="tf-group-label">Categoría</span>
+                        <SelectInput
+                            label="Categoría"
+                            hideLabel
+                            value={query.categoryId ?? ""}
+                            onChange={(v) => set("categoryId", v)}
+                            placeholder="Todas"
+                            options={categories.map((cat) => ({
+                                value: cat.id,
+                                label: cat.name,
+                                color: cat.color,
+                            }))}
+                            className="tf-field-select"
+                        />
+                    </div>
 
-                <div className="tf-group" style={{ flex: 1 }}>
-                    <span className="tf-group-label">Cuenta</span>
-                    <SelectInput
-                        label="Cuenta"
-                        hideLabel
-                        value={query.accountId ?? ""}
-                        onChange={(v) => set("accountId", v)}
-                        placeholder="Todas"
-                        options={accounts.map((acc) => ({
-                            value: acc.id,
-                            label: acc.name,
-                        }))}
-                        className="tf-field-select"
-                    />
-                </div>
+                    <div className="tf-group tf-group--third">
+                        <span className="tf-group-label">Cuenta</span>
+                        <SelectInput
+                            label="Cuenta"
+                            hideLabel
+                            value={query.accountId ?? ""}
+                            onChange={(v) => set("accountId", v)}
+                            placeholder="Todas"
+                            options={accounts.map((acc) => ({
+                                value: acc.id,
+                                label: acc.name,
+                            }))}
+                            className="tf-field-select"
+                        />
+                    </div>
+
+                    <div className="tf-group tf-group--third">
+                        <span className="tf-group-label">Cuenta relacionada</span>
+                        <SelectInput
+                            label="Cuenta relacionada"
+                            hideLabel
+                            value={query.relatedAccountId ?? ""}
+                            onChange={(v) => set("relatedAccountId", v)}
+                            placeholder="Todas"
+                            options={accounts.map((acc) => ({
+                                value: acc.id,
+                                label: acc.name,
+                            }))}
+                            className="tf-field-select"
+                        />
+                    </div>
                 </div>
 
                 <div className="tf-divider" />

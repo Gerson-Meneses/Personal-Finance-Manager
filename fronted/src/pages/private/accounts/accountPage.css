@@ -29,25 +29,177 @@
     color: #f8fafc;
 }
 
-/* ── Resumen: tres saldos ────────────────────────────── */
-.accounts-summary.default-row {
+/* ── Resumen patrimonial ─────────────────────────────── */
+.acc-overview {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     gap: 14px;
-    width: 100%;
+    align-items: stretch;
 }
 
-.accounts-summary .balance-card {
-    min-height: 104px;
+.acc-overview__hero {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    padding: 20px 22px;
 }
 
-.accounts-summary .balance-card .card-head {
-    margin-bottom: 0;
+.acc-overview__hero::after {
+    content: "";
+    position: absolute;
+    inset: -40% -20% auto auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(241, 196, 15, 0.12), transparent 68%);
+    pointer-events: none;
 }
 
-/* Tercer widget: patrimonio neto (acento amarillo) */
-.card-net::before {
-    background: #f1c40f;
+.acc-overview__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+
+.acc-overview__eyebrow svg {
+    color: #f1c40f;
+}
+
+.acc-overview__amount {
+    margin: 0;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: #f8fafc;
+}
+
+.acc-overview__bar {
+    display: flex;
+    height: 7px;
+    margin-top: 4px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.acc-overview__bar-liquid {
+    height: 100%;
+    background: #22c55e;
+    transition: width 0.35s ease;
+}
+
+.acc-overview__bar-debt {
+    height: 100%;
+    background: #ef4444;
+    transition: width 0.35s ease;
+}
+
+.acc-overview__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 2px;
+}
+
+.acc-overview__legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.82rem;
+    color: #94a3b8;
+}
+
+.acc-overview__legend strong {
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.acc-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.acc-dot--liquid { background: #22c55e; }
+.acc-dot--debt { background: #ef4444; }
+
+.acc-overview__hint {
+    margin: auto 0 0;
+    font-size: 0.75rem;
+    color: #475569;
+}
+
+.acc-overview__stats {
+    display: grid;
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.acc-stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    min-width: 0;
+}
+
+.acc-stat__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.acc-stat__icon--liquid {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.acc-stat__icon--debt {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.acc-stat__icon--available {
+    background: rgba(241, 196, 15, 0.1);
+    color: #f1c40f;
+}
+
+.acc-stat__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.acc-stat__text > span {
+    font-size: 0.74rem;
+    color: #64748b;
+}
+
+.acc-stat__text > strong {
+    font-size: 0.98rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.acc-stat > small {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: #475569;
+    white-space: nowrap;
 }
 
 /* Estado de error de carga */
@@ -63,6 +215,24 @@
 @media (max-width: 900px) {
     .accounts-toolbar .si-wrapper {
         width: 180px;
+    }
+
+    .acc-overview {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .acc-overview__stats {
+        grid-template-rows: none;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .acc-stat {
+        flex-wrap: wrap;
+    }
+
+    .acc-stat > small {
+        width: 100%;
+        margin-left: 48px;
     }
 }
 
@@ -95,32 +265,20 @@
         width: 100%;
     }
 
-    /* Saldos: carrusel horizontal con snap en vez de tres columnas apretadas */
-    .accounts-summary.default-row {
-        grid-template-columns: none;
-        grid-auto-flow: column;
-        grid-auto-columns: 80%;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        scroll-padding-inline: 16px;
-        scrollbar-width: none;
-        margin: 0 -16px;
-        padding: 2px 16px 6px;
-        box-sizing: border-box;
+    .acc-overview__stats {
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    .accounts-summary.default-row::-webkit-scrollbar {
-        display: none;
+    .acc-stat {
+        flex-wrap: nowrap;
     }
 
-    .accounts-summary .balance-card {
-        scroll-snap-align: start;
-        min-height: 0;
-        padding: 14px 16px;
+    .acc-stat > small {
+        width: auto;
+        margin-left: auto;
     }
 
-    .accounts-summary .card-amount {
-        font-size: 1.35rem;
-        margin-bottom: 0;
+    .acc-overview__hero {
+        padding: 18px;
     }
 }

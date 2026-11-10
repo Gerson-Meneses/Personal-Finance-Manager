@@ -25,6 +25,15 @@ export interface Transaction {
   loanPayment?: LoanPayment
 }
 
+export interface TransactionStats {
+  count: number;
+  income: number;
+  expense: number;
+  net: number;
+  transfers: number;
+  creditPayments: number;
+}
+
 export const TransactionSchema = z.object({
   name: nameSchema(),
   type: z.enum(TransactionTypeValues),
@@ -64,6 +73,7 @@ export const TransactionQuerySchema = z.object({
   relatedAccountId: uuidSchema("Id de cuenta relacionada").optional(),
   page: numberSchema("Pagina").optional(),
   limit: numberSchema("Limite").optional(),
+  orderBy: z.enum(["date", "amount", "name", "createdAt"]).optional(),
   order: z.enum(ORDER_VALUES).optional(),
   search: stringSchema("Busqueda").optional()
 })

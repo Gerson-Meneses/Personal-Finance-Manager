@@ -7,13 +7,18 @@ import { ApiPaginated } from "../typesResponseHttp/apiResponses";
 import { Transaction } from "../entities/Transaction.entity";
 import { paginated } from "../helpers/responses";
 import { TransactionQuerySchema } from "../schemas/querysTransaction.schema";
-import { TransactionResponse } from "../ResponseInterfaces/TransactionInterface";
+import { TransactionResponse, TransactionStatsResponse } from "../ResponseInterfaces/TransactionInterface";
 
 const categoryService = new TransactionService();
 
 export const getAllTransactionsByUser = async (c: Context,userId: UuidSchema, filters: TransactionQuerySchema) => {
     const result = await categoryService.getTransactions(userId,filters);
     return c.json<ApiPaginated<TransactionResponse>>(paginated(result.items, result.total, result.page, result.limit), 200)
+}
+
+export const getTransactionsStats = async (c: Context, userId: UuidSchema, filters: TransactionQuerySchema) => {
+    const result = await categoryService.getTransactionsStats(userId, filters);
+    return c.json<TransactionStatsResponse>(result, 200)
 }
 
 export const

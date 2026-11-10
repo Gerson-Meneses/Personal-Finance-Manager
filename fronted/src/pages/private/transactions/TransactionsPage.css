@@ -1,10 +1,133 @@
-/* Hereda: .page-container, .page-header, .empty-state, .badge, .badge-mutted,
-           .btn-secondary, .text-muted, .animate-slide-in de shared */
+/* ════════════════════════════════════════════════════════
+   TRANSACCIONES — vista minimalista
+════════════════════════════════════════════════════════ */
+.tx-page {
+    gap: 14px;
+}
 
+.tx-page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 20px 22px;
+    background:
+        radial-gradient(ellipse 60% 120% at 0% 0%, rgba(56, 189, 248, 0.06), transparent 60%),
+        #0b0d12;
+}
+
+.tx-page-header__text {
+    min-width: 0;
+}
+
+.tx-page-header__eyebrow {
+    display: inline-flex;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #38bdf8;
+    margin-bottom: 4px;
+}
+
+.tx-page-header h1 {
+    margin: 0;
+    font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+    font-weight: 600;
+    color: #f8fafc;
+    line-height: 1.1;
+}
+
+.tx-page-header p {
+    margin: 5px 0 0;
+    font-size: 0.84rem;
+}
+
+.tx-page-header__count {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    color: #7dd3fc;
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ── Resumen rápido ───────────────────────────────────── */
+.tx-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.tx-stat {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 13px 15px;
+    min-width: 0;
+}
+
+.tx-stat__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.tx-stat--income .tx-stat__icon {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.tx-stat--expense .tx-stat__icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.tx-stat--net .tx-stat__icon {
+    background: rgba(241, 196, 15, 0.1);
+    color: #f1c40f;
+}
+
+.tx-stat--count .tx-stat__icon {
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+}
+
+.tx-stat > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.tx-stat__label {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.tx-stat strong {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Historial ────────────────────────────────────────── */
 .tx-grouped-list {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    padding: 20px;
 }
 
 .tx-date-group { display: flex; flex-direction: column; }
@@ -24,6 +147,38 @@
     letter-spacing: 0.06em;
 }
 
+/* ── Vacío ────────────────────────────────────────────── */
+.tx-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    padding: 36px 20px;
+}
+
+.tx-empty__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(56, 189, 248, 0.08);
+    color: #38bdf8;
+}
+
+.tx-empty h3 {
+    margin: 4px 0 0;
+    font-size: 1rem;
+    color: #e2e8f0;
+}
+
+.tx-empty p {
+    margin: 0;
+    font-size: 0.86rem;
+}
+
 /* Paginación */
 .tf-pagination {
     display: flex;
@@ -36,4 +191,28 @@
 .tf-page-info {
     font-size: 0.82rem;
     color: #64748b;
+}
+
+@media (max-width: 900px) {
+    .tx-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .tx-page-header {
+        padding: 16px;
+    }
+
+    .tx-page-header__count {
+        padding: 5px 10px;
+    }
+
+    .tx-stats {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tx-grouped-list {
+        padding: 16px 12px;
+    }
 }

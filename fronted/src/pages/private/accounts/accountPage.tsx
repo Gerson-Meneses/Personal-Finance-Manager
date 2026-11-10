@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Wallet, CreditCard, TrendingUp } from "lucide-react";
+import { Plus, Wallet, CreditCard, TrendingUp, CircleDollarSign } from "lucide-react";
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import { useAccounts } from "../../../features/accounts/hooks";
@@ -25,13 +25,19 @@ export function AccountPage() {
   const navigate = useNavigate();
 
   // Cálculos rápidos para el resumen superior
-  const debitBalance = accounts
-    .filter(a => a.type === "DEBIT" || a.type === "CASH")
-    .reduce((sum, account) => sum + account.balance, 0);
+  const liquidAccounts = accounts.filter(a => a.type === "DEBIT" || a.type === "CASH");
+  const creditAccounts = accounts.filter(a => a.type === "CREDIT");
 
-  const creditDebt = accounts
-    .filter(a => a.type === "CREDIT")
-    .reduce((sum, account) => sum + getCreditDebt(account), 0);
+  const debitBalance = liquidAccounts.reduce((sum, account) => sum + account.balance, 0);
+
+  const creditDebt = creditAccounts.reduce((sum, account) => sum + getCreditDebt(account), 0);
+
+  const creditLimit = creditAccounts.reduce((sum, account) => sum + (account.creditLimit ?? 0), 0);
+  const creditAvailable = Math.max(0, creditLimit - creditDebt);
+  const netWorth = debitBalance - creditDebt;
+  const breakdownTotal = debitBalance + creditDebt;
+  const liquidShare = breakdownTotal > 0 ? (debitBalance / breakdownTotal) * 100 : 0;
+  const debtShare = breakdownTotal > 0 ? (creditDebt / breakdownTotal) * 100 : 0;
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -123,31 +129,76 @@ export function AccountPage() {
     <div className="page-container">
       {header}
 
-      {/* Widgets de Resumen Rápido — mismas balance-card que el dashboard */}
-      <section className="default-row accounts-summary">
-        <article className="balance-card card-debit">
-          <div className="card-head">
-            <Wallet size={24} className="text-success" />
-            <p className="card-label">Total en Débito</p>
+      {/* Resumen patrimonial */}
+      <section className="acc-overview">
+        <article className="acc-overview__hero card">
+          <span className="acc-overview__eyebrow">
+            <TrendingUp size={15} />
+            Patrimonio neto
+          </span>
+          <p className="acc-overview__amount amount-font">{formatCurrency(netWorth)}</p>
+
+          <div
+            className="acc-overview__bar"
+            role="img"
+            aria-label={`Liquidez ${formatCurrency(debitBalance)} y deuda ${formatCurrency(creditDebt)}`}
+          >
+            <span className="acc-overview__bar-liquid" style={{ width: `${liquidShare}%` }} />
+            <span className="acc-overview__bar-debt" style={{ width: `${debtShare}%` }} />
           </div>
-          <h2 className="card-amount text-success">{formatCurrency(debitBalance)}</h2>
+
+          <div className="acc-overview__legend">
+            <span>
+              <i className="acc-dot acc-dot--liquid" />
+              Liquidez <strong>{formatCurrency(debitBalance)}</strong>
+            </span>
+            <span>
+              <i className="acc-dot acc-dot--debt" />
+              Deuda <strong>{formatCurrency(creditDebt)}</strong>
+            </span>
+          </div>
+
+          <p className="acc-overview__hint">
+            {liquidAccounts.length} cuenta{liquidAccounts.length !== 1 ? "s" : ""} líquida{liquidAccounts.length !== 1 ? "s" : ""}
+            {" · "}
+            {creditAccounts.length} tarjeta{creditAccounts.length !== 1 ? "s" : ""} de crédito
+          </p>
         </article>
 
-        <article className="balance-card card-credit">
-          <div className="card-head">
-            <CreditCard size={24} className="text-danger" />
-            <p className="card-label">Deuda en Crédito</p>
-          </div>
-          <h2 className="card-amount text-danger">{formatCurrency(creditDebt)}</h2>
-        </article>
+        <div className="acc-overview__stats">
+          <article className="acc-stat card">
+            <span className="acc-stat__icon acc-stat__icon--liquid">
+              <Wallet size={18} />
+            </span>
+            <div className="acc-stat__text">
+              <span>Saldo disponible</span>
+              <strong className="amount-font text-success">{formatCurrency(debitBalance)}</strong>
+            </div>
+            <small>{liquidAccounts.length} cuenta{liquidAccounts.length !== 1 ? "s" : ""}</small>
+          </article>
 
-        <article className="balance-card card-net">
-          <div className="card-head">
-            <TrendingUp size={24} className="text-warning" />
-            <p className="card-label">Patrimonio Neto</p>
-          </div>
-          <h2 className="card-amount">{formatCurrency(debitBalance - creditDebt)}</h2>
-        </article>
+          <article className="acc-stat card">
+            <span className="acc-stat__icon acc-stat__icon--debt">
+              <CreditCard size={18} />
+            </span>
+            <div className="acc-stat__text">
+              <span>Deuda actual</span>
+              <strong className="amount-font text-danger">{formatCurrency(creditDebt)}</strong>
+            </div>
+            <small>{creditAccounts.length} tarjeta{creditAccounts.length !== 1 ? "s" : ""}</small>
+          </article>
+
+          <article className="acc-stat card">
+            <span className="acc-stat__icon acc-stat__icon--available">
+              <CircleDollarSign size={18} />
+            </span>
+            <div className="acc-stat__text">
+              <span>Crédito disponible</span>
+              <strong className="amount-font text-warning">{formatCurrency(creditAvailable)}</strong>
+            </div>
+            <small>de {formatCurrency(creditLimit)}</small>
+          </article>
+        </div>
       </section>
 
       {/* Grid de Cuentas */}

@@ -19,7 +19,10 @@
     align-items: center;
     gap: 10px;
     min-width: 0;
-    flex: 1 1 auto;
+    /* No crece: así la navegación conserva espacio y no se solapa con
+       el avatar/logout en portátiles */
+    flex: 0 1 auto;
+    max-width: min(340px, 38vw);
 }
 
 .header-logo {
@@ -78,8 +81,9 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    flex: 1;
+    flex: 1 1 0;
     min-width: 0;
+    overflow: hidden;
 }
 
 .header-nav-link {
@@ -265,6 +269,11 @@ main {
         padding: 0 12px;
         gap: 8px;
         height: 52px;
+    }
+
+    .header-left {
+        flex: 1 1 auto;
+        max-width: none;
     }
 
     .header-right {

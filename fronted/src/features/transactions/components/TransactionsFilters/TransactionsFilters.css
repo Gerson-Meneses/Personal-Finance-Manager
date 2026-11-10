@@ -252,3 +252,18 @@
     .tf-top-bar { flex-direction: column; align-items: stretch; }
     .tf-controls { justify-content: flex-end; }
 }
+/* Filas de filtros: los grupos crecen de forma pareja */
+.tf-row > .tf-group {
+    flex: 1 1 180px;
+    min-width: 0;
+}
+
+.tf-group--third {
+    flex: 1 1 180px;
+}
+
+@media (max-width: 640px) {
+    .tf-row > .tf-group {
+        flex: 1 1 100%;
+    }
+}

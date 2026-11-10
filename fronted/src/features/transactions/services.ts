@@ -1,10 +1,24 @@
 import { apiFetch } from "../../shared/api";
 import type { Data } from "../../shared/dataApiInterface";
-import type { Transaction, TransactionOutput, TransactionQuerySchemaOutput, UpdateTransactionOutput } from "./types";
+import type { Transaction, TransactionOutput, TransactionQuerySchemaOutput, TransactionStats, UpdateTransactionOutput } from "./types";
+
+const toSearchParams = (query?: TransactionQuerySchemaOutput) => {
+  if (!query) return "";
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      params.set(key, String(value));
+    }
+  });
+  return `?${params.toString()}`;
+};
 
 export const getTransactions = async (query?: TransactionQuerySchemaOutput): Promise<Data<Transaction>> => {
-  const searchParams = query ? `?${new URLSearchParams(query as any).toString()}` : "";
-  return await apiFetch<Data<Transaction>>(`/transaction${searchParams}`);
+  return await apiFetch<Data<Transaction>>(`/transaction${toSearchParams(query)}`);
+};
+
+export const getTransactionStats = async (query?: TransactionQuerySchemaOutput): Promise<TransactionStats> => {
+  return await apiFetch<TransactionStats>(`/transaction/stats${toSearchParams(query)}`);
 };
 
 export const getTransactionById = async (id: string): Promise<Transaction> => {

@@ -5,6 +5,7 @@ import { SelectInput } from "../../../../shared/components/SelectInput/SelectInp
 import { DatePicker } from "../../../../shared/components/DateInput/DateInput";
 import { NumericInput } from "../../../../shared/components/NumericInput/NumericInput";
 import { SearchInput } from "../../../../shared/components/SearchInput/SearchInput";
+import "../../../transactions/components/TransactionsFilters/TransactionsFilters.css";
 
 
 interface LoanFiterProps {
@@ -22,7 +23,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
         key: K,
         value: LoanQueryFilters[K]
     ) => {
-        onChange({ ...query, [key]: value || undefined });
+        onChange({ ...query, [key]: value === "" ? undefined : value });
     };
 
     const activeCount = Object.entries(query).filter(([key, value]) => {
@@ -30,25 +31,50 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
         return value !== undefined && value !== "";
     }).length;
 
-    let activeFilter: FilterBadgeItem[] = []
+    const activeFilter: FilterBadgeItem[] = []
 
-    for (let key in query) {
+    const FILTER_LABELS: Record<string, string> = {
+        type: "Tipo",
+        status: "Estado",
+        lender: "Persona",
+        startDate: "Fecha inicio",
+        from: "Desde",
+        to: "Hasta",
+        minAmount: "Monto mín.",
+        maxAmount: "Monto máx.",
+        hasPayments: "Pagos",
+        minPaymentAmount: "Pago mín.",
+        maxPaymentAmount: "Pago máx.",
+        paymentDateFrom: "Pago desde",
+        paymentDateTo: "Pago hasta",
+    };
+
+    for (const key in query) {
         if (key === "page" || key === "limit" || key === "order" || key === "orderBy") continue;
 
         const queryKey = key as keyof typeof query;
         const value = query[queryKey];
 
         if (value !== undefined && value !== "") {
+            let label = String(value);
+
+            if (key === "type") label = value === "GIVEN" ? "Otorgué" : "Recibí";
+            else if (key === "status") label = value === "PAID" ? "Pagados" : "Pendientes";
+            else if (key === "hasPayments") label = value ? "Con pagos" : "Sin pagos";
+            else if (["minAmount", "maxAmount", "minPaymentAmount", "maxPaymentAmount"].includes(key)) {
+                label = `S/ ${Number(value).toLocaleString("es-PE", { minimumFractionDigits: 2 })}`;
+            }
+
             activeFilter.push({
                 key: key,
-                label: String(value)
+                name: FILTER_LABELS[key] ?? key,
+                label
             });
         }
     }
 
     const removeFilter = (key: keyof typeof query) => {
-        const { [key]: _, ...rest } = query
-        onChange(rest)
+        onChange({ ...query, [key]: undefined })
     }
 
     return (
@@ -89,16 +115,16 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                 <div className="tf-group">
                     <span className="tf-group-label">Tipo de préstamo</span>
                     <div className="tf-chips">
-                        {[
+                        {([
                             { value: undefined, label: "Todos" },
                             { value: "RECEIVED", label: "Recibí" },
                             { value: "GIVEN", label: "Otorgué" },
-                        ].map((opt) => (
+                        ] as { value: LoanQueryFilters["type"]; label: string }[]).map((opt) => (
                             <button
                                 key={opt.label}
                                 type="button"
                                 className={`tf-chip ${query.type === opt.value ? "active" : ""}`}
-                                onClick={() => set("type", opt.value as any)}
+                                onClick={() => set("type", opt.value)}
                             >
                                 {opt.label}
                             </button>
@@ -112,7 +138,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                 <div className="tf-group">
                     <SelectInput
                         label="Estado del préstamo"
-                        value={query.status ?? "Todos"}
+                        value={query.status ?? ""}
                         onChange={(value) => set("status", value as "PAID" | "PENDING")}
                         options={[
                             { value: "PAID", label: "Pagados" },
@@ -194,16 +220,16 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                 <div className="tf-group">
                     <span className="tf-group-label">Pagos realizados</span>
                     <div className="tf-chips">
-                        {[
+                        {([
                             { value: undefined, label: "Todos" },
                             { value: true, label: "Con pagos" },
                             { value: false, label: "Sin pagos" },
-                        ].map((opt) => (
+                        ] as { value: boolean | undefined; label: string }[]).map((opt) => (
                             <button
                                 key={String(opt.value)}
                                 type="button"
                                 className={`tf-chip ${query.hasPayments === opt.value ? "active" : ""}`}
-                                onClick={() => set("hasPayments", opt.value as any)}
+                                onClick={() => set("hasPayments", opt.value)}
                             >
                                 {opt.label}
                             </button>

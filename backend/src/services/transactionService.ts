@@ -12,9 +12,10 @@ import { UuidSchema } from "../schemas/uuid.schema";
 import { TypeAccount, TypeTransaction } from "../utils/Enums";
 import { PaginatedResult } from "../types";
 import { TransactionQuerySchema } from "../schemas/querysTransaction.schema";
-import { EntityManager, QueryRunner } from "typeorm";
+import { EntityManager, QueryRunner, SelectQueryBuilder } from "typeorm";
 import { toTransactionResponse } from "../mappers/TransactionMapper";
-import { TransactionResponse } from "../ResponseInterfaces/TransactionInterface";
+import { TransactionResponse, TransactionStatsResponse } from "../ResponseInterfaces/TransactionInterface";
+import { money } from "../utils/normalizarMoney";
 
 type BalanceState = {
     type: TypeTransaction;
@@ -95,15 +96,11 @@ export class TransactionService {
         if (!locked) throw new NotFoundError('Transacción no encontrada');
     }
 
-    async getTransactions(
+    /** Construye la consulta base y aplica todos los filtros del listado. */
+    private buildTransactionQuery(
         userId: UuidSchema,
         filters: TransactionQuerySchema
-    ): Promise<PaginatedResult<TransactionResponse>> {
-
-        const page = filters.page && filters.page > 0 ? filters.page : 1;
-        const limit = filters.limit && filters.limit > 0 ? filters.limit : 20;
-        const order = filters.order ?? 'DESC';
-
+    ): SelectQueryBuilder<Transaction> {
         const qb = this.transactionRepo
             .createQueryBuilder('t')
             .leftJoinAndSelect('t.account', 'account')
@@ -111,7 +108,7 @@ export class TransactionService {
             .leftJoinAndSelect('t.category', 'category')
             .leftJoinAndSelect('t.loan', 'loan')
             .leftJoinAndSelect('t.loanPayment', 'loanPayment')
-            .where('t.userId = :userId', { userId: userId });
+            .where('t.userId = :userId', { userId });
 
         if (filters.type) {
             qb.andWhere('t.type = :type', { type: filters.type });
@@ -129,35 +126,71 @@ export class TransactionService {
             qb.andWhere('t.categoryId = :categoryId', { categoryId: filters.categoryId });
         }
 
-        if (filters.date) {
-            qb.andWhere('DATE(t.date) = :date', { date: filters.date });
+        if (filters.search) {
+            qb.andWhere(
+                `(
+                    t.name ILIKE :search
+                    OR t.description ILIKE :search
+                    OR category.name ILIKE :search
+                    OR account.name ILIKE :search
+                    OR relatedAccount.name ILIKE :search
+                )`,
+                { search: `%${filters.search}%` }
+            );
         }
 
-        if (filters.from && filters.to) {
-            qb.andWhere('t.date BETWEEN :from AND :to', {
-                from: filters.from,
-                to: filters.to,
-            });
+        if (filters.date) {
+            qb.andWhere('t.date = :date', { date: filters.date });
+        }
+
+        // from y to son independientes: sirve para "desde X" o "hasta Y"
+        if (filters.from) {
+            qb.andWhere('t.date >= :from', { from: filters.from });
+        }
+
+        if (filters.to) {
+            qb.andWhere('t.date <= :to', { to: filters.to });
         }
 
         if (filters.amount) {
             qb.andWhere('t.amount = :amount', { amount: filters.amount });
         }
 
-        if (filters.minAmount) {
+        if (filters.minAmount !== undefined && filters.minAmount !== null) {
             qb.andWhere('t.amount >= :minAmount', { minAmount: filters.minAmount });
         }
 
-        if (filters.maxAmount) {
+        if (filters.maxAmount !== undefined && filters.maxAmount !== null) {
             qb.andWhere('t.amount <= :maxAmount', { maxAmount: filters.maxAmount });
         }
 
-        qb.orderBy('t.date', order)
+        return qb;
+    }
+
+    async getTransactions(
+        userId: UuidSchema,
+        filters: TransactionQuerySchema
+    ): Promise<PaginatedResult<TransactionResponse>> {
+
+        const page = filters.page && filters.page > 0 ? filters.page : 1;
+        const limit = filters.limit && filters.limit > 0 ? filters.limit : 20;
+        const order = filters.order ?? 'DESC';
+        const orderBy = filters.orderBy ?? 'date';
+
+        const orderByMap: Record<string, string> = {
+            date: 't.date',
+            amount: 't.amount',
+            name: 't.name',
+            createdAt: 't.createdAt',
+        };
+
+        const qb = this.buildTransactionQuery(userId, filters)
+            .orderBy(orderByMap[orderBy] ?? 't.date', order)
+            .addOrderBy('t.id', order)
             .skip((page - 1) * limit)
             .take(limit);
 
-        let [transactions, total] = await qb.getManyAndCount();
-
+        const [transactions, total] = await qb.getManyAndCount();
 
         const transactionsResponse = transactions.map(tx => toTransactionResponse(tx))
 
@@ -166,6 +199,43 @@ export class TransactionService {
             total,
             page,
             limit,
+        };
+    }
+
+    async getTransactionsStats(
+        userId: UuidSchema,
+        filters: TransactionQuerySchema
+    ): Promise<TransactionStatsResponse> {
+        const raw = await this.buildTransactionQuery(userId, filters)
+            .select('COUNT(t.id)', 'count')
+            .addSelect(
+                `COALESCE(SUM(CASE WHEN t.type = '${TypeTransaction.INCOME}' THEN t.amount ELSE 0 END), 0)`,
+                'income'
+            )
+            .addSelect(
+                `COALESCE(SUM(CASE WHEN t.type = '${TypeTransaction.EXPENSE}' THEN t.amount ELSE 0 END), 0)`,
+                'expense'
+            )
+            .addSelect(
+                `COALESCE(SUM(CASE WHEN t.type = '${TypeTransaction.TRANSFER}' THEN t.amount ELSE 0 END), 0)`,
+                'transfers'
+            )
+            .addSelect(
+                `COALESCE(SUM(CASE WHEN t.type = '${TypeTransaction.CREDIT_PAYMENT}' THEN t.amount ELSE 0 END), 0)`,
+                'creditPayments'
+            )
+            .getRawOne<{ count: string; income: string; expense: string; transfers: string; creditPayments: string }>();
+
+        const incomeCents = Number(raw?.income ?? 0);
+        const expenseCents = Number(raw?.expense ?? 0);
+
+        return {
+            count: Number(raw?.count ?? 0),
+            income: money(incomeCents),
+            expense: money(expenseCents),
+            net: money(incomeCents - expenseCents),
+            transfers: money(Number(raw?.transfers ?? 0)),
+            creditPayments: money(Number(raw?.creditPayments ?? 0)),
         };
     }
 

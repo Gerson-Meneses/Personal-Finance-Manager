@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import type { Loan } from "../../types";
 import { getIcon } from "../../../../shared/utils/GetIcon";
 import dayjs from "dayjs";
@@ -51,7 +52,7 @@ export const LoanCard = ({ loan, search = "" }: LoanCardProps) => {
     return (
         <div
             className={`loan-card card ${isPaid ? "loan-card--paid" : ""} ${expanded ? "loan-card--expanded" : ""}`}
-            style={{ borderLeft: `3px solid ${category?.color}` }}
+            style={{ borderLeft: `3px solid ${category?.color || (isGiven ? "#8b5cf6" : "#0891b2")}` }}
         >
             <button
                 className="loan-card__header"
@@ -81,9 +82,15 @@ export const LoanCard = ({ loan, search = "" }: LoanCardProps) => {
                                     {isGiven ? "Presté" : "Recibí"}
                                 </span>
                             </div>
-                            <span className={`loan-card__amount ${isGiven ? "text-danger" : "text-success"}`}>
-                                {isGiven ? "-" : "+"} {formatCurrency(principalAmount)}
-                            </span>
+
+                            <div className="loan-card__amount-group">
+                                <span className={`loan-card__amount ${isGiven ? "text-danger" : "text-success"}`}>
+                                    {isGiven ? "-" : "+"} {formatCurrency(principalAmount)}
+                                </span>
+                                <span className={`loan-card__chevron ${expanded ? "is-open" : ""}`} aria-hidden="true">
+                                    <ChevronDown size={16} />
+                                </span>
+                            </div>
                         </div>
 
                         <div className="loan-card__bottom-row">

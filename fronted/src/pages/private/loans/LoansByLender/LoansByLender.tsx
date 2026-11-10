@@ -1,10 +1,10 @@
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import { ArrowDownLeft, ArrowUpRight, HandCoins, Plus, Wallet } from "lucide-react";
 import { QuickPayForm } from "../../../../features/LoanPayments/QuickPay";
 import NotFoundView from "../../../../shared/components/NotFoundView/NotFoundView";
 import { useLoansQuery, useLoanSummary } from "../../../../features/loans/hooks";
-import { LenderSummary } from "../../../../features/loans/components/LoanCardSummary/LenderSummary";
 import LoadingScreen from "../../../../shared/components/LoadingScreen/LoadingScreen";
-import { useCallback, useState } from "react";
 import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal";
 
 import { initialQuery } from "../../../../features/loans/types";
@@ -18,14 +18,24 @@ import { useClientSearch } from "../../../../shared/Hooks/UseClientSearch";
 import { normalizeLoan } from "../../../../features/loans/utils/NormalizeLoan";
 import type { LoanQueryFiltersFormInput } from "../../../../features/LoanPayments/types";
 import { LoansFilter } from "../../../../features/loans/components/LoansFilter/LoansFilter";
+import { formatCurrency } from "../../../../shared/utils/formatCurrency";
 
 type Tab = "loans" | "timeline";
 
+const getInitials = (name: string) =>
+    name
+        .split(" ")
+        .filter(Boolean)
+        .map((part) => part[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+
 export const LoansByLender = () => {
-    const { lender } = useParams();
+    const { lender = "" } = useParams();
 
     const { filters, saveFiltersToURL, clearFiltersFromURL } = useFilterURL<LoanQueryFiltersFormInput>(initialQuery)
-    const { search, setSearch, filtered } = useClientSearch(useCallback(normalizeLoan, []))
+    const { search, setSearch, filtered } = useClientSearch(normalizeLoan)
 
     const [showModal, setShowModal] = useState(false);
     const [showModal2, setShowModal2] = useState(false);
@@ -38,12 +48,25 @@ export const LoansByLender = () => {
     const { summary = [], isLoading: isLoading2 } = useLoanSummary({ status: "PENDING" });
     const { loans = [], isLoading: isLoading1, createLoan, meta } = useLoansQuery({ lender, status: "PENDING", ...queryForBackend });
 
-    if (isLoading1 || isLoading2) return <LoadingScreen />;
-    if (!lender) return <NotFoundView />;
+    const lenderSummary = useMemo(
+        () => summary.find((s) => s.lender === lender),
+        [summary, lender]
+    );
 
     const filteredLoans = filtered(loans)
 
-    const lenderSummary = summary.find((s) => s.lender === lender) ?? summary[0];
+    if (isLoading1 || isLoading2) return <LoadingScreen />;
+    if (!lender) return <NotFoundView />;
+
+    const given = lenderSummary?.byType.GIVEN;
+    const received = lenderSummary?.byType.RECEIVED;
+    const total = lenderSummary?.total;
+
+    const givenRemaining = given?.totalRemaining ?? 0;
+    const receivedRemaining = received?.totalRemaining ?? 0;
+    const net = givenRemaining - receivedRemaining;
+    const activeLoans = total?.loanCount ?? filteredLoans.length;
+    const totalAmount = total?.totalAmount ?? filteredLoans.reduce((sum, loan) => sum + loan.principalAmount, 0);
 
     const handleFiltersChange = (newFilters: LoanQueryFiltersFormInput) => {
         saveFiltersToURL({ ...newFilters, page: 1 })
@@ -54,116 +77,141 @@ export const LoansByLender = () => {
     }
 
     return (
-        <div className="page-container animate-fade-in">
-            <div className="detail-layout">
-
-                {/* ── ASIDE ─────────────────────────────────── */}
-                <aside className="default-column">
-                    <LenderSummary details={false} summaryLender={lenderSummary} />
-
-                    <div className="card action-card mt-6">
-                        <h3>• Acciones Rápidas</h3>
-                        <div className="action-buttons">
-                            <button
-                                onClick={() => setShowModal(true)}
-                                className="btn-primary"
-                            >
-                                Pago rápido
-                            </button>
-                            <button
-                                onClick={() => setShowModal2(true)}
-                                className="btn-secondary text-blue-600"
-                            >
-                                Nuevo préstamo
-                            </button>
-
-                        </div>
+        <div className="page-container lender-detail animate-fade-in">
+            <header className="lender-hero card">
+                <div className="lender-hero__identity">
+                    <span className="lender-hero__avatar" aria-hidden="true">
+                        {getInitials(lender)}
+                    </span>
+                    <div className="lender-hero__text">
+                        <span className="lender-hero__eyebrow">PrÃ©stamos con</span>
+                        <h1>{lender}</h1>
+                        <p className="text-muted">
+                            {activeLoans} prÃ©stamo{activeLoans !== 1 ? "s" : ""} activo{activeLoans !== 1 ? "s" : ""}
+                            {" Â· "}
+                            {formatCurrency(totalAmount)} prestado en total
+                        </p>
                     </div>
+                </div>
 
-                    <section className="card flex flex-col gap-4 ">
-                        <h3>• Vista</h3>
-                        <section className="flex justify-center items-center">
+                <div className={`lender-hero__net ${net >= 0 ? "is-positive" : "is-negative"}`}>
+                    <small>{net >= 0 ? "A favor" : "Por pagar"}</small>
+                    <strong className="amount-font">{formatCurrency(Math.abs(net))}</strong>
+                </div>
 
-                            <TypeToggle<Tab>
-                                value={tab}
-                                onChange={(val) => setTab(val)}
-                                icon={""}
-                                label=""
-                                leftOption={{
-                                    label: `Prestamos ${filteredLoans.length > 0 ? `(${filteredLoans.length})` : ''}`,
-                                    value: "loans",
-                                    icon: "HandCoins",
-                                    color: "#2563eb"
-                                }}
-                                rightOption={{
-                                    label: "Actividad",
-                                    value: "timeline",
-                                    icon: "History",
-                                    color: "#16a34a"
-                                }}
-                            ></TypeToggle>
-                        </section>
-                    </section>
-                </aside>
+                <div className="lender-hero__actions">
+                    <button className="btn-primary" onClick={() => setShowModal(true)}>
+                        <Wallet size={17} />
+                        Pago rÃ¡pido
+                    </button>
+                    <button className="btn-secondary" onClick={() => setShowModal2(true)}>
+                        <Plus size={17} />
+                        Nuevo prÃ©stamo
+                    </button>
+                </div>
+            </header>
 
-                {/* ── MAIN ──────────────────────────────────── */}
-                <main className=" flex flex-col gap-6">
+            <section className="lender-stats">
+                <article className="lender-stat card lender-stat--given">
+                    <span className="lender-stat__icon"><ArrowUpRight size={17} /></span>
+                    <div>
+                        <span className="lender-stat__label">Me deben</span>
+                        <strong className="amount-font">{formatCurrency(givenRemaining)}</strong>
+                        <small>{given?.loanCount ?? 0} prÃ©stamo{given?.loanCount !== 1 ? "s" : ""}</small>
+                    </div>
+                </article>
 
-                    {/* Filter bar */}
-                    <LoansFilter
-                        query={filters}
-                        onChange={handleFiltersChange}
-                        onReset={clearFiltersFromURL}
-                        search={search}
-                        onSearchChange={setSearch}
-                    />
+                <article className="lender-stat card lender-stat--received">
+                    <span className="lender-stat__icon"><ArrowDownLeft size={17} /></span>
+                    <div>
+                        <span className="lender-stat__label">Yo debo</span>
+                        <strong className="amount-font">{formatCurrency(receivedRemaining)}</strong>
+                        <small>{received?.loanCount ?? 0} prÃ©stamo{received?.loanCount !== 1 ? "s" : ""}</small>
+                    </div>
+                </article>
 
-                    {/* Content */}
-                    {tab === "loans" && (
-                        <div className="card list-container">
-                            {filteredLoans.length === 0 ? (
-                                <p className="loans-list__empty">
-                                    No se encontraron préstamos con los filtros actuales.
-                                </p>
-                            ) : (
-                                filteredLoans.map((loan) => (
-                                    <LoanCard key={loan.id} loan={loan} search={search}  />
-                                ))
-                            )}
-                        </div>
+                <article className="lender-stat card lender-stat--total">
+                    <span className="lender-stat__icon"><HandCoins size={17} /></span>
+                    <div>
+                        <span className="lender-stat__label">Total prestado</span>
+                        <strong className="amount-font">{formatCurrency(totalAmount)}</strong>
+                        <small>Historial con esta persona</small>
+                    </div>
+                </article>
+            </section>
+
+            <LoansFilter
+                query={filters}
+                onChange={handleFiltersChange}
+                onReset={clearFiltersFromURL}
+                search={search}
+                onSearchChange={setSearch}
+            />
+
+            <section className="lender-viewbar card">
+                <span className="lender-viewbar__label">Vista</span>
+                <TypeToggle<Tab>
+                    value={tab}
+                    onChange={(val) => setTab(val)}
+                    icon=""
+                    label=""
+                    leftOption={{
+                        label: `PrÃ©stamos${filteredLoans.length > 0 ? ` (${filteredLoans.length})` : ""}`,
+                        value: "loans",
+                        icon: "HandCoins",
+                        color: "#8b5cf6"
+                    }}
+                    rightOption={{
+                        label: "Actividad",
+                        value: "timeline",
+                        icon: "History",
+                        color: "#0891b2"
+                    }}
+                />
+            </section>
+
+            {tab === "loans" && (
+                <div className="card lender-loans-list">
+                    {filteredLoans.length === 0 ? (
+                        <p className="lender-loans-list__empty">
+                            No se encontraron prÃ©stamos con los filtros actuales.
+                        </p>
+                    ) : (
+                        filteredLoans.map((loan) => (
+                            <LoanCard key={loan.id} loan={loan} search={search} />
+                        ))
                     )}
+                </div>
+            )}
 
-                    {tab === "timeline" && (
-                        <div className="card">
-                            <LoanQuickHistory defaultOrder={filters.order} search={search} loans={filteredLoans} />
-                        </div>
-                    )}
-                    {/* Paginación solo visible cuando no hay búsqueda activa */}
-                    {!search && meta?.totalPages > 1 && (
-                        <div className="tf-pagination">
-                            <button
-                                className="btn-secondary"
-                                disabled={!filters.page || Number(filters.page) <= 1}
-                                onClick={() => handlePageChange((Number(filters.page) ?? 1) - 1)}
-                            >
-                                ← Anterior
-                            </button>
-                            <span className="tf-page-info">
-                                Página {Number(filters.page) ?? 1}/{meta.totalPages}
-                            </span>
-                            <button
-                                className="btn-secondary"
-                                disabled={filters.page ? Number(filters.page) >= meta.totalPages : false}
-                                onClick={() => handlePageChange((Number(filters.page) ?? 1) + 1)}
-                            >
-                                Siguiente →
-                            </button>
-                        </div>
-                    )}
-                </main>
-            </div>
+            {tab === "timeline" && (
+                <div className="card lender-timeline">
+                    <LoanQuickHistory defaultOrder={filters.order} search={search} loans={filteredLoans} />
+                </div>
+            )}
 
-            {/* Modal */}
+            {!search && meta?.totalPages > 1 && (
+                <div className="tf-pagination">
+                    <button
+                        className="btn-secondary"
+                        disabled={!filters.page || Number(filters.page) <= 1}
+                        onClick={() => handlePageChange((Number(filters.page) || 1) - 1)}
+                    >
+                        â† Anterior
+                    </button>
+                    <span className="tf-page-info">
+                        PÃ¡gina {Number(filters.page) || 1}/{meta.totalPages}
+                    </span>
+                    <button
+                        className="btn-secondary"
+                        disabled={(Number(filters.page) || 1) >= meta.totalPages}
+                        onClick={() => handlePageChange((Number(filters.page) || 1) + 1)}
+                    >
+                        Siguiente â†’
+                    </button>
+                </div>
+            )}
+
             <ModalPortal isOpen={showModal} onClose={() => setShowModal(false)}>
                 <QuickPayForm lender={lender} onClose={() => setShowModal(false)} />
             </ModalPortal>

@@ -1,8 +1,20 @@
 
 
+.loan-card.card {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.018);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.loan-card:hover {
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
 .loan-card--expanded {
-  border-color: rgba(59, 130, 246, 0.25);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border-color: rgba(139, 92, 246, 0.28);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
 /* Header Reset */
@@ -10,7 +22,7 @@
   width: 100%;
   background: transparent;
   border: none;
-  padding: 14px 20px;
+  padding: 14px 16px;
   cursor: pointer;
   text-align: left;
   color: inherit;
@@ -35,6 +47,7 @@
 
 .loan-card__details-wrapper {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -43,19 +56,46 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
   margin-bottom: 4px;
+  min-width: 0;
 }
 
 .loan-card__name-group {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .loan-card__title {
   font-weight: 600;
   color: #f8fafc;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Grupo monto + chevron */
+.loan-card__amount-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.loan-card__chevron {
+  display: flex;
+  align-items: center;
+  color: #64748b;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.loan-card__chevron.is-open {
+  transform: rotate(180deg);
+  color: #a78bfa;
 }
 
 /* Badges del Top Row */
@@ -66,8 +106,8 @@
   text-transform: uppercase;
   font-weight: 700;
 }
-.loan-card__badge.given { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-.loan-card__badge.received { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.loan-card__badge.given { background: rgba(139, 92, 246, 0.12); color: #c4b5fd; }
+.loan-card__badge.received { background: rgba(8, 145, 178, 0.14); color: #67e8f9; }
 
 /* Montos e Idioma fuentes idénticos a .amount-font */
 .loan-card__amount {
@@ -81,13 +121,16 @@
   align-items: center;
   font-size: 0.8rem;
   margin-top: 2px;
+  min-width: 0;
 }
 
 .loan-card__meta-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   color: #64748b;
+  min-width: 0;
 }
 
 .loan-card__date::first-letter {
@@ -119,7 +162,8 @@
 }
 
 .loan-card__progress-bar {
-  width: 120px;
+  flex: 1;
+  max-width: 160px;
   height: 4px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 4px;
@@ -293,4 +337,36 @@
 
 .description-section {
  padding: 12px;
+}
+@media (max-width: 520px) {
+  .loan-card__header {
+    padding: 12px;
+  }
+
+  .loan-card__main-content {
+    gap: 10px;
+  }
+
+  .loan-card__top-row {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .loan-card__name-group {
+    flex: 1 1 100%;
+  }
+
+  .loan-card__amount-group {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .loan-card__progress-bar {
+    max-width: none;
+  }
+
+  .loan-card__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 14px;
+  }
 }

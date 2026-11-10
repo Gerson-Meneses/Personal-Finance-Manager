@@ -19,3 +19,12 @@ export interface TransactionResponse {
     loan?: LoanResponse
     loanPayment?: LoanPaymentResponse
 }
+
+export interface TransactionStatsResponse {
+    count: number;
+    income: number;
+    expense: number;
+    net: number;
+    transfers: number;
+    creditPayments: number;
+}

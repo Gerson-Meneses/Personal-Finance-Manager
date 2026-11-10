@@ -1,95 +1,215 @@
-.lender-header {
+/* ════════════════════════════════════════════════════════
+   RESUMEN POR PERSONA (préstamos)
+════════════════════════════════════════════════════════ */
+.lender-card {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
-.lender-header h3 {
+.lender-card--link:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+    transform: translateY(-2px);
+}
+
+.lender-card__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.lender-card__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.22);
+    color: #c4b5fd;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+
+.lender-card__identity {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.lender-card__identity h3 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lender-card__identity span {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.lender-card__net {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: auto;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.lender-card__net small {
+    font-size: 0.64rem;
     text-transform: uppercase;
-    color: #ededed;
-    margin-top: 8px;
-    border-bottom: #a9a9a9 solid .1px;
-    width: 90%;
-    padding-bottom: 4px;
-    text-align: center;
+    letter-spacing: 0.07em;
+    color: #64748b;
 }
 
-.loan-columns {
+.lender-card__net strong {
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.lender-card__net.is-positive strong { color: #22c55e; }
+.lender-card__net.is-negative strong { color: #ef4444; }
+
+/* ── Bloques me deben / yo debo ──────────────────────── */
+.lender-card__types {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.lender-card__types > :only-child {
+    grid-column: 1 / -1;
+}
+
+.lender-type {
     display: flex;
-    align-items: center;
-    justify-content: center;
-
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    min-width: 0;
 }
 
-.loan-column {
-    padding: .5rem;
-}
-
-.loan-column h4 {
-    margin-bottom: .75rem;
-}
-
-.loan-data {
+.lender-type__head {
     display: flex;
+    align-items: baseline;
     justify-content: space-between;
-    margin-bottom: .5rem;
+    gap: 8px;
 }
 
-.loan-data span {
+.lender-type__head > span {
+    font-size: 0.7rem;
     color: #94a3b8;
-    margin-right: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.progress {
-    height: 8px;
-    margin-top: .75rem;
+.lender-type__head strong {
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
+.lender-type--given .lender-type__head strong { color: #a78bfa; }
+.lender-type--received .lender-type__head strong { color: #22d3ee; }
+
+.lender-type__bar {
+    height: 4px;
     border-radius: 999px;
     overflow: hidden;
-
-    background: rgba(255, 255, 255, .08);
+    background: rgba(255, 255, 255, 0.07);
 }
 
-
-.tittle {
-    font-weight: bold;
-}
-
-.tittle::before {
-    display: inline-block;
-    content: "";
-    background-color: #ededed;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    transform: translateY(-50%);
-    margin-right: 8px;
-}
-
-.given.tittle::before {
-    background-color: #8f4eff;
-}
-
-.received.tittle::before {
-    background-color: #0891B2;
-}
-
-.progress-fill {
+.lender-type__bar span {
+    display: block;
     height: 100%;
+    border-radius: inherit;
+    transition: width 0.3s ease;
 }
 
-.given {
-    color: #8f4eff;
+.lender-type--given .lender-type__bar span { background: #8b5cf6; }
+.lender-type--received .lender-type__bar span { background: #0891b2; }
+
+.lender-type__meta {
+    font-size: 0.68rem;
+    color: #64748b;
 }
 
-.received {
-    color: #0891B2;
+/* ── Progreso total + footer ─────────────────────────── */
+.lender-card__progress {
+    height: 4px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
 }
 
-.progress-fill.given {
-    background-color: #7C3AED;
+.lender-card__progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #8b5cf6, #22d3ee);
+    transition: width 0.3s ease;
 }
 
-.progress-fill.received {
-    background-color: #0891B2;
+.lender-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.lender-card__footer > span {
+    font-size: 0.7rem;
+    color: #475569;
+}
+
+.lender-card__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #38bdf8;
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: gap 0.15s ease;
+}
+
+.lender-card__action:hover {
+    gap: 8px;
+}
+
+@media (max-width: 520px) {
+    .lender-card {
+        padding: 15px;
+    }
+
+    .lender-card__types {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lender-card__footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }

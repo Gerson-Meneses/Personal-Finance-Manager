@@ -1,5 +1,5 @@
-import { useCallback } from "react"
-import { useTransactions } from "../../../features/transactions/hooks"
+import { List, TrendingDown, TrendingUp, Wallet } from "lucide-react"
+import { useTransactions, useTransactionsStats } from "../../../features/transactions/hooks"
 import TransactionItem from "../../../features/transactions/components/TransactionItem"
 import TransactionsFilters from "../../../features/transactions/components/TransactionsFilters/TransactionsFilters"
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen"
@@ -9,6 +9,7 @@ import { useFilterURL } from "../../../shared/Hooks/UseFiltersUrl.hook"
 import { ListHistory } from "../../../shared/components/ListHistory/ListHistory"
 import { useClientSearch } from "../../../shared/Hooks/UseClientSearch"
 import { normalizeTransaction } from "../../../features/transactions/utils/Normalizetransaction"
+import { formatCurrency } from "../../../shared/utils/formatCurrency"
 
 
 export function TransactionsPage() {
@@ -18,17 +19,16 @@ export function TransactionsPage() {
         clearFiltersFromURL,
     } = useFilterURL<TransactionQuerySchemaOutput>(defaultTransactionsQueryFilters)
 
-    const { search, setSearch, filtered } = useClientSearch(
-        useCallback(normalizeTransaction, [])
-    )
+    const { search, setSearch, filtered } = useClientSearch(normalizeTransaction)
 
-    // Cuando hay búsqueda activa traemos todo para filtrar client-side,
-    // ignorando la paginación del backend temporalmente
+    // Cuando hay bÃºsqueda activa traemos todo para filtrar client-side,
+    // ignorando la paginaciÃ³n del backend temporalmente
     const queryForBackend = search
         ? { ...query, limit: 9999, page: 1 }
         : query
 
     const { transactions, loading, error, meta } = useTransactions(queryForBackend)
+    const { stats } = useTransactionsStats({ ...query, search: search || undefined })
 
     // Alimentamos el hook con los datos frescos del backend
     const filteredTransactions = filtered(transactions)
@@ -50,21 +50,60 @@ export function TransactionsPage() {
         saveFiltersToURL({ ...query, page: newPage })
     }
 
-    return (
-        <div className="page-container">
+    const netClass = (stats?.net ?? 0) >= 0 ? "text-success" : "text-danger"
+    const resultLabel = search
+        ? `${filteredTransactions.length} de ${meta?.total ?? 0}`
+        : `${meta?.total ?? 0}`
 
-            <header className="card page-header">
-                <div>
+    return (
+        <div className="page-container tx-page">
+
+            <header className="tx-page-header card">
+                <div className="tx-page-header__text">
+                    <span className="tx-page-header__eyebrow">Movimientos</span>
                     <h1>Transacciones</h1>
                     <p className="text-muted">
-                        <span className="dot-base dot-bg-muted"></span>
-                        {search
-                            ? `${filteredTransactions.length} de ${meta?.total ?? 0} resultado${filteredTransactions.length !== 1 ? "s" : ""}`
-                            : `${meta?.total ?? 0} resultado${meta?.total !== 1 ? "s" : ""}`
-                        }
+                        Revisa, filtra y analiza cada ingreso y gasto.
                     </p>
                 </div>
+                <span className="tx-page-header__count">
+                    {resultLabel} resultado{Number(resultLabel.split(" ")[0]) !== 1 ? "s" : ""}
+                </span>
             </header>
+
+            <section className="tx-stats">
+                <article className="tx-stat card tx-stat--income">
+                    <span className="tx-stat__icon"><TrendingUp size={17} /></span>
+                    <div>
+                        <span className="tx-stat__label">Ingresos</span>
+                        <strong className="amount-font">{formatCurrency(stats?.income ?? 0)}</strong>
+                    </div>
+                </article>
+
+                <article className="tx-stat card tx-stat--expense">
+                    <span className="tx-stat__icon"><TrendingDown size={17} /></span>
+                    <div>
+                        <span className="tx-stat__label">Gastos</span>
+                        <strong className="amount-font">{formatCurrency(stats?.expense ?? 0)}</strong>
+                    </div>
+                </article>
+
+                <article className="tx-stat card tx-stat--net">
+                    <span className="tx-stat__icon"><Wallet size={17} /></span>
+                    <div>
+                        <span className="tx-stat__label">Balance</span>
+                        <strong className={`amount-font ${netClass}`}>{formatCurrency(stats?.net ?? 0)}</strong>
+                    </div>
+                </article>
+
+                <article className="tx-stat card tx-stat--count">
+                    <span className="tx-stat__icon"><List size={17} /></span>
+                    <div>
+                        <span className="tx-stat__label">Movimientos</span>
+                        <strong className="amount-font">{stats?.count ?? meta?.total ?? 0}</strong>
+                    </div>
+                </article>
+            </section>
 
             <TransactionsFilters
                 query={query}
@@ -75,8 +114,25 @@ export function TransactionsPage() {
             />
 
             {filteredTransactions.length === 0 ? (
-                <div className="empty-state">
-                    <p>Sin transacciones para los filtros seleccionados.</p>
+                <div className="empty-state card tx-empty">
+                    <span className="tx-empty__icon"><List size={22} /></span>
+                    <h3>Sin transacciones</h3>
+                    <p className="text-muted">
+                        {search
+                            ? `No hay coincidencias para Â«${search}Â».`
+                            : "No hay movimientos para los filtros seleccionados."}
+                    </p>
+                    {(search || Object.keys(query).some((key) => !["page", "limit", "order", "orderBy"].includes(key))) && (
+                        <button
+                            className="btn-secondary"
+                            onClick={() => {
+                                setSearch("");
+                                clearFiltersFromURL();
+                            }}
+                        >
+                            Limpiar filtros
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="card tx-grouped-list">
@@ -94,25 +150,25 @@ export function TransactionsPage() {
                 </div>
             )}
 
-            {/* Paginación solo visible cuando no hay búsqueda activa */}
+            {/* PaginaciÃ³n solo visible cuando no hay bÃºsqueda activa */}
             {!search && meta?.totalPages > 1 && (
                 <div className="tf-pagination">
                     <button
                         className="btn-secondary"
                         disabled={!query.page || Number(query.page) <= 1}
-                        onClick={() => handlePageChange((Number(query.page) ?? 1) - 1)}
+                        onClick={() => handlePageChange((Number(query.page) || 1) - 1)}
                     >
-                        ← Anterior
+                        â† Anterior
                     </button>
                     <span className="tf-page-info">
-                        Página {Number(query.page) ?? 1}/{meta.totalPages}
+                        PÃ¡gina {Number(query.page) || 1}/{meta.totalPages}
                     </span>
                     <button
                         className="btn-secondary"
-                        disabled={query.page ? Number(query.page) >= meta.totalPages : false}
-                        onClick={() => handlePageChange((Number(query.page) ?? 1) + 1)}
+                        disabled={(Number(query.page) || 1) >= meta.totalPages}
+                        onClick={() => handlePageChange((Number(query.page) || 1) + 1)}
                     >
-                        Siguiente →
+                        Siguiente â†’
                     </button>
                 </div>
             )}

@@ -1,0 +1,267 @@
+/* ════════════════════════════════════════════════════════
+   DETALLE DE PRÉSTAMOS POR PERSONA
+════════════════════════════════════════════════════════ */
+.lender-detail {
+    gap: 14px;
+}
+
+.lender-hero {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    padding: 20px 22px;
+    background:
+        radial-gradient(ellipse 55% 130% at 0% 0%, rgba(139, 92, 246, 0.09), transparent 62%),
+        #0b0d12;
+}
+
+.lender-hero__identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    flex: 1 1 260px;
+}
+
+.lender-hero__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(139, 92, 246, 0.13);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    color: #c4b5fd;
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+
+.lender-hero__text {
+    min-width: 0;
+}
+
+.lender-hero__eyebrow {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #a78bfa;
+    margin-bottom: 2px;
+}
+
+.lender-hero h1 {
+    margin: 0;
+    font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+    font-weight: 600;
+    color: #f8fafc;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lender-hero p {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+}
+
+.lender-hero__net {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: auto;
+    text-align: right;
+}
+
+.lender-hero__net small {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+}
+
+.lender-hero__net strong {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.lender-hero__net.is-positive strong { color: #22c55e; }
+.lender-hero__net.is-negative strong { color: #ef4444; }
+
+.lender-hero__actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.lender-hero__actions button {
+    font-size: 0.8rem;
+    padding: 9px 14px;
+}
+
+/* ── Stats ────────────────────────────────────────────── */
+.lender-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.lender-stat {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 13px 15px;
+    min-width: 0;
+}
+
+.lender-stat__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.lender-stat--given .lender-stat__icon {
+    background: rgba(139, 92, 246, 0.12);
+    color: #a78bfa;
+}
+
+.lender-stat--received .lender-stat__icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.lender-stat--total .lender-stat__icon {
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+}
+
+.lender-stat > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.lender-stat__label {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.lender-stat strong {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lender-stat small {
+    font-size: 0.68rem;
+    color: #475569;
+}
+
+/* ── Barra de vista ───────────────────────────────────── */
+.lender-viewbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+}
+
+.lender-viewbar__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.lender-viewbar .custom-form-group {
+    width: auto;
+    flex: 0 0 auto;
+}
+
+.lender-viewbar .toggle-wrapper {
+    min-width: 260px;
+}
+
+/* ── Listas ───────────────────────────────────────────── */
+.lender-loans-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+}
+
+.lender-loans-list__empty {
+    margin: 0;
+    padding: 28px 16px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.lender-timeline {
+    padding: 18px;
+}
+
+@media (max-width: 900px) {
+    .lender-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .lender-stat--total {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 640px) {
+    .lender-hero {
+        padding: 16px;
+        align-items: flex-start;
+    }
+
+    .lender-hero__net {
+        align-items: flex-start;
+        text-align: left;
+        margin-left: 0;
+    }
+
+    .lender-hero__actions {
+        width: 100%;
+    }
+
+    .lender-hero__actions button {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .lender-stats {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lender-stat--total {
+        grid-column: auto;
+    }
+
+    .lender-viewbar .custom-form-group {
+        width: 100%;
+        flex: 1 1 auto;
+    }
+
+    .lender-viewbar .toggle-wrapper {
+        min-width: 0;
+        width: 100%;
+    }
+}

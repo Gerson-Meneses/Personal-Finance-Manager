@@ -3,6 +3,21 @@ import * as service from "./services";
 import type { Transaction, TransactionOutput, TransactionQuerySchemaOutput, UpdateTransactionOutput } from "./types";
 import type { DataError, Meta } from "../../shared/dataApiInterface";
 
+export const useTransactionsStats = (filters?: TransactionQuerySchemaOutput) => {
+  const statsQuery = useQuery({
+    queryKey: ["transactions", "stats", filters],
+    queryFn: () => service.getTransactionStats(filters),
+    placeholderData: (previousData) => previousData,
+  });
+
+  return {
+    stats: statsQuery.data,
+    loading: statsQuery.isLoading,
+    error: statsQuery.error,
+    refetch: statsQuery.refetch,
+  };
+};
+
 export const useTransactions = (filters?: TransactionQuerySchemaOutput) => {
   const queryClient = useQueryClient();
 
