@@ -115,7 +115,7 @@ export function CategoryDetail({ category, month, onClose }: Props) {
                                 <span className="cat-detail-tx-date">{dayjs(tx.date).format("DD/MM/YYYY")}</span>
                             </div>
                             <span className={`cat-detail-tx-amount ${isOut ? "out" : "in"}`}>
-                                {isOut ? "−" : "+"} {formatCurrency(tx.amount)}
+                                {isOut ? "−" : "+"} {formatCurrency(tx.amount / 100)}
                             </span>
                         </div>
                     );

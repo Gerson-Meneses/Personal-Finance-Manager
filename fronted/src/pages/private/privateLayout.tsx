@@ -7,6 +7,7 @@ import ModalPortal from "../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "../../features/transactions/components/TransactionForm/TransactionForm";
 import { AddAnotherTransactionPrompt } from "../../features/transactions/components/AddAnotherTransactionPrompt";
 import { NotificationsBell } from "../../features/recurring/components/NotificationsBell";
+import { ThemeToggle } from "../../shared/theme/ThemeToggle";
 import { useTransactions } from "../../features/transactions/hooks";
 import LoadingScreen from "../../shared/components/LoadingScreen/LoadingScreen";
 import "./privateLayout.css"
@@ -91,6 +92,7 @@ export function PrivateLayout() {
 
         <div className="header-right">
           <NotificationsBell />
+          <ThemeToggle />
 
           <button
             className="header-menu-btn tooltip-left"
@@ -171,6 +173,10 @@ export function PrivateLayout() {
                 <span>Administración</span>
               </NavLink>
             )}
+            <div className="header-mobile-theme">
+              <span>Tema</span>
+              <ThemeToggle />
+            </div>
           </nav>
         )}
       </header>

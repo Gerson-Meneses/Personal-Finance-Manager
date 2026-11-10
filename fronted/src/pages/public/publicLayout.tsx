@@ -3,6 +3,7 @@ import "./publicLayout.css"
 import { useAuthContext } from "../../features/auth/authContext";
 import LoadingScreen from "../../shared/components/LoadingScreen/LoadingScreen";
 import { getIcon } from "../../shared/utils/GetIcon";
+import { ThemeToggle } from "../../shared/theme/ThemeToggle";
 
 export function PublicLayout() {
 
@@ -24,6 +25,7 @@ export function PublicLayout() {
             <span className="public-brand-tagline">Tus finanzas, en un solo lugar</span>
           </div>
         </div>
+        <ThemeToggle className="public-theme-toggle" />
         <div className="page-transition" key={location.pathname}>
           <Outlet></Outlet>
         </div>

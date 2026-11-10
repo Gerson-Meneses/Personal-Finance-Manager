@@ -542,3 +542,9 @@ form.login-form .register-row-2 {
         font-size: 1.2rem;
     }
 }
+.public-theme-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+}

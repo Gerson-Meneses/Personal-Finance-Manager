@@ -8,6 +8,7 @@ import { CategoryQuerySchema, CategorySchema, UpdateCategorySchema } from "../sc
 import { UuidSchema, uuidSchema } from "../schemas/uuid.schema";
 import { PaginatedResult } from "../types";
 import { TypeTransaction } from "../utils/Enums";
+import { money } from "../utils/normalizarMoney";
 
 export interface CategoryWithUsage extends Category {
     transactionCount: number;
@@ -114,7 +115,7 @@ export class CategoryService {
             return {
                 ...category,
                 transactionCount: Number(usage?.transactionCount ?? 0),
-                totalAmount: Number(usage?.totalAmount ?? 0),
+                totalAmount: money(Number(usage?.totalAmount ?? 0)),
             };
         });
 

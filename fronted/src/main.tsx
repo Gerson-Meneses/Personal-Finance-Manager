@@ -5,8 +5,10 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./features/auth/authContext";
 import ScrollToTop from "./shared/components/ScrollToTop/ScrollToTop";
 import { ToastProvider } from "./shared/components/Toast/ToastProvider";
+import { ThemeProvider } from "./shared/theme/ThemeProvider";
 import './index.css'
 import App from "./App";
+import "./theme.css";
 
 document.addEventListener("touchstart", () => {}, { passive: true });
 
@@ -24,14 +26,16 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </BrowserRouter>
-      </ToastProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <ScrollToTop />
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </ToastProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>
 );

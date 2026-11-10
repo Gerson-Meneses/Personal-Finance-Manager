@@ -36,7 +36,7 @@ export const FilterWrapper = <T extends object>({
     onRemoveFilter
 }: FilterWrapperProps<T>) => {
     return (
-        <div className={`w-full bg-[#0b0d12] border border-slate-800 rounded-xl p-4 shadow-xl flex flex-col gap-4 ${className}`}>
+        <div className={`filter-wrapper w-full bg-[#0b0d12] border border-slate-800 rounded-xl p-4 shadow-xl flex flex-col gap-4 ${className}`}>
 
             {/* 1. BARRA SUPERIOR CONSTANTE */}
             <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -48,7 +48,7 @@ export const FilterWrapper = <T extends object>({
                     <button
                         type="button"
                         onClick={onToggleOpen}
-                        className={`flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-colors border cursor-pointer
+                        className={`filter-toggle flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-colors border cursor-pointer
               ${isOpen
                                 ? "bg-indigo-600 border-indigo-500 text-white"
                                 : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-indigo-900 hover:text-white"
@@ -67,7 +67,7 @@ export const FilterWrapper = <T extends object>({
                         <button
                             type="button"
                             onClick={onReset}
-                            className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-3 py-2 rounded-lg text-sm font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors cursor-pointer"
+                            className="filter-reset flex items-center justify-center gap-1.5 w-full sm:w-auto px-3 py-2 rounded-lg text-sm font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors cursor-pointer"
                         >
                             <RotateCcw size={14} />
                             <span>Limpiar</span>
@@ -83,7 +83,7 @@ export const FilterWrapper = <T extends object>({
                     {activeFilters.map((filter) => (
                         <div
                             key={filter.key}
-                            className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700/60 rounded-full pl-3 pr-1.5 py-1 text-xs text-slate-200 transition-all hover:border-slate-600"
+                            className="filter-badge flex items-center gap-1.5 bg-slate-800/80 border border-slate-700/60 rounded-full pl-3 pr-1.5 py-1 text-xs text-slate-200 transition-all hover:border-slate-600"
                         >
                             {filter.color && (
                                 <span
@@ -111,7 +111,7 @@ export const FilterWrapper = <T extends object>({
 
             {/* 3. PANEL EXPANDIBLE (CONTENIDO HIJO) */}
             {isOpen && (
-                <div className="w-full border-t border-slate-800/80 pt-4 animate-slide-in">
+                <div className="filter-panel w-full border-t border-slate-800/80 pt-4 animate-slide-in">
                     {children}
                 </div>
             )}
