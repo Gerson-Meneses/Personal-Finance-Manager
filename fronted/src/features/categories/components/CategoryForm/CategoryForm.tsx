@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     CategorySchema,
     type Category,
@@ -17,7 +17,7 @@ import { FormContainer } from "../../../../shared/components/FormContainer/FormC
 import InfoModal from "../../../../shared/components/InfoModal/InfoModal";
 import { useCategories } from "../../hooks";
 import { suggestCategoryStyle } from "../../styleSuggestion";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import "./CategoryForm.css";
 import {
@@ -68,6 +68,8 @@ export const CategoryForm = ({
     const { deleteCategory } = useCategories();
     const toast = useToast();
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [submitAttempted, setSubmitAttempted] = useState(false);
+    const formRef = useRef<HTMLFormElement>(null);
 
     const {
         control,
@@ -76,7 +78,7 @@ export const CategoryForm = ({
         setError,
         setValue,
         getValues,
-        formState: { isDirty, isValid },
+        formState: { isValid },
     } = useForm<CategorySchemaInput, unknown, CategorySchemaOutput>({
         resolver: zodResolver(CategorySchema),
         mode: "onChange",
@@ -127,6 +129,7 @@ export const CategoryForm = ({
 
     /* ---------- submit ---------- */
     const onSubmit = async (data: CategorySchemaOutput) => {
+        setSubmitAttempted(false);
         try {
             if (isEdit && category) {
                 const updateData: UpdateCategoryInput = { ...data, categoryId: category.id };
@@ -150,22 +153,59 @@ export const CategoryForm = ({
         }
     };
 
+    const onInvalid = (errors: FieldErrors<CategorySchemaInput>) => {
+        setSubmitAttempted(true);
+        const firstInvalid = Object.keys(errors)[0];
+        if (!firstInvalid) return;
+
+        /* Los inputs custom no exponen refs, así que enfocamos el primero
+           marcado con error después de que React pinte la validación. */
+        setTimeout(() => {
+            const field = formRef.current?.querySelector<HTMLElement>(
+                ".custom-form-group.has-error input, .custom-form-group.has-error textarea, .custom-form-group.has-error button"
+            );
+            field?.focus();
+        }, 0);
+    };
+
     /* ---------- derived ---------- */
     const headerIcon = isIncome ? <TrendingUp size={20} /> : <TrendingDown size={20} />;
     const typeModifier = isIncome ? "income" : "expense";
     const knownFields = Object.keys(defaultValues);
     const hasUnmappedDetails = !!error?.details && Object.keys(error.details).some((key) => !knownFields.includes(key));
+    const hasMappedDetails = !!error?.details && Object.keys(error.details).length > 0 && !hasUnmappedDetails;
+    const validationError = submitAttempted && !isValid
+        ? "Faltan datos obligatorios. Revisa los campos marcados."
+        : null;
+    const serverError = error
+        ? hasUnmappedDetails
+            ? error.message || "Ocurrió un error inesperado"
+            : hasMappedDetails
+                ? "No se pudo guardar la categoría. Revisa los campos marcados."
+                : error.message || "Ocurrió un error inesperado"
+        : null;
+    const bannerError = serverError ?? validationError;
 
     return (
         <>
         <FormContainer
             title={isEdit ? "Editar Categoría" : "Nueva Categoría"}
             icon={headerIcon}
-            error={error && (!error.details || hasUnmappedDetails) ? (error.message || "Ocurrió un error inesperado") : null}
+            error={bannerError}
             className="max-w-lg mx-auto"
             onClose={onClose}
         >
-            <form onSubmit={handleSubmit(onSubmit)} className="form-default-container">
+            <form
+                ref={formRef}
+                onSubmit={(event) => {
+                    /* El modal puede estar anidado dentro de otro formulario
+                       (ej. crear categoría desde una transacción). Sin esto,
+                       el submit también valida el formulario de atrás. */
+                    event.stopPropagation();
+                    handleSubmit(onSubmit, onInvalid)(event);
+                }}
+                className="form-default-container"
+            >
 
                 {/* ── TYPE TOGGLE (solo al crear; PATCH no permite cambiar type) ── */}
                 {!isEdit && (
@@ -262,7 +302,7 @@ export const CategoryForm = ({
                     <button
                         type="submit"
                         className={`btn-submit ${typeModifier}`}
-                        disabled={isPending || !isDirty || !isValid}
+                        disabled={isPending}
                     >
                         {isIncome ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                         {isPending

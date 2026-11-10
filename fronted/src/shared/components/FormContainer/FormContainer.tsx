@@ -46,9 +46,13 @@ export const FormContainer = ({
       </div>
 
       {error && (
-        <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm flex items-center gap-2">
-          <AlertTriangle size={16} className="shrink-0" />
-          <p>{error}</p>
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="mb-4 flex items-start gap-2.5 rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm text-red-300"
+        >
+          <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+          <p className="m-0 leading-relaxed">{error}</p>
         </div>
       )}
 

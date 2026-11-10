@@ -175,7 +175,15 @@ export default function AccountForm({
             className="max-w-2xl mx-auto"
             onClose={onClose}
         >
-            <form onSubmit={handleSubmit(onSubmit)} className="form-default-container">
+            <form
+                onSubmit={(event) => {
+                    /* Evita que el submit valide también el formulario padre
+                       cuando el alta de cuenta se abre desde otro modal. */
+                    event.stopPropagation();
+                    handleSubmit(onSubmit)(event);
+                }}
+                className="form-default-container"
+            >
 
                 {/* ── TYPE TOGGLE ─────────────────────────────────────────── */}
                 {!fieldsHidden?.type && (

@@ -155,6 +155,7 @@ export default function SelectCategory({
         if (
             selected === CREATE_OPTION
         ) {
+            createCategory.reset();
             setCreateName(defaultName);
             setShowForm(true);
             return;
@@ -164,6 +165,7 @@ export default function SelectCategory({
     };
 
     const handleCreateQuery = (query: string) => {
+        createCategory.reset();
         setCreateName(query || defaultName);
         setShowForm(true);
     };

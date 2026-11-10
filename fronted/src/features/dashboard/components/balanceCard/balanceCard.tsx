@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, CreditCard, TrendingDown } from "lucide-react";
+import { AlertTriangle, ArrowRight, Wallet, CreditCard, TrendingDown } from "lucide-react";
 import { formatCurrency } from "../../../../shared/utils/formatCurrency";
 import "./balanceCard.css"
 
@@ -16,17 +16,32 @@ interface Props {
 export default function BalanceHero({ balances, credit }: Props) {
   const navigate = useNavigate();
   const netWorth = balances.debit - credit.debt;
+  const isNegative = netWorth < 0;
 
   return (
-    <article className="balance-card dash-hero">
+    <article className={`balance-card dash-hero ${isNegative ? "is-negative" : ""}`}>
       <div className="hero-top">
-        <p className="card-label">Patrimonio neto</p>
+        <div className="hero-top-label">
+          <p className="card-label">Patrimonio neto</p>
+          {isNegative && (
+            <span className="hero-negative-badge">
+              <AlertTriangle size={12} />
+              En déficit
+            </span>
+          )}
+        </div>
         <button className="btn-ghost" onClick={() => navigate("/accounts")}>
           Ver cuentas <ArrowRight size={14} />
         </button>
       </div>
 
-      <h2 className="hero-amount">{formatCurrency(netWorth)}</h2>
+      <h2 className={`hero-amount ${isNegative ? "is-negative" : ""}`}>{formatCurrency(netWorth)}</h2>
+
+      {isNegative && (
+        <p className="hero-negative-note">
+          Tu deuda supera el dinero disponible. Revisa tus cuentas de crédito.
+        </p>
+      )}
 
       <div className="hero-stats">
         <div className="hero-stat">
