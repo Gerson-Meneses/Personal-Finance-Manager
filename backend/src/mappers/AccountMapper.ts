@@ -18,13 +18,13 @@ export const toAccountResponse = (account: Account): AccountResponse => {
         throw new Error("Account is undefined");
     }
 
-    if (account.billingCloseDay && account.creditLimit && account.overdraft && account.paymentDueDay) {
+    if (account.type === TypeAccount.CREDIT && account.creditLimit != null) {
         accountInfo = {
             ...accountInfo,
-            billingCloseDay: account.billingCloseDay,
+            billingCloseDay: account.billingCloseDay ?? undefined,
             creditLimit: round(account.creditLimit / 100),
-            overdraft: account.overdraft,
-            paymentDueDay: account.paymentDueDay,
+            overdraft: account.overdraft ?? 0,
+            paymentDueDay: account.paymentDueDay ?? undefined,
         }
     }
 

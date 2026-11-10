@@ -76,8 +76,6 @@ export class AccountService {
             })
 
             await this.accountRepo.save(newAccount)
-
-            newAccount.balance = newAccount.creditLimit / 100
         } else {
             newAccount = this.accountRepo.create({
                 name,
@@ -92,16 +90,13 @@ export class AccountService {
         return toAccountResponse(newAccount);
     }
 
-    async getAccountById(accountId: string, userId: string): Promise<Account> {
+    async getAccountById(accountId: string, userId: string): Promise<AccountResponse> {
         const account = await this.accountRepo.findOne({ where: { id: accountId, user: { id: userId } } });
         if (!account) throw new NotFoundError("Cuenta no encontrada o no pertenece al usuario.")
-        if (account.type === TypeAccount.CREDIT) {
-            account.creditLimit = account.creditLimit / 100
-        }
-        return { ...account, balance: account.balance / 100 }
+        return toAccountResponse(account)
     }
 
-    async updateAccount(accountId: string, userId: string, updateData: UpdateAccountSchema): Promise<Account> {
+    async updateAccount(accountId: string, userId: string, updateData: UpdateAccountSchema): Promise<AccountResponse> {
         const account = await this.accountRepo.findOne({ where: { id: accountId, user: { id: userId } } });
         if (!account) throw new NotFoundError("Cuenta no encontrada o no pertenece al usuario.")
 
@@ -127,14 +122,12 @@ export class AccountService {
                 account.balance = getMaxBalance(account.creditLimit, account.overdraft) - currentDebt
                 if (account.balance < 0) throw new BadRequestError("No se puede aumentar el porcentaje de sobregiro por debajo de la deuda actual.")
             }
-
-            account.creditLimit = account.creditLimit / 100
         }
 
         const updatedAccount = Object.assign(account, updateData);
         const savedAccount = await this.accountRepo.save(updatedAccount);
 
-        return { ...savedAccount, balance: savedAccount.balance / 100 }
+        return toAccountResponse(savedAccount)
     }
 
     async deleteAccount(accountId: string, userId: string): Promise<void> {

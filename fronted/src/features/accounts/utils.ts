@@ -10,6 +10,7 @@ export const getCreditDebt = (account: Account): number =>
 
 /** Porcentaje de uso del límite (0-100) */
 export const getCreditUsage = (account: Account): number => {
-    if (account.type !== "CREDIT" || !account.creditLimit) return 0;
-    return Math.min(Math.round((getCreditDebt(account) / account.creditLimit) * 100), 100);
+    const max = getCreditMax(account);
+    if (account.type !== "CREDIT" || max <= 0) return 0;
+    return Math.min(Math.max(Math.round((getCreditDebt(account) / max) * 100), 0), 100);
 };

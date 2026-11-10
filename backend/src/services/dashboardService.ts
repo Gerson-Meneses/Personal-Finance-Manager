@@ -9,6 +9,12 @@ import { money } from "../utils/normalizarMoney"
 import { getMaxBalance } from "../utils/getBalanceToCreditCard"
 import { StatusLoan, TypeTransaction } from "../utils/Enums"
 import { RecurringPaymentService } from "./recurringPaymentService"
+import { calculateLoanPaymentStatus } from "../mappers/LoansMapper"
+
+type DashboardLoan = Loan & {
+    amountRemaining: number
+    amountPaid: number
+}
 
 
 
@@ -26,8 +32,8 @@ export interface DashboardResponse {
     loans: {
         totalDebt: number
         totalAmtDue: number
-        given: Loan[]
-        received: Loan[]
+        given: DashboardLoan[]
+        received: DashboardLoan[]
     }
 
     month: {
@@ -129,6 +135,7 @@ export class DashboardService {
             }),
             this.loanRepo.find({
                 where: { user: { id: userId }, status: StatusLoan.PENDING },
+                relations: ["payments"],
                 order: { createdAt: "DESC" }
             }),
             incomeExpensePromise,
@@ -170,16 +177,26 @@ export class DashboardService {
         /* LOANS */
         /* -------------------------------- */
 
-        const given = loans.filter(l => l.type === "GIVEN").map(loan => ({ ...loan, principalAmount: money(loan.principalAmount) }))
-        const received = loans.filter(l => l.type === "RECEIVED").map(loan => ({ ...loan, principalAmount: money(loan.principalAmount) }))
+        const toDashboardLoan = (loan: Loan): DashboardLoan => {
+            const paymentStatus = calculateLoanPaymentStatus(loan)
+            return {
+                ...loan,
+                principalAmount: money(loan.principalAmount),
+                amountRemaining: paymentStatus.totalRemaining,
+                amountPaid: paymentStatus.totalPaid,
+            }
+        }
+
+        const given = loans.filter(l => l.type === "GIVEN").map(toDashboardLoan)
+        const received = loans.filter(l => l.type === "RECEIVED").map(toDashboardLoan)
 
         const totalDebt = received.reduce(
-            (sum, l) => sum + l.principalAmount,
+            (sum, l) => sum + l.amountRemaining,
             0
         )
 
         const totalAmtDue = given.reduce(
-            (sum, l) => sum + l.principalAmount,
+            (sum, l) => sum + l.amountRemaining,
             0
         )
 

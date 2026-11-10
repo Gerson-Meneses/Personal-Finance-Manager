@@ -6,6 +6,8 @@ export interface Loan {
   type: "GIVEN" | "RECEIVED"
   lender: string
   principalAmount: number
+  amountRemaining?: number
+  amountPaid?: number
   status: string
   startDate: string
 }

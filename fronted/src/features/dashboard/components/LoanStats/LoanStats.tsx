@@ -17,7 +17,7 @@ interface Props {
 const groupByLender = (list: Loan[]) =>
     Object.entries(
         list.reduce((acc, curr) => {
-            acc[curr.lender] = (acc[curr.lender] || 0) + curr.principalAmount;
+            acc[curr.lender] = (acc[curr.lender] || 0) + (curr.amountRemaining ?? curr.principalAmount);
             return acc;
         }, {} as Record<string, number>)
     );

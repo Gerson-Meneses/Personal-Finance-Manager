@@ -4,7 +4,7 @@ import { Plus, Wallet, CreditCard, TrendingUp, CircleDollarSign } from "lucide-r
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import { useAccounts } from "../../../features/accounts/hooks";
-import { getCreditDebt } from "../../../features/accounts/utils";
+import { getCreditDebt, getCreditMax } from "../../../features/accounts/utils";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import AccountCard from "../../../features/accounts/components/accountCard/accountCard";
 import AccountForm from "../../../features/accounts/components/accountForm/accountForm";
@@ -32,8 +32,8 @@ export function AccountPage() {
 
   const creditDebt = creditAccounts.reduce((sum, account) => sum + getCreditDebt(account), 0);
 
-  const creditLimit = creditAccounts.reduce((sum, account) => sum + (account.creditLimit ?? 0), 0);
-  const creditAvailable = Math.max(0, creditLimit - creditDebt);
+  const creditCapacity = creditAccounts.reduce((sum, account) => sum + getCreditMax(account), 0);
+  const creditAvailable = Math.max(0, creditCapacity - creditDebt);
   const netWorth = debitBalance - creditDebt;
   const breakdownTotal = debitBalance + creditDebt;
   const liquidShare = breakdownTotal > 0 ? (debitBalance / breakdownTotal) * 100 : 0;
@@ -196,7 +196,7 @@ export function AccountPage() {
               <span>Crédito disponible</span>
               <strong className="amount-font text-warning">{formatCurrency(creditAvailable)}</strong>
             </div>
-            <small>de {formatCurrency(creditLimit)}</small>
+            <small>de {formatCurrency(creditCapacity)}</small>
           </article>
         </div>
       </section>
