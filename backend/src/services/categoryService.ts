@@ -4,8 +4,7 @@ import { ReccurentTransaction } from "../entities/ReccurentTransaction.entity";
 import { Transaction } from "../entities/Transaction.entity";
 import { User } from "../entities/User.entity";
 import { BadRequestError, ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
-import { CategorySchema, UpdateCategorySchema } from "../schemas/category.schema";
-import { PaginationQuerySchema } from "../schemas/queryPagination.schema";
+import { CategoryQuerySchema, CategorySchema, UpdateCategorySchema } from "../schemas/category.schema";
 import { UuidSchema, uuidSchema } from "../schemas/uuid.schema";
 import { PaginatedResult } from "../types";
 import { TypeTransaction } from "../utils/Enums";
@@ -71,7 +70,7 @@ export class CategoryService {
     private transactionRepo = AppDataSourceProd.getRepository(Transaction)
     private recurrentRepo = AppDataSourceProd.getRepository(ReccurentTransaction)
 
-    async getCategoriesByUser(userId: UuidSchema, filters: PaginationQuerySchema): Promise<PaginatedResult<CategoryWithUsage>> {
+    async getCategoriesByUser(userId: UuidSchema, filters: CategoryQuerySchema): Promise<PaginatedResult<CategoryWithUsage>> {
         const page = filters.page && filters.page > 0 ? filters.page : 1;
         const limit = filters.limit && filters.limit > 0 ? filters.limit : 100;
         const order = filters.order ?? 'DESC';
@@ -86,15 +85,25 @@ export class CategoryService {
 
         const [categories, total] = await qb.getManyAndCount();
 
-        const usageRaw = await this.transactionRepo
+        const usageQb = this.transactionRepo
             .createQueryBuilder('tx')
             .select('tx.categoryId', 'categoryId')
             .addSelect('COUNT(tx.id)', 'transactionCount')
             .addSelect('COALESCE(SUM(tx.amount), 0)', 'totalAmount')
             .where('tx.userId = :userId', { userId })
             .andWhere('tx.categoryId IS NOT NULL')
-            .groupBy('tx.categoryId')
-            .getRawMany();
+            .groupBy('tx.categoryId');
+
+        // Métricas del mes solicitado (YYYY-MM). Sin month = histórico completo.
+        if (filters.month) {
+            const [year, monthNumber] = filters.month.split('-').map(Number);
+            const lastDay = new Date(year, monthNumber, 0).getDate();
+            const from = `${filters.month}-01`;
+            const to = `${filters.month}-${String(lastDay).padStart(2, '0')}`;
+            usageQb.andWhere('tx.date >= :from AND tx.date <= :to', { from, to });
+        }
+
+        const usageRaw = await usageQb.getRawMany();
 
         const usageById = new Map<string, { transactionCount: string | number; totalAmount: string | number }>(
             usageRaw.map((row) => [row.categoryId, row])

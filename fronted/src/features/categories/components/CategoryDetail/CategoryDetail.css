@@ -167,3 +167,9 @@
     display: inline-flex;
     align-items: center;
 }
+
+.cat-detail-month {
+    color: #64748b;
+    font-weight: 400;
+    text-transform: capitalize;
+}

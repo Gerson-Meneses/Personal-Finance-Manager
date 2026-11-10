@@ -368,3 +368,106 @@
         flex: 0 1 auto;
     }
 }
+
+/* ===== Resumen del mes ===== */
+.cat-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.cat-summary-card {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 13px 15px;
+    background: #0b0d12;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    min-width: 0;
+    font-family: inherit;
+    text-align: left;
+    color: inherit;
+}
+
+.cat-summary-card--link {
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.cat-summary-card--link:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.025);
+    transform: translateY(-1px);
+}
+
+.cat-summary-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.cat-summary-card--expense .cat-summary-icon {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.cat-summary-card--income .cat-summary-icon {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.cat-summary-card--active .cat-summary-icon {
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+}
+
+.cat-summary-card > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cat-summary-label {
+    font-size: 0.68rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cat-summary-card strong {
+    font-size: 0.98rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 820px) {
+    .cat-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cat-summary-card:last-child {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 480px) {
+    .cat-summary {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cat-summary-card:last-child {
+        grid-column: auto;
+    }
+
+    .cat-summary-card {
+        padding: 11px 13px;
+    }
+}

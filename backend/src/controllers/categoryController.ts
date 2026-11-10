@@ -1,8 +1,7 @@
 import { Context } from "hono";
 import { CategoryService } from "../services/categoryService";
-import { CategorySchema, UpdateCategorySchema } from "../schemas/category.schema";
+import { CategoryQuerySchema, CategorySchema, UpdateCategorySchema } from "../schemas/category.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
-import { PaginationQuerySchema } from "../schemas/queryPagination.schema";
 import { ApiPaginated } from "../typesResponseHttp/apiResponses";
 import { Category } from "../entities/Category.entity";
 import { paginated } from "../helpers/responses";
@@ -10,7 +9,7 @@ import { TypeTransaction } from "../utils/Enums";
 
 const categoryService = new CategoryService();
 
-export const getAllCategoriesByUser = async (c: Context, user: UuidSchema, filters: PaginationQuerySchema) => {
+export const getAllCategoriesByUser = async (c: Context, user: UuidSchema, filters: CategoryQuerySchema) => {
     const result = await categoryService.getCategoriesByUser(user, filters);
     return c.json<ApiPaginated<Category>>(paginated(result.items, result.total, result.page, result.limit), 200)
 }

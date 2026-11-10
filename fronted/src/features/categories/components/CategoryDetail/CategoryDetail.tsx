@@ -11,19 +11,39 @@ import "./CategoryDetail.css";
 
 interface Props {
     category: Category;
+    /** Mes YYYY-MM para limitar las transacciones mostradas */
+    month?: string;
     onClose: () => void;
 }
 
-export function CategoryDetail({ category, onClose }: Props) {
+export function CategoryDetail({ category, month, onClose }: Props) {
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ["categories", "detail", category.id],
         queryFn: () => getCategoryById(category.id),
         staleTime: 30_000,
     });
 
-    const transactions = (data?.transactions ?? []).slice(0, 10);
-    const count = category.transactionCount ?? data?.transactions?.length ?? 0;
+    const monthFrom = month ? `${month}-01` : "";
+    const monthTo = month
+        ? dayjs(`${month}-01`).endOf("month").format("YYYY-MM-DD")
+        : "";
+    const monthLabel = month ? dayjs(`${month}-01`).format("MMMM YYYY") : "";
+
+    const allTransactions = data?.transactions ?? [];
+    const monthTransactions = month
+        ? allTransactions.filter((tx) => {
+            const date = dayjs(tx.date).format("YYYY-MM-DD");
+            return date >= monthFrom && date <= monthTo;
+        })
+        : allTransactions;
+
+    const transactions = monthTransactions.slice(0, 10);
+    const count = category.transactionCount ?? monthTransactions.length;
     const total = category.totalAmount ?? 0;
+
+    const transactionsLink = month
+        ? `/transactions?categoryId=${category.id}&from=${monthFrom}&to=${monthTo}`
+        : `/transactions?categoryId=${category.id}`;
 
     return (
         <div className="cat-detail">
@@ -71,7 +91,10 @@ export function CategoryDetail({ category, onClose }: Props) {
             </div>
 
             <section className="cat-detail-tx">
-                <h3>Últimas transacciones</h3>
+                <h3>
+                    Últimas transacciones
+                    {monthLabel && <span className="cat-detail-month"> · {monthLabel}</span>}
+                </h3>
 
                 {isLoading && <p className="text-muted">Cargando transacciones…</p>}
                 {isError && (
@@ -102,7 +125,7 @@ export function CategoryDetail({ category, onClose }: Props) {
             <footer className="cat-detail-footer">
                 <Link
                     className="btn-primary cat-detail-link"
-                    to={`/transactions?categoryId=${category.id}`}
+                    to={transactionsLink}
                     onClick={onClose}
                 >
                     <ExternalLink size={15} />

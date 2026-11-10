@@ -3,8 +3,11 @@ import type { Data } from "../../shared/dataApiInterface";
 import type { Category, CategorySchemaOutput, CategorySuggestion } from "./types";
 import type { TransactionType } from "../transactions/types";
 
-export const getCategories = async (): Promise<Data<Category>> => 
-  await apiFetch<Data<Category>>("/category?limit=9999");
+export const getCategories = async (month?: string): Promise<Data<Category>> => {
+  const params = new URLSearchParams({ limit: "9999" });
+  if (month) params.set("month", month);
+  return await apiFetch<Data<Category>>(`/category?${params.toString()}`);
+};
 
 export const suggestCategory = async (name: string, type: TransactionType): Promise<{ suggestion: CategorySuggestion | null }> =>
   await apiFetch<{ suggestion: CategorySuggestion | null }>(

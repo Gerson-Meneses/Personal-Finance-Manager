@@ -6,12 +6,13 @@ import type { TransactionType } from "../transactions/types"
 import type { Data, DataError } from "../../shared/dataApiInterface";
 
 
-export const useCategories = () => {
+export const useCategories = (month?: string) => {
   const queryClient = useQueryClient();
 
   const categoriesQuery = useQuery<Data<Category>>({
-    queryKey: ["categories"],
-    queryFn: service.getCategories
+    queryKey: ["categories", month ?? "all"],
+    queryFn: () => service.getCategories(month),
+    placeholderData: (previousData) => previousData,
   });
 
   // Centralizamos la invalidación para no repetir código

@@ -1,23 +1,23 @@
 import { Context, Hono } from "hono";
 import { AppEnv } from "../types";
 import { zValidator } from "@hono/zod-validator";
-import { categorySchema, suggestQuerySchema, UpdateCategorySchema, updateCategorySchema } from "../schemas/category.schema"
+import { categoryQuerySchema, categorySchema, suggestQuerySchema, UpdateCategorySchema, updateCategorySchema } from "../schemas/category.schema"
 import { ZodError } from "zod";
 import { zodErrorResponse } from "../helpers/zodErrorResponse";
 import { createCategory, deleteCategory, getAllCategoriesByUser, getCategoryById, suggestCategoryForUser, updateCategory } from "../controllers/categoryController";
 import { uuidParamSchema, UuidSchema } from "../schemas/uuid.schema";
-import { PaginationQuerySchema, paginationQuerySchema } from "../schemas/queryPagination.schema";
+import type { CategoryQuerySchema } from "../schemas/category.schema";
 
 export const categoryRouter = new Hono<AppEnv>();
 
 
 categoryRouter.get("/",
     async (c: Context) => {
-        const parsed = paginationQuerySchema.safeParse(c.req.query());
+        const parsed = categoryQuerySchema.safeParse(c.req.query());
         if (!parsed.success) {
             return zodErrorResponse(parsed.error, c)
         }
-        const filters: PaginationQuerySchema = {
+        const filters: CategoryQuerySchema = {
             ...parsed.data,
         };
         const user = c.get('user')

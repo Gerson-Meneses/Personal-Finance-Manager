@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { TypeTransaction } from '../utils/Enums';
 import { colord } from "colord";
+import { paginationQuerySchema } from "./queryPagination.schema";
 
 const colorSchema = z.string().refine((val) => colord(val).isValid(), {
     message: "Debe ser un color válido (Hex, RGB, HSL o nombre)",
@@ -51,3 +52,13 @@ export const suggestQuerySchema = z.object({
 });
 
 export type SuggestQuerySchema = z.infer<typeof suggestQuerySchema>;
+
+/** Listado de categorías con métricas de uso. `month` = YYYY-MM. */
+export const categoryQuerySchema = paginationQuerySchema.extend({
+    month: z
+        .string()
+        .regex(/^\d{4}-(0[1-9]|1[0-2])$/, { message: "El mes debe tener formato YYYY-MM" })
+        .optional(),
+});
+
+export type CategoryQuerySchema = z.infer<typeof categoryQuerySchema>;

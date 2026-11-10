@@ -1,4 +1,7 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import "dayjs/locale/es";
 import { useCategories } from "../../../features/categories/hooks";
 import { CategoryForm } from "../../../features/categories/components/CategoryForm/CategoryForm";
 import { CategoryDetail } from "../../../features/categories/components/CategoryDetail/CategoryDetail";
@@ -12,10 +15,23 @@ import { SearchInput } from "../../../shared/components/SearchInput/SearchInput"
 import { SelectInput } from "../../../shared/components/SelectInput/SelectInput";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import InfoModal from "../../../shared/components/InfoModal/InfoModal";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, TrendingDown, TrendingUp, CalendarDays } from "lucide-react";
 import "./Categories.css";
 
+dayjs.locale("es");
+
 type SortMode = "az" | "za" | "usage";
+
+const MONTH_OPTIONS = [
+    { value: "", label: "Todo el tiempo" },
+    ...Array.from({ length: 12 }, (_, index) => {
+        const month = dayjs().subtract(index, "month");
+        return {
+            value: month.format("YYYY-MM"),
+            label: month.format("MMMM YYYY"),
+        };
+    }),
+];
 
 /* ------------------------------------------------------------------ */
 /*  Fila de categoría                                                   */
@@ -112,6 +128,9 @@ function CategoryRow({ cat, share, showType, deletePending, onOpen, onEdit, onDe
 /*  Página                                                              */
 /* ------------------------------------------------------------------ */
 export default function CategoriesPage() {
+    const [month, setMonth] = useState(() => dayjs().format("YYYY-MM"));
+    const navigate = useNavigate();
+
     const {
         categories,
         loading,
@@ -121,7 +140,7 @@ export default function CategoriesPage() {
         createCategory,
         updateCategory,
         deleteCategory,
-    } = useCategories();
+    } = useCategories(month || undefined);
 
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState<SortMode>("az");
@@ -131,6 +150,31 @@ export default function CategoriesPage() {
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
     const toast = useToast();
+
+    const summary = useMemo(() => {
+        const expenses = categories.filter((cat) => cat.type === "EXPENSE");
+        const incomes = categories.filter((cat) => cat.type === "INCOME");
+        return {
+            expenseTotal: expenses.reduce((sum, cat) => sum + (cat.totalAmount ?? 0), 0),
+            incomeTotal: incomes.reduce((sum, cat) => sum + (cat.totalAmount ?? 0), 0),
+            activeCount: categories.filter((cat) => (cat.transactionCount ?? 0) > 0).length,
+        };
+    }, [categories]);
+
+    const monthLabel = month ? dayjs(`${month}-01`).format("MMMM YYYY") : "todo el tiempo";
+    const expenseLabel = month ? `Gastos de ${monthLabel}` : "Gastos totales";
+    const incomeLabel = month ? `Ingresos de ${monthLabel}` : "Ingresos totales";
+    const monthFrom = month ? `${month}-01` : "";
+    const monthTo = month ? dayjs(`${month}-01`).endOf("month").format("YYYY-MM-DD") : "";
+
+    const openTransactions = (type: "EXPENSE" | "INCOME") => {
+        const params = new URLSearchParams({ type });
+        if (monthFrom) {
+            params.set("from", monthFrom);
+            params.set("to", monthTo);
+        }
+        navigate(`/transactions?${params.toString()}`);
+    };
 
     const visible = useMemo(() => {
         const q = normalizeText(search);
@@ -225,6 +269,15 @@ export default function CategoriesPage() {
                     <SearchInput value={search} onChange={setSearch} placeholder="Buscar categoría..." />
                     <SelectInput
                         compact
+                        label="Filtrar por mes"
+                        hideLabel
+                        value={month}
+                        onChange={setMonth}
+                        options={MONTH_OPTIONS}
+                        className="cat-sort-select cat-month-select"
+                    />
+                    <SelectInput
+                        compact
                         label="Ordenar categorías"
                         hideLabel
                         value={sort}
@@ -249,6 +302,40 @@ export default function CategoriesPage() {
                     </button>
                 </div>
             </header>
+
+            <section className="cat-summary">
+                <button
+                    type="button"
+                    className="cat-summary-card cat-summary-card--expense cat-summary-card--link"
+                    onClick={() => openTransactions("EXPENSE")}
+                >
+                    <span className="cat-summary-icon"><TrendingDown size={17} /></span>
+                    <div>
+                        <span className="cat-summary-label">{expenseLabel}</span>
+                        <strong className="amount-font">{formatCurrency(summary.expenseTotal)}</strong>
+                    </div>
+                </button>
+
+                <button
+                    type="button"
+                    className="cat-summary-card cat-summary-card--income cat-summary-card--link"
+                    onClick={() => openTransactions("INCOME")}
+                >
+                    <span className="cat-summary-icon"><TrendingUp size={17} /></span>
+                    <div>
+                        <span className="cat-summary-label">{incomeLabel}</span>
+                        <strong className="amount-font">{formatCurrency(summary.incomeTotal)}</strong>
+                    </div>
+                </button>
+
+                <article className="cat-summary-card cat-summary-card--active">
+                    <span className="cat-summary-icon"><CalendarDays size={17} /></span>
+                    <div>
+                        <span className="cat-summary-label">Categorías con movimientos</span>
+                        <strong className="amount-font">{summary.activeCount}</strong>
+                    </div>
+                </article>
+            </section>
 
             {deleteError && (
                 <div className="cat-error-banner" role="alert">
@@ -335,7 +422,13 @@ export default function CategoriesPage() {
 
             {/* ── Modal: detalle de uso ────────────────────────────────── */}
             <ModalPortal isOpen={!!detail} onClose={() => setDetail(null)}>
-                {detail && <CategoryDetail category={detail} onClose={() => setDetail(null)} />}
+                {detail && (
+                    <CategoryDetail
+                        category={detail}
+                        month={month || undefined}
+                        onClose={() => setDetail(null)}
+                    />
+                )}
             </ModalPortal>
 
             {/* ── Confirmación de borrado ──────────────────────────────── */}
