@@ -12,6 +12,9 @@ import { Transaction } from '../entities/Transaction.entity'
 import { User } from '../entities/User.entity'
 import { LoanPayment } from '../entities/LoanPayment.entity'
 import { Codes } from '../entities/Codes.entity'
+import { RecurringPayment } from '../entities/RecurringPayment.entity'
+import { RecurringPaymentOccurrence } from '../entities/RecurringPaymentOccurrence.entity'
+import { PaymentNotification } from '../entities/PaymentNotification.entity'
 
 const entities = [
     Account,
@@ -24,6 +27,9 @@ const entities = [
     Transaction,
     User,
     Codes,
+    RecurringPayment,
+    RecurringPaymentOccurrence,
+    PaymentNotification,
 ]
 
 // En desarrollo (bun desde src) carga *.ts; en producción (dist) carga *.js

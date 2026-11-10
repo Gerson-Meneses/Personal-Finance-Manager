@@ -8,6 +8,7 @@ import { DashboardQuerySchema } from "../schemas/dashboardQuerySchema"
 import { money } from "../utils/normalizarMoney"
 import { getMaxBalance } from "../utils/getBalanceToCreditCard"
 import { StatusLoan, TypeTransaction } from "../utils/Enums"
+import { RecurringPaymentService } from "./recurringPaymentService"
 
 
 
@@ -47,6 +48,16 @@ export interface DashboardResponse {
         transactions: Transaction[]
     }
 
+    recurring: {
+        month: string
+        expectedIncome: number
+        expectedExpense: number
+        projectedNet: number
+        paidExpense: number
+        pendingExpense: number
+        dueCount: number
+    }
+
 }
 
 export class DashboardService {
@@ -54,6 +65,7 @@ export class DashboardService {
     private accountRepo = AppDataSourceProd.getRepository(Account)
     private transactionRepo = AppDataSourceProd.getRepository(Transaction)
     private loanRepo = AppDataSourceProd.getRepository(Loan)
+    private recurringService = new RecurringPaymentService()
 
     async getDashboard(userId: string, queryData: DashboardQuerySchema): Promise<DashboardResponse> {
 
@@ -65,6 +77,7 @@ export class DashboardService {
 
         const startOfMonth = new Date(year, month - 1, 1)
         const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999)
+        const monthKey = `${year}-${String(month).padStart(2, "0")}`
 
         /* -------------------------------- */
         /* QUERIES (todas independientes -> en paralelo) */
@@ -110,7 +123,7 @@ export class DashboardService {
             take: recentsTransactions ?? 5
         })
 
-        const [accounts, loans, incomeExpenseRaw, rawCategories, recentTransactions] = await Promise.all([
+        const [accounts, loans, incomeExpenseRaw, rawCategories, recentTransactions, recurringProjection] = await Promise.all([
             this.accountRepo.find({
                 where: { user: { id: userId } }
             }),
@@ -120,7 +133,8 @@ export class DashboardService {
             }),
             incomeExpensePromise,
             categoriesPromise,
-            recentPromise
+            recentPromise,
+            this.recurringService.getMonthProjection(userId, monthKey)
         ])
 
         /* -------------------------------- */
@@ -234,6 +248,16 @@ export class DashboardService {
 
             recentActivity: {
                 transactions: recentTransactions
+            },
+
+            recurring: {
+                month: recurringProjection.month,
+                expectedIncome: recurringProjection.expectedIncome,
+                expectedExpense: recurringProjection.expectedExpense,
+                projectedNet: recurringProjection.projectedNet,
+                paidExpense: recurringProjection.paidExpense,
+                pendingExpense: recurringProjection.pendingExpense,
+                dueCount: recurringProjection.dueCount
             }
 
         }

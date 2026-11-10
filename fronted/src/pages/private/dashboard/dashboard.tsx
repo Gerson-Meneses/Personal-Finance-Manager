@@ -11,6 +11,7 @@ import RecentTransactions from "../../../features/dashboard/components/recentTra
 import ExpensesByCategory from "../../../features/dashboard/components/expensesByCategory";
 import QuickStats from "../../../features/dashboard/components/quickStats";
 import LoanStats from "../../../features/dashboard/components/LoanStats/LoanStats";
+import { RecurringForecastCard } from "../../../features/recurring/components/RecurringForecastCard";
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "../../../features/transactions/components/TransactionForm/TransactionForm";
@@ -98,6 +99,7 @@ export default function DashboardPage() {
             <section className="grid-auto-tall">
                 <AccountsList accounts={accounts} />
                 <div className="dash-side">
+                    <RecurringForecastCard />
                     <LoanStats loans={loans} />
                     <ExpensesByCategory
                         expenses={expensesByCategory}

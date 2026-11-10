@@ -17,6 +17,7 @@ import "./App.css"
 import { LoansByLender } from "./pages/private/loans/LoansByLender/LoansByLender";
 import ProfilePage from "./pages/private/profile/profilePage";
 import AdminPanelPage from "./pages/private/admin/adminPanelPage";
+import RecurringPaymentsPage from "./pages/private/recurring/RecurringPaymentsPage";
 
 
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/categories" element={< CategoriesPage />} ></Route>
         <Route path="/loans" element={< LoansPage />} ></Route>
         <Route path="/loans/:lender" element={< LoansByLender />} ></Route>
+        <Route path="/recurring" element={< RecurringPaymentsPage />} ></Route>
         <Route path="/transactions" element={< TransactionsPage />} ></Route>
         <Route path="/perfil" element={< ProfilePage />} ></Route>
         <Route path="/admin" element={< AdminPanelPage />} ></Route>

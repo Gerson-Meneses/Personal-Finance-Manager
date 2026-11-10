@@ -8,6 +8,8 @@ import { userRouter } from './userRouter'
 import { authMiddleware } from '../middlewares/authMiddleware'
 import { loanRouter } from './loansRouter'
 import { dashboardRouter } from './dashboardRouter'
+import { recurringPaymentRouter } from './recurringPaymentRouter'
+import { notificationRouter } from './recurringNotificationRouter'
 
 const router = new Hono()
 
@@ -21,5 +23,7 @@ router.route('/transaction', transactionRouter)
 router.route('/credit-card', creditCardRouter)
 router.route('/loan', loanRouter)
 router.route('/dashboard', dashboardRouter)
+router.route('/recurring-payments', recurringPaymentRouter)
+router.route('/notifications', notificationRouter)
 
 export default router

@@ -11,3 +11,24 @@ export enum TypeCode {
     CHANGE_PASSWORD = "CHANGE_PASSWORD",
     DELETE_ACCOUNT = "DELETE_ACCOUNT"
 }
+
+/** Periodicidad de un pago/gasto previsto */
+export enum RecurrenceFrequency {
+    MONTHLY = "MONTHLY",
+    WEEKLY = "WEEKLY",
+    BIWEEKLY = "BIWEEKLY",
+    YEARLY = "YEARLY"
+}
+
+export enum RecurringEntryType {
+    EXPENSE = "EXPENSE",
+    INCOME = "INCOME"
+}
+
+export enum RecurringOccurrenceStatus {
+    PENDING = "PENDING",
+    DUE = "DUE",
+    PAID = "PAID",
+    SKIPPED = "SKIPPED",
+    FAILED = "FAILED"
+}

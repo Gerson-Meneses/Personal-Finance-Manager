@@ -2,7 +2,7 @@ import { useAuthContext } from "../../features/auth/authContext";
 import { useLogout } from "../../features/auth/useLogout";
 import { matchPath, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { ArrowLeft, ArrowLeftRight, HandCoins, Home, Menu, Plus, ShieldCheck, Tags, Wallet, X } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, CalendarClock, HandCoins, Home, Menu, Plus, ShieldCheck, Tags, Wallet, X } from "lucide-react";
 import ModalPortal from "../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "../../features/transactions/components/TransactionForm/TransactionForm";
 import { AddAnotherTransactionPrompt } from "../../features/transactions/components/AddAnotherTransactionPrompt";
@@ -67,6 +67,10 @@ export function PrivateLayout() {
           <NavLink to="/loans" className="header-nav-link">
             <HandCoins size={17} />
             <span>Préstamos</span>
+          </NavLink>
+          <NavLink to="/recurring" className="header-nav-link">
+            <CalendarClock size={17} />
+            <span>Previstos</span>
           </NavLink>
           <NavLink to="/categories" className="header-nav-link">
             <Tags size={17} />
@@ -141,6 +145,10 @@ export function PrivateLayout() {
             <NavLink to="/loans" className="header-mobile-link" onClick={() => setMenuOpen(false)}>
               <HandCoins size={18} />
               <span>Préstamos</span>
+            </NavLink>
+            <NavLink to="/recurring" className="header-mobile-link" onClick={() => setMenuOpen(false)}>
+              <CalendarClock size={18} />
+              <span>Pagos previstos</span>
             </NavLink>
             <NavLink to="/categories" className="header-mobile-link" onClick={() => setMenuOpen(false)}>
               <Tags size={18} />
