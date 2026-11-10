@@ -212,12 +212,31 @@
         padding: 16px;
     }
 
+    .loan-stat {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .loan-stat__icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+    }
+
+    .loan-stat strong {
+        font-size: 0.82rem;
+    }
+
+    .loan-stat__label {
+        font-size: 0.65rem;
+    }
+
     .loans-header .btn-primary {
         width: 100%;
     }
 
     .loans-stats {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .loans-grid {
@@ -239,5 +258,12 @@
     .loans-chip {
         flex: 1;
         text-align: center;
+    }
+}
+
+
+@media (max-width: 340px) {
+    .loans-stats {
+        grid-template-columns: minmax(0, 1fr);
     }
 }

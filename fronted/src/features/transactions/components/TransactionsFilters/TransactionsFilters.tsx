@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import dayjs from "dayjs";
+import "dayjs/locale/es";
 import { useCategories } from "../../../categories/hooks";
 import { useAccounts } from "../../../accounts/hooks";
 import { FilterWrapper, type FilterBadgeItem } from "../../../../shared/components/FilterWrapper/FilterWrapper";
@@ -22,7 +23,9 @@ interface Props {
 
 type DateMode = "range" | "exact";
 type AmountMode = "range" | "exact";
-type Period = "all" | "today" | "7d" | "month" | "lastMonth";
+type Period = "all" | "today" | "7d" | "lastWeek" | "month" | "lastMonth";
+
+dayjs.locale("es");
 
 const TYPE_OPTIONS: { value: TransactionQuerySchemaOutput["type"]; label: string }[] = [
     { value: undefined, label: "Todos" },
@@ -44,6 +47,7 @@ const PERIOD_OPTIONS: { value: Period; label: string }[] = [
     { value: "all", label: "Todo" },
     { value: "today", label: "Hoy" },
     { value: "7d", label: "7 días" },
+    { value: "lastWeek", label: "Semana pasada" },
     { value: "month", label: "Este mes" },
     { value: "lastMonth", label: "Mes anterior" },
 ];
@@ -87,6 +91,13 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
         if (!from && !to) return "all";
         if (from === today && to === today) return "today";
         if (from === dayjs().subtract(6, "day").format("YYYY-MM-DD") && to === today) return "7d";
+
+        const lastWeek = dayjs().subtract(1, "week");
+        if (
+            from === lastWeek.startOf("week").format("YYYY-MM-DD") &&
+            to === lastWeek.endOf("week").format("YYYY-MM-DD")
+        ) return "lastWeek";
+
         if (from === dayjs().startOf("month").format("YYYY-MM-DD") && to === today) return "month";
         if (
             from === dayjs().subtract(1, "month").startOf("month").format("YYYY-MM-DD") &&
@@ -94,6 +105,83 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
         ) return "lastMonth";
         return "all";
     }, [query.from, query.to]);
+
+    const monthOptions = useMemo(
+        () => Array.from({ length: 12 }, (_, index) => {
+            const month = dayjs().subtract(index, "month");
+            return {
+                value: month.format("YYYY-MM"),
+                label: month.format("MMMM YYYY"),
+            };
+        }),
+        []
+    );
+
+    const weekOptions = useMemo(
+        () => Array.from({ length: 8 }, (_, index) => {
+            const week = dayjs().subtract(index, "week");
+            const start = week.startOf("week");
+            const end = week.endOf("week");
+            return {
+                value: start.format("YYYY-MM-DD"),
+                label: `Semana ${start.format("D MMM")} - ${end.format("D MMM")}`,
+            };
+        }),
+        []
+    );
+
+    const selectedMonth = useMemo(() => {
+        if (!query.from || !query.to) return "";
+        const from = dayjs(query.from);
+        const to = dayjs(query.to);
+        const isFullMonth =
+            from.isSame(from.startOf("month"), "day") &&
+            to.isSame(to.endOf("month"), "day");
+        const isCurrentMonthToToday =
+            from.isSame(from.startOf("month"), "day") &&
+            to.isSame(dayjs().startOf("day"), "day");
+        return isFullMonth || isCurrentMonthToToday ? from.format("YYYY-MM") : "";
+    }, [query.from, query.to]);
+
+    const selectedWeek = useMemo(() => {
+        if (!query.from || !query.to) return "";
+        const from = dayjs(query.from);
+        const to = dayjs(query.to);
+        return from.isSame(from.startOf("week"), "day") &&
+            to.isSame(to.endOf("week"), "day")
+            ? from.format("YYYY-MM-DD")
+            : "";
+    }, [query.from, query.to]);
+
+    const applyMonth = (value: string) => {
+        if (!value) {
+            onChange({ ...query, from: undefined, to: undefined, date: undefined, page: 1 });
+            return;
+        }
+        const month = dayjs(`${value}-01`);
+        onChange({
+            ...query,
+            date: undefined,
+            from: month.startOf("month").format("YYYY-MM-DD"),
+            to: month.endOf("month").format("YYYY-MM-DD"),
+            page: 1,
+        });
+    };
+
+    const applyWeek = (value: string) => {
+        if (!value) {
+            onChange({ ...query, from: undefined, to: undefined, date: undefined, page: 1 });
+            return;
+        }
+        const week = dayjs(value);
+        onChange({
+            ...query,
+            date: undefined,
+            from: week.startOf("week").format("YYYY-MM-DD"),
+            to: week.endOf("week").format("YYYY-MM-DD"),
+            page: 1,
+        });
+    };
 
     const applyPeriod = (value: Period) => {
         const today = dayjs();
@@ -108,6 +196,10 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
         } else if (value === "7d") {
             next.from = today.subtract(6, "day").format("YYYY-MM-DD");
             next.to = today.format("YYYY-MM-DD");
+        } else if (value === "lastWeek") {
+            const lastWeek = today.subtract(1, "week");
+            next.from = lastWeek.startOf("week").format("YYYY-MM-DD");
+            next.to = lastWeek.endOf("week").format("YYYY-MM-DD");
         } else if (value === "month") {
             next.from = today.startOf("month").format("YYYY-MM-DD");
             next.to = today.format("YYYY-MM-DD");
@@ -170,7 +262,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
     };
 
     return (
-        <FilterWrapper
+        <FilterWrapper<TransactionQuerySchemaOutput>
             isOpen={open}
             onToggleOpen={() => setOpen((p) => !p)}
             activeCount={activeCount}
@@ -217,6 +309,29 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                             </button>
                         ))}
                     </div>
+
+                    <div className="tf-period-selectors">
+                        <SelectInput
+                            compact
+                            label="Mes específico"
+                            hideLabel
+                            value={selectedMonth}
+                            onChange={applyMonth}
+                            placeholder="Mes específico"
+                            options={monthOptions}
+                            className="tf-field-select"
+                        />
+                        <SelectInput
+                            compact
+                            label="Semana específica"
+                            hideLabel
+                            value={selectedWeek}
+                            onChange={applyWeek}
+                            placeholder="Semana específica"
+                            options={weekOptions}
+                            className="tf-field-select"
+                        />
+                    </div>
                 </div>
 
                 <div className="tf-divider" />
@@ -241,7 +356,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                 <div className="tf-divider" />
 
                 {/* ================= FECHA Y MONTO ================= */}
-                <div className="grid-auto-tall">
+                <div className="grid-auto-tall tf-fields-grid">
                     <RangeExactGroup
                         label="Fecha"
                         icon="calendar"

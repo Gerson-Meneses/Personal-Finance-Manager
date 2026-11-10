@@ -46,7 +46,7 @@ export const SelectAccount = ({
     placeholder = "Seleccionar cuenta",
     label = "Cuenta",
     icon = "Wallet",
-    allowCreate = true,
+    allowCreate = false,
     defaultStyle = true,
     error,
     required,

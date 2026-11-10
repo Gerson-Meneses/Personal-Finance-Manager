@@ -74,6 +74,11 @@ export const SelectOrInputText = ({
                 id={inputId}
                 name={name}
                 placeholder="Selecciona una opción"
+                searchable
+                onCreateQuery={(query) => {
+                    setIsCustomMode(true);
+                    onChange(query);
+                }}
                 options={[
                     ...options.map((opt) => ({
                         value: opt,

@@ -23,7 +23,7 @@ interface FilterWrapperProps<T> {
     onRemoveFilter?: (key: keyof T) => void;
 }
 
-export const FilterWrapper = <T extends Record<string, any>>({
+export const FilterWrapper = <T extends object>({
     children,
     searchElement,
     orderElement,
@@ -42,13 +42,13 @@ export const FilterWrapper = <T extends Record<string, any>>({
             <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex-1 w-full">{searchElement}</div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto justify-end cursor-pointer">
-                    {orderElement && <div>{orderElement}</div>}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto sm:justify-end">
+                    {orderElement && <div className="w-full sm:w-auto">{orderElement}</div>}
 
                     <button
                         type="button"
                         onClick={onToggleOpen}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border cursor-pointer
+                        className={`flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-colors border cursor-pointer
               ${isOpen
                                 ? "bg-indigo-600 border-indigo-500 text-white"
                                 : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-indigo-900 hover:text-white"
@@ -67,7 +67,7 @@ export const FilterWrapper = <T extends Record<string, any>>({
                         <button
                             type="button"
                             onClick={onReset}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors cursor-pointer"
+                            className="flex items-center justify-center gap-1.5 w-full sm:w-auto px-3 py-2 rounded-lg text-sm font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors cursor-pointer"
                         >
                             <RotateCcw size={14} />
                             <span>Limpiar</span>
@@ -96,7 +96,7 @@ export const FilterWrapper = <T extends Record<string, any>>({
                             {onRemoveFilter && (
                                 <button
                                     type="button"
-                                    onClick={() => onRemoveFilter(filter.key)}
+                                    onClick={() => onRemoveFilter(filter.key as keyof T)}
                                     className="relative tooltip-left p-0.5 rounded-full text-slate-400 hover:bg-slate-700 hover:text-red-400 transition-colors cursor-pointer"
                                     aria-label={`Quitar filtro: ${filter.name ?? filter.key}: ${filter.label}`}
                                     data-tooltip={`Quitar filtro: ${filter.name ?? filter.key}: ${filter.label}`}

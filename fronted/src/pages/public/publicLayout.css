@@ -1,4 +1,4 @@
-﻿/* â”€â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Layout ─────────────────────────────────────────── */
 .container {
     display: flex;
     flex-direction: column;
@@ -27,7 +27,7 @@
     align-self: center;
 }
 
-/* â”€â”€â”€ Marca â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Marca ──────────────────────────────────────────── */
 .public-brand {
     display: flex;
     align-items: center;
@@ -65,7 +65,7 @@
     font-size: 0.78rem;
 }
 
-/* â”€â”€â”€ Card del form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Card del form ───────────────────────────────────── */
 form.form-default-container.login-form {
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 2rem 1.75rem;
@@ -79,7 +79,7 @@ form.form-default-container.login-form {
     gap: 0;
 }
 
-/* â”€â”€â”€ TÃ­tulo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Título ──────────────────────────────────────────── */
 .login-form h1 {
     font-size: 1.5rem;
     font-weight: 500;
@@ -89,7 +89,7 @@ form.form-default-container.login-form {
     letter-spacing: -.01em;
 }
 
-/* â”€â”€â”€ Section divider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Section divider ─────────────────────────────────── */
 .form-section-divider {
     height: 0.5px;
     background: #6580a6;
@@ -104,7 +104,7 @@ form.form-default-container.login-form {
     margin-bottom: 0.6rem;
 }
 
-/* â”€â”€â”€ Rows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Rows ────────────────────────────────────────────── */
 form.login-form .form-default-row {
     /* Una columna que ocupa todo el ancho: los inputs nunca se salen */
     display: grid;
@@ -123,7 +123,7 @@ form.login-form .register-row-2 {
     position: relative;
 }
 
-/* â”€â”€â”€ Inputs base (aplica a todos los inputs del form pÃºblico) â”€â”€ */
+/* ─── Inputs base (aplica a todos los inputs del form público) ── */
 .login-form input[type="text"],
 .login-form input[type="email"],
 .login-form input[type="tel"],
@@ -153,7 +153,7 @@ form.login-form .register-row-2 {
     background: rgba(56, 189, 248, 0.05);
 }
 
-/* â”€â”€â”€ Fix autofill Chrome/Edge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Fix autofill Chrome/Edge ────────────────────────── */
 .login-form input:-webkit-autofill,
 .login-form input:-webkit-autofill:hover,
 .login-form input:-webkit-autofill:focus {
@@ -164,7 +164,7 @@ form.login-form .register-row-2 {
     border-color: #38bdf8 !important;
 }
 
-/* â”€â”€â”€ Selects (fecha de nacimiento) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Selects (fecha de nacimiento) ───────────────────── */
 .login-form select {
     flex: 1;
     background: rgba(255, 255, 255, 0.03);
@@ -196,7 +196,7 @@ form.login-form .register-row-2 {
     background: #0b0d12;
 }
 
-/* â”€â”€â”€ BotÃ³n submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Botón submit ────────────────────────────────────── */
 .button-login {
     width: 100%;
     padding: 0.65rem;
@@ -221,7 +221,7 @@ form.login-form .register-row-2 {
     cursor: not-allowed;
 }
 
-/* â”€â”€â”€ Link de navegaciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Link de navegación ──────────────────────────────── */
 .button-message {
     text-align: center;
     font-size: 0.8rem;
@@ -239,7 +239,7 @@ form.login-form .register-row-2 {
     color: #38bdf8;
 }
 
-/* â”€â”€â”€ Error banner (error general sin details) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Error banner (error general sin details) ────────── */
 .error-banner {
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.3);
@@ -253,7 +253,7 @@ form.login-form .register-row-2 {
 
 /* Codes */
 
-/* â”€â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Layout ─────────────────────────────────────────── */
 .auth-page-container {
     display: flex;
     align-items: center;
@@ -261,7 +261,7 @@ form.login-form .register-row-2 {
     padding: 20px;
 }
 
-/* â”€â”€â”€ Card â€” mismo sistema que login-form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Card — mismo sistema que login-form ─────────────── */
 .auth-card {
     background: #0b0d12;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -275,7 +275,7 @@ form.login-form .register-row-2 {
     gap: 1rem;
 }
 
-/* â”€â”€â”€ Ãcono superior â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Ícono superior ──────────────────────────────────── */
 .auth-icon-wrap {
     width: 52px;
     height: 52px;
@@ -293,7 +293,7 @@ form.login-form .register-row-2 {
     border-color: rgba(34, 197, 94, 0.15);
 }
 
-/* â”€â”€â”€ TipografÃ­a â€” consistente con register â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Tipografía — consistente con register ───────────── */
 .auth-title {
     font-size: 1.4rem;
     font-weight: 500;       /* igual que el h1 del register */
@@ -316,7 +316,7 @@ form.login-form .register-row-2 {
     font-weight: 500;
 }
 
-/* â”€â”€â”€ Inputs full width dentro de auth-card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Inputs full width dentro de auth-card ───────────── */
 .auth-card .form-default-row {
     width: 100%;
 }
@@ -354,7 +354,7 @@ form.login-form .register-row-2 {
     background: rgba(56, 189, 248, 0.05);
 }
 
-/* â”€â”€â”€ Fix autofill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Fix autofill ────────────────────────────────────── */
 .auth-card input:-webkit-autofill,
 .auth-card input:-webkit-autofill:hover,
 .auth-card input:-webkit-autofill:focus {
@@ -365,7 +365,7 @@ form.login-form .register-row-2 {
     border-color: #38bdf8 !important;
 }
 
-/* â”€â”€â”€ OTP inputs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── OTP inputs ──────────────────────────────────────── */
 .otp-inputs {
     display: flex;
     gap: 10px;
@@ -413,7 +413,7 @@ form.login-form .register-row-2 {
     -webkit-box-shadow: 0 0 0px 1000px #0b0d12 inset !important;
 }
 
-/* â”€â”€â”€ BotÃ³n â€” igual que .button-login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Botón — igual que .button-login ────────────────── */
 .auth-card .button-login {
     width: 100%;
     padding: 0.65rem;
@@ -439,7 +439,7 @@ form.login-form .register-row-2 {
     transform: none;
 }
 
-/* â”€â”€â”€ Link de navegaciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Link de navegación ──────────────────────────────── */
 .auth-card .button-message {
     font-size: 0.78rem;
     color: #475569;
@@ -452,7 +452,7 @@ form.login-form .register-row-2 {
 .auth-card .button-message:hover { color: #38bdf8; }
 .auth-card .button-message span  { color: #38bdf8; }
 
-/* â”€â”€â”€ Banners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Banners ─────────────────────────────────────────── */
 .success-banner {
     width: 100%;
     background: rgba(34, 197, 94, 0.08);
@@ -464,7 +464,7 @@ form.login-form .register-row-2 {
     text-align: center;
 }
 
-/* â”€â”€â”€ Reglas de contraseÃ±a â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Reglas de contraseña ────────────────────────────── */
 .password-rules {
     list-style: none;
     padding: 0;
@@ -497,7 +497,7 @@ form.login-form .register-row-2 {
     transition: background 0.2s;
 }
 
-/* â”€â”€â”€ Divider sutil entre secciones del form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Divider sutil entre secciones del form ──────────── */
 .auth-divider {
     width: 100%;
     height: 0.5px;
@@ -505,7 +505,7 @@ form.login-form .register-row-2 {
     margin: 0.25rem 0;
 }
 
-/* â”€â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Responsive ──────────────────────────────────────── */
 @media (max-width: 480px) {
     form.form-default-container.login-form {
         padding: 1.5rem 1.15rem;

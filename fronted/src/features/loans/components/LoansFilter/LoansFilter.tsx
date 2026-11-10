@@ -78,7 +78,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
     }
 
     return (
-        <FilterWrapper
+        <FilterWrapper<LoanQueryFilters>
             isOpen={open}
             onToggleOpen={() => setOpen((p) => !p)}
 

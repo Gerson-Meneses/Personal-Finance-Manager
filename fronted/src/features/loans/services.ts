@@ -10,14 +10,23 @@ import type {
     CreateLoanOutput,
 } from "./types"
 
+const toSearchParams = (query?: object) => {
+    if (!query) return "";
+    const params = new URLSearchParams();
+    Object.entries(query).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+            params.set(key, String(value));
+        }
+    });
+    return `?${params.toString()}`;
+};
+
 export const getLoans = async (query?: LoanQueryFilters): Promise<Data<Loan>> => {
-    const searchParams = query ? `?${new URLSearchParams(query as any).toString()}` : "";
-    return await apiFetch<Data<Loan>>(`/loan${searchParams}`);
+    return await apiFetch<Data<Loan>>(`/loan${toSearchParams(query)}`);
 };
 
 export const getSummary = async (query?: LoanSummaryQuerySchema) => {
-    const searchParams = query ? `?${new URLSearchParams(query as any).toString()}` : "";
-    const data = await apiFetch<LoanSummaryGrouped[]>(`/loan/summary${searchParams}`)
+    const data = await apiFetch<LoanSummaryGrouped[]>(`/loan/summary${toSearchParams(query)}`)
     return data
 }
 
@@ -33,8 +42,8 @@ export const getByLender = async (lender: string, type?: string) => {
 export const createLoan = async (
     body: CreateLoanOutput
 ): Promise<Loan> => {
-    const data = await apiFetch<Loan>("/loan", { method: "POST", body: JSON.stringify(body) })
-    return data
+    const data = await apiFetch<{ loan: Loan }>("/loan", { method: "POST", body: JSON.stringify(body) })
+    return data.loan
 }
 
 export const createLoanPayment = async (

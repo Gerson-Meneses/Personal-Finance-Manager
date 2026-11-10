@@ -84,11 +84,11 @@ export const LoansByLender = () => {
                         {getInitials(lender)}
                     </span>
                     <div className="lender-hero__text">
-                        <span className="lender-hero__eyebrow">PrÃ©stamos con</span>
+                        <span className="lender-hero__eyebrow">Préstamos con</span>
                         <h1>{lender}</h1>
                         <p className="text-muted">
-                            {activeLoans} prÃ©stamo{activeLoans !== 1 ? "s" : ""} activo{activeLoans !== 1 ? "s" : ""}
-                            {" Â· "}
+                            {activeLoans} préstamo{activeLoans !== 1 ? "s" : ""} activo{activeLoans !== 1 ? "s" : ""}
+                            {" · "}
                             {formatCurrency(totalAmount)} prestado en total
                         </p>
                     </div>
@@ -102,11 +102,11 @@ export const LoansByLender = () => {
                 <div className="lender-hero__actions">
                     <button className="btn-primary" onClick={() => setShowModal(true)}>
                         <Wallet size={17} />
-                        Pago rÃ¡pido
+                        Pago rápido
                     </button>
                     <button className="btn-secondary" onClick={() => setShowModal2(true)}>
                         <Plus size={17} />
-                        Nuevo prÃ©stamo
+                        Nuevo préstamo
                     </button>
                 </div>
             </header>
@@ -117,7 +117,7 @@ export const LoansByLender = () => {
                     <div>
                         <span className="lender-stat__label">Me deben</span>
                         <strong className="amount-font">{formatCurrency(givenRemaining)}</strong>
-                        <small>{given?.loanCount ?? 0} prÃ©stamo{given?.loanCount !== 1 ? "s" : ""}</small>
+                        <small>{given?.loanCount ?? 0} préstamo{given?.loanCount !== 1 ? "s" : ""}</small>
                     </div>
                 </article>
 
@@ -126,7 +126,7 @@ export const LoansByLender = () => {
                     <div>
                         <span className="lender-stat__label">Yo debo</span>
                         <strong className="amount-font">{formatCurrency(receivedRemaining)}</strong>
-                        <small>{received?.loanCount ?? 0} prÃ©stamo{received?.loanCount !== 1 ? "s" : ""}</small>
+                        <small>{received?.loanCount ?? 0} préstamo{received?.loanCount !== 1 ? "s" : ""}</small>
                     </div>
                 </article>
 
@@ -156,7 +156,7 @@ export const LoansByLender = () => {
                     icon=""
                     label=""
                     leftOption={{
-                        label: `PrÃ©stamos${filteredLoans.length > 0 ? ` (${filteredLoans.length})` : ""}`,
+                        label: `Préstamos${filteredLoans.length > 0 ? ` (${filteredLoans.length})` : ""}`,
                         value: "loans",
                         icon: "HandCoins",
                         color: "#8b5cf6"
@@ -174,7 +174,7 @@ export const LoansByLender = () => {
                 <div className="card lender-loans-list">
                     {filteredLoans.length === 0 ? (
                         <p className="lender-loans-list__empty">
-                            No se encontraron prÃ©stamos con los filtros actuales.
+                            No se encontraron préstamos con los filtros actuales.
                         </p>
                     ) : (
                         filteredLoans.map((loan) => (
@@ -197,17 +197,17 @@ export const LoansByLender = () => {
                         disabled={!filters.page || Number(filters.page) <= 1}
                         onClick={() => handlePageChange((Number(filters.page) || 1) - 1)}
                     >
-                        â† Anterior
+                        ← Anterior
                     </button>
                     <span className="tf-page-info">
-                        PÃ¡gina {Number(filters.page) || 1}/{meta.totalPages}
+                        Página {Number(filters.page) || 1}/{meta.totalPages}
                     </span>
                     <button
                         className="btn-secondary"
                         disabled={(Number(filters.page) || 1) >= meta.totalPages}
                         onClick={() => handlePageChange((Number(filters.page) || 1) + 1)}
                     >
-                        Siguiente â†’
+                        Siguiente →
                     </button>
                 </div>
             )}

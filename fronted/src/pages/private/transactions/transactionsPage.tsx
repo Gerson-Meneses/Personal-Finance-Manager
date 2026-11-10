@@ -21,8 +21,8 @@ export function TransactionsPage() {
 
     const { search, setSearch, filtered } = useClientSearch(normalizeTransaction)
 
-    // Cuando hay bÃºsqueda activa traemos todo para filtrar client-side,
-    // ignorando la paginaciÃ³n del backend temporalmente
+    // Cuando hay búsqueda activa traemos todo para filtrar client-side,
+    // ignorando la paginación del backend temporalmente
     const queryForBackend = search
         ? { ...query, limit: 9999, page: 1 }
         : query
@@ -119,7 +119,7 @@ export function TransactionsPage() {
                     <h3>Sin transacciones</h3>
                     <p className="text-muted">
                         {search
-                            ? `No hay coincidencias para Â«${search}Â».`
+                            ? `No hay coincidencias para «${search}».`
                             : "No hay movimientos para los filtros seleccionados."}
                     </p>
                     {(search || Object.keys(query).some((key) => !["page", "limit", "order", "orderBy"].includes(key))) && (
@@ -150,7 +150,7 @@ export function TransactionsPage() {
                 </div>
             )}
 
-            {/* PaginaciÃ³n solo visible cuando no hay bÃºsqueda activa */}
+            {/* Paginación solo visible cuando no hay búsqueda activa */}
             {!search && meta?.totalPages > 1 && (
                 <div className="tf-pagination">
                     <button
@@ -158,17 +158,17 @@ export function TransactionsPage() {
                         disabled={!query.page || Number(query.page) <= 1}
                         onClick={() => handlePageChange((Number(query.page) || 1) - 1)}
                     >
-                        â† Anterior
+                        ← Anterior
                     </button>
                     <span className="tf-page-info">
-                        PÃ¡gina {Number(query.page) || 1}/{meta.totalPages}
+                        Página {Number(query.page) || 1}/{meta.totalPages}
                     </span>
                     <button
                         className="btn-secondary"
                         disabled={(Number(query.page) || 1) >= meta.totalPages}
                         onClick={() => handlePageChange((Number(query.page) || 1) + 1)}
                     >
-                        Siguiente â†’
+                        Siguiente →
                     </button>
                 </div>
             )}
