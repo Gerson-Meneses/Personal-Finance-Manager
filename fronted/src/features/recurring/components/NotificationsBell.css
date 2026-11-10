@@ -203,3 +203,15 @@
         height: 32px;
     }
 }
+
+@media (max-width: 640px) {
+    .notif-panel {
+        position: fixed;
+        top: 58px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-height: calc(100vh - 70px);
+        overflow-y: auto;
+    }
+}

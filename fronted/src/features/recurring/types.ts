@@ -92,6 +92,17 @@ export interface PaymentNotification {
     };
 }
 
+const optionalCoercedInt = (min: number, max: number) =>
+    z.preprocess(
+        (value) => (value === "" || value === null || value === undefined ? undefined : Number(value)),
+        z.number().int().min(min).max(max).optional()
+    );
+
+const optionalEndDate = z.preprocess(
+    (value) => (value === "" || value === null ? undefined : value),
+    z.string().optional()
+);
+
 export const RecurringPaymentFormSchema = z
     .object({
         name: z.string().trim().min(3, "El nombre debe tener al menos 3 caracteres").max(100),
@@ -100,10 +111,10 @@ export const RecurringPaymentFormSchema = z
         amount: z.coerce.number().positive("El monto debe ser mayor a 0"),
         frequency: z.enum(RecurrenceFrequencyValues),
         intervalCount: z.coerce.number().int().positive("Debe ser mayor a 0"),
-        dayOfMonth: z.coerce.number().int().min(1).max(31).optional(),
-        dayOfWeek: z.coerce.number().int().min(0).max(6).optional(),
+        dayOfMonth: optionalCoercedInt(1, 31),
+        dayOfWeek: optionalCoercedInt(0, 6),
         startDate: z.string().min(1, "La fecha de inicio es requerida"),
-        endDate: z.string().optional(),
+        endDate: optionalEndDate,
         autoDebit: z.boolean(),
         accountId: z.string().uuid("Selecciona una cuenta"),
         categoryId: z.string().uuid("Selecciona una categoría"),

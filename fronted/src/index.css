@@ -214,9 +214,9 @@ option { background-color: #0b0d12; cursor: pointer; }
     opacity: 1;
     visibility: visible;
     transition:
-        opacity 0.12s ease 0.25s,
-        transform 0.12s ease 0.25s,
-        visibility 0s linear 0.25s;
+        opacity 0.12s ease 0.45s,
+        transform 0.12s ease 0.45s,
+        visibility 0s linear 0.45s;
 }
 
 [data-tooltip]:focus-visible::before {
@@ -230,7 +230,7 @@ option { background-color: #0b0d12; cursor: pointer; }
     display: block;
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.12s ease 0.25s, visibility 0s linear 0.25s;
+    transition: opacity 0.12s ease 0.45s, visibility 0s linear 0.45s;
 }
 
 /* Solo punteros con hover real (evita que se quede pegado tras tocar en m√≥vil) */
@@ -305,3 +305,12 @@ option { background-color: #0b0d12; cursor: pointer; }
     color: #f65353;
 }
 
+
+/* En pantallas t·ctiles solo se muestra el tooltip manteniendo presionado
+   (regla :active con delay). El foco de teclado no debe dejar tooltips fijos. */
+@media (hover: none) and (pointer: coarse) {
+    [data-tooltip]:focus-visible::after,
+    [data-tooltip]:focus-visible::before {
+        display: none;
+    }
+}

@@ -6,6 +6,34 @@ const dateString = (label: string) =>
         message: `${label} tiene un formato inválido`,
     });
 
+const optionalDateString = (label: string) =>
+    z.preprocess(
+        (value) => (value === "" || value === null ? undefined : value),
+        dateString(label).optional()
+    );
+
+const optionalInt = (min: number, max: number, message: string) =>
+    z.preprocess(
+        (value) => (value === "" || value === null || value === undefined ? undefined : Number(value)),
+        z.number().int().min(min).max(max).optional()
+    );
+
+const nullableOptionalDate = (label: string) =>
+    z.preprocess(
+        (value) => (value === "" ? null : value),
+        dateString(label).nullable().optional()
+    );
+
+const nullableOptionalInt = (min: number, max: number) =>
+    z.preprocess(
+        (value) => {
+            if (value === "" || value === null) return null;
+            if (value === undefined) return undefined;
+            return Number(value);
+        },
+        z.number().int().min(min).max(max).nullable().optional()
+    );
+
 const amountSchema = z
     .number({ message: "El monto es requerido" })
     .positive({ message: "El monto debe ser mayor a 0" })
@@ -22,10 +50,10 @@ const baseRecurringPayment = z.object({
     amount: amountSchema,
     frequency: z.enum(RecurrenceFrequency, { message: "Frecuencia inválida" }),
     intervalCount: z.number().int().positive().default(1),
-    dayOfMonth: z.number().int().min(1).max(31).optional(),
-    dayOfWeek: z.number().int().min(0).max(6).optional(),
+    dayOfMonth: optionalInt(1, 31, "El día del mes debe estar entre 1 y 31"),
+    dayOfWeek: optionalInt(0, 6, "El día de la semana debe estar entre 0 y 6"),
     startDate: dateString("La fecha de inicio"),
-    endDate: dateString("La fecha de fin").optional(),
+    endDate: optionalDateString("La fecha de fin"),
     autoDebit: z.boolean().default(false),
     accountId: z.uuid({ message: "La cuenta es requerida" }),
     categoryId: z.uuid({ message: "La categoría es requerida" }),
@@ -72,10 +100,10 @@ export const updateRecurringPaymentSchema = z
         amount: z.number().positive().transform((value) => Math.round(value * 100)).optional(),
         frequency: z.enum(RecurrenceFrequency).optional(),
         intervalCount: z.number().int().positive().optional(),
-        dayOfMonth: z.number().int().min(1).max(31).nullable().optional(),
-        dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
+        dayOfMonth: nullableOptionalInt(1, 31),
+        dayOfWeek: nullableOptionalInt(0, 6),
         startDate: dateString("La fecha de inicio").optional(),
-        endDate: dateString("La fecha de fin").nullable().optional(),
+        endDate: nullableOptionalDate("La fecha de fin"),
         autoDebit: z.boolean().optional(),
         accountId: z.uuid().optional(),
         categoryId: z.uuid().optional(),

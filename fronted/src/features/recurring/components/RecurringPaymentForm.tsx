@@ -93,7 +93,14 @@ export function RecurringPaymentForm({ payment, isPending, onSubmit, onSuccess, 
 
     const submit = async (data: RecurringPaymentFormOutput) => {
         setSubmitAttempted(false);
-        await onSubmit(data);
+        const payload: RecurringPaymentFormOutput = {
+            ...data,
+            description: data.description || undefined,
+            endDate: data.endDate || undefined,
+            dayOfMonth: isMonthly ? data.dayOfMonth : undefined,
+            dayOfWeek: isWeekly ? data.dayOfWeek : undefined,
+        };
+        await onSubmit(payload);
         onSuccess?.();
     };
 
@@ -294,7 +301,7 @@ export function RecurringPaymentForm({ payment, isPending, onSubmit, onSuccess, 
                         render={({ field, fieldState }) => (
                             <DatePicker
                                 label="Fin (opcional)"
-                                value={field.value ?? ""}
+                                value={typeof field.value === "string" ? field.value : ""}
                                 onChange={field.onChange}
                                 error={fieldState.error?.message}
                                 disabled={isPending}
@@ -304,7 +311,7 @@ export function RecurringPaymentForm({ payment, isPending, onSubmit, onSuccess, 
                     />
                 </div>
 
-                {endDate && (
+                {typeof endDate === "string" && endDate.length > 0 && (
                     <button
                         type="button"
                         className="btn-ghost recurring-clear-end"

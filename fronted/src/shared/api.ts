@@ -70,8 +70,16 @@ function buildApiError(status: number, statusText: string, body: unknown): ApiEr
         ? err.code
         : fallbackType;
   const details = normalizeDetails(err.details);
+  const detailMessage = details
+    ? Object.entries(details)
+        .flatMap(([field, messages]) =>
+          messages.map((detail) => (field === "body" ? detail : `${field}: ${detail}`))
+        )
+        .join(" · ")
+    : "";
+  const finalMessage = detailMessage || message;
 
-  return new ApiError(message, type, details);
+  return new ApiError(finalMessage, type, details);
 }
 
 export async function apiFetch<T>(
