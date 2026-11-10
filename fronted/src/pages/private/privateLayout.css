@@ -254,7 +254,7 @@ main {
 /* ─── Responsive ──────────────────────────────────────── */
 
 /* Tableta/ventana media: nav solo iconos (cabe en una fila) */
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
     .header-nav-link span {
         display: none;
     }

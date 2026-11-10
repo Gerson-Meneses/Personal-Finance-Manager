@@ -2,10 +2,11 @@ import { useAuthContext } from "../../features/auth/authContext";
 import { useLogout } from "../../features/auth/useLogout";
 import { matchPath, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { ArrowLeft, ArrowLeftRight, CalendarClock, HandCoins, Home, Menu, Plus, ShieldCheck, Tags, Wallet, X } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, CalendarClock, HandCoins, Home, Menu, PiggyBank, Plus, ShieldCheck, Tags, Wallet, X } from "lucide-react";
 import ModalPortal from "../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "../../features/transactions/components/TransactionForm/TransactionForm";
 import { AddAnotherTransactionPrompt } from "../../features/transactions/components/AddAnotherTransactionPrompt";
+import { NotificationsBell } from "../../features/recurring/components/NotificationsBell";
 import { useTransactions } from "../../features/transactions/hooks";
 import LoadingScreen from "../../shared/components/LoadingScreen/LoadingScreen";
 import "./privateLayout.css"
@@ -72,6 +73,10 @@ export function PrivateLayout() {
             <CalendarClock size={17} />
             <span>Previstos</span>
           </NavLink>
+          <NavLink to="/budgets" className="header-nav-link">
+            <PiggyBank size={17} />
+            <span>Presupuestos</span>
+          </NavLink>
           <NavLink to="/categories" className="header-nav-link">
             <Tags size={17} />
             <span>Categorías</span>
@@ -85,6 +90,8 @@ export function PrivateLayout() {
         </nav>
 
         <div className="header-right">
+          <NotificationsBell />
+
           <button
             className="header-menu-btn tooltip-left"
             onClick={() => setMenuOpen(open => !open)}
@@ -149,6 +156,10 @@ export function PrivateLayout() {
             <NavLink to="/recurring" className="header-mobile-link" onClick={() => setMenuOpen(false)}>
               <CalendarClock size={18} />
               <span>Pagos previstos</span>
+            </NavLink>
+            <NavLink to="/budgets" className="header-mobile-link" onClick={() => setMenuOpen(false)}>
+              <PiggyBank size={18} />
+              <span>Presupuestos</span>
             </NavLink>
             <NavLink to="/categories" className="header-mobile-link" onClick={() => setMenuOpen(false)}>
               <Tags size={18} />

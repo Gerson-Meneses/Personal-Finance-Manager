@@ -82,6 +82,8 @@ export default function DashboardPage() {
                 </button>
             </header>
 
+            <RecurringForecastCard />
+
             {/* Fila 1: patrimonio + resumen del mes */}
             <section className="grid-auto-tall">
                 <BalanceHero balances={balances} credit={credit} />
@@ -99,7 +101,6 @@ export default function DashboardPage() {
             <section className="grid-auto-tall">
                 <AccountsList accounts={accounts} />
                 <div className="dash-side">
-                    <RecurringForecastCard />
                     <LoanStats loans={loans} />
                     <ExpensesByCategory
                         expenses={expensesByCategory}

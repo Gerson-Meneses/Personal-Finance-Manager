@@ -15,6 +15,7 @@ import { Codes } from '../entities/Codes.entity'
 import { RecurringPayment } from '../entities/RecurringPayment.entity'
 import { RecurringPaymentOccurrence } from '../entities/RecurringPaymentOccurrence.entity'
 import { PaymentNotification } from '../entities/PaymentNotification.entity'
+import { Budget } from '../entities/Budget.entity'
 
 const entities = [
     Account,
@@ -30,6 +31,7 @@ const entities = [
     RecurringPayment,
     RecurringPaymentOccurrence,
     PaymentNotification,
+    Budget,
 ]
 
 // En desarrollo (bun desde src) carga *.ts; en producción (dist) carga *.js

@@ -10,6 +10,7 @@ import { loanRouter } from './loansRouter'
 import { dashboardRouter } from './dashboardRouter'
 import { recurringPaymentRouter } from './recurringPaymentRouter'
 import { notificationRouter } from './recurringNotificationRouter'
+import { budgetRouter } from './budgetRouter'
 
 const router = new Hono()
 
@@ -25,5 +26,6 @@ router.route('/loan', loanRouter)
 router.route('/dashboard', dashboardRouter)
 router.route('/recurring-payments', recurringPaymentRouter)
 router.route('/notifications', notificationRouter)
+router.route('/budgets', budgetRouter)
 
 export default router

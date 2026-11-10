@@ -387,3 +387,10 @@
     .recurring-rule__actions { grid-column: 1 / -1; justify-content: flex-end; }
     .recurring-rule > strong { grid-row: 1; grid-column: 2; }
 }
+
+.recurring-clear-end {
+    align-self: flex-start;
+    font-size: 0.72rem;
+    color: #64748b;
+    padding: 0;
+}

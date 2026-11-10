@@ -75,6 +75,7 @@ export function RecurringPaymentForm({ payment, isPending, onSubmit, onSuccess, 
 
     const type = useWatch({ control, name: "type" });
     const frequency = useWatch({ control, name: "frequency" });
+    const endDate = useWatch({ control, name: "endDate" });
     const isWeekly = frequency === "WEEKLY" || frequency === "BIWEEKLY";
     const isMonthly = frequency === "MONTHLY" || frequency === "YEARLY";
 
@@ -282,6 +283,7 @@ export function RecurringPaymentForm({ payment, isPending, onSubmit, onSuccess, 
                                 onChange={field.onChange}
                                 error={fieldState.error?.message}
                                 disabled={isPending}
+                                disableFuture={false}
                             />
                         )}
                     />
@@ -296,10 +298,21 @@ export function RecurringPaymentForm({ payment, isPending, onSubmit, onSuccess, 
                                 onChange={field.onChange}
                                 error={fieldState.error?.message}
                                 disabled={isPending}
+                                disableFuture={false}
                             />
                         )}
                     />
                 </div>
+
+                {endDate && (
+                    <button
+                        type="button"
+                        className="btn-ghost recurring-clear-end"
+                        onClick={() => setValue("endDate", "", { shouldValidate: true, shouldDirty: true })}
+                    >
+                        Quitar fecha límite
+                    </button>
+                )}
 
                 <Controller
                     control={control}

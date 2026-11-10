@@ -86,6 +86,7 @@ export const usePaymentNotifications = () => {
     const notificationsQuery = useQuery({
         queryKey: ["paymentNotifications"],
         queryFn: () => service.getPaymentNotifications(false),
+        refetchInterval: 60_000,
     });
 
     const markRead = useMutation({
