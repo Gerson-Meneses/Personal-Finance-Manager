@@ -65,7 +65,7 @@
     content: "";
     flex: 1;
     height: 0.5px;
-    background: var(--color-border-tertiary, rgba(0,0,0,0.08));
+    background: var(--border-soft);
 }
 
 /* Colorea el separador según el tipo activo */

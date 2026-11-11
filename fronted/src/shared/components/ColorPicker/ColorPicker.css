@@ -12,7 +12,7 @@
 
 .color-wrapper:hover,
 .color-wrapper:focus-within {
-    border-color: #38bdf8;
+    border-color: var(--info);
     background: rgba(56, 189, 248, 0.05);
 }
 
@@ -56,6 +56,6 @@
 
 .color-hex {
     font-size: 0.9rem;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-family: monospace;
 }

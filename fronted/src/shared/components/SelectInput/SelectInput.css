@@ -9,7 +9,7 @@
 
 .input-wrapper:focus-within,
 .input-wrapper:hover {
-    border-color: #38bdf8;
+    border-color: var(--info);
     background: rgba(56, 189, 248, 0.05);
     box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
 }
@@ -19,7 +19,7 @@
     align-items: center;
     gap: 6px;
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -51,7 +51,7 @@
     background: transparent;
     border: none;
     border-radius: 12px;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-family: inherit;
     font-size: 0.9rem;
     text-align: left;
@@ -71,7 +71,7 @@
 }
 
 .select-input-value.is-placeholder {
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .select-input-chevron {
@@ -79,13 +79,13 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: #94a3b8;
+    color: var(--text-secondary);
     transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .select-input-trigger:hover .select-input-chevron,
 .select-input-chevron.open {
-    color: #38bdf8;
+    color: var(--info);
 }
 
 .select-input-chevron.open {
@@ -101,7 +101,7 @@
     min-width: 100%;
     /* Nunca sobresale de la tarjeta del modal ni del viewport */
     max-width: min(320px, calc(100vw - 48px));
-    background: #1e293b;
+    background: var(--bg-elevated);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
@@ -154,7 +154,7 @@
     gap: 8px;
     padding: 8px 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .select-input-search-input {
@@ -163,13 +163,13 @@
     background: transparent;
     border: none;
     outline: none;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-family: inherit;
     font-size: 0.85rem;
 }
 
 .select-input-search-input::placeholder {
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .select-input-menu {
@@ -195,7 +195,7 @@
 
 .select-input-empty {
     padding: 0.6rem;
-    color: #64748b;
+    color: var(--text-tertiary);
     font-size: 0.82rem;
     text-align: center;
 }
@@ -209,7 +209,7 @@
     padding: 0.5rem 0.6rem;
     border-radius: 8px;
     border: 1px solid transparent;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     font-size: 0.85rem;
     white-space: nowrap;
     cursor: pointer;
@@ -219,11 +219,11 @@
 .select-input-option.is-active {
     background: rgba(56, 189, 248, 0.1);
     border-color: rgba(56, 189, 248, 0.35);
-    color: #38bdf8;
+    color: var(--info);
 }
 
 .select-input-option.is-selected {
-    color: #38bdf8;
+    color: var(--info);
     font-weight: 500;
 }
 
@@ -249,7 +249,7 @@
 
 /* Fila "+ Crear <texto>" */
 .select-input-option.is-create {
-    color: #38bdf8;
+    color: var(--info);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0;
     margin-top: 4px;
@@ -268,28 +268,28 @@
 .select-compact .select-input-trigger {
     padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .select-compact .select-input-value.is-placeholder {
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .select-compact .select-input-trigger:hover {
-    color: #f8fafc;
+    color: var(--text-primary);
 }
 
 .select-compact .select-input-chevron {
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .select-compact .select-input-trigger:hover .select-input-chevron {
-    color: #38bdf8;
+    color: var(--info);
 }
 
 /* Estados globales reutilizados */
 .has-error .select-input {
-    border-color: #ef4444 !important;
+    border-color: var(--danger) !important;
     box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2);
 }
 
@@ -299,7 +299,7 @@
 select, .select {
     width: fit-content;
     border: none;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: .9rem;
     transition: all 0.3s ease;
     outline: none;
@@ -313,6 +313,6 @@ select, .select {
 }
 
 option {
-    background-color: #0b0d12;
+    background-color: var(--bg-surface);
     cursor: pointer;
 }

@@ -20,9 +20,9 @@
     padding: 5px 12px;
     height: 32px;
     background: transparent;
-    border: 0.5px solid var(--color-border-secondary);
-    border-radius: var(--border-radius-md);
-    color: var(--color-text-secondary);
+    border: 0.5px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
     font-size: 13px;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
@@ -30,8 +30,8 @@
 }
 
 .lqh-order-btn:hover {
-    background: var(--color-background-secondary);
-    color: var(--color-text-primary);
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .lqh-order-btn svg {

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ArrowRight, Check, Sparkles, X } from "lucide-react";
+import { focusFirstElement, trapTabKey } from "../../shared/utils/focus";
 import "./OnboardingTour.css";
 
 interface Step {
@@ -67,6 +68,7 @@ export function OnboardingTour({ userId, autoStart = false }: { userId: string; 
     const [open, setOpen] = useState(false);
     const [index, setIndex] = useState(0);
     const [rect, setRect] = useState<DOMRect | null>(null);
+    const cardRef = useRef<HTMLElement>(null);
 
     const step = visibleSteps[index];
     const isLast = index === visibleSteps.length - 1;
@@ -137,6 +139,32 @@ export function OnboardingTour({ userId, autoStart = false }: { userId: string; 
 
     useEffect(() => {
         if (!open) return;
+
+        const previousFocus = document.activeElement as HTMLElement | null;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        const frame = requestAnimationFrame(() => {
+            focusFirstElement(cardRef.current);
+        });
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Tab") {
+                trapTabKey(event, cardRef.current);
+            }
+        };
+        document.addEventListener("keydown", onKeyDown);
+
+        return () => {
+            cancelAnimationFrame(frame);
+            document.removeEventListener("keydown", onKeyDown);
+            document.body.style.overflow = previousOverflow;
+            if (previousFocus?.isConnected) previousFocus.focus();
+        };
+    }, [open]);
+
+    useEffect(() => {
+        if (!open) return;
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") markDone();
             if (event.key === "ArrowRight" && !isLast) setIndex((value) => value + 1);
@@ -167,10 +195,12 @@ export function OnboardingTour({ userId, autoStart = false }: { userId: string; 
             )}
 
             <section
+                ref={cardRef}
                 className="onboarding-tour__card"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Tutorial de bienvenida"
+                tabIndex={-1}
             >
                 <button
                     type="button"
