@@ -1,7 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
-  body?: any; // Ahora aceptamos objetos, strings, etc.
+  body?: unknown; // Objetos, strings, FormData, etc.
 }
 
 export class ApiError extends Error {
@@ -99,7 +99,7 @@ export async function apiFetch<T>(
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
-    body: isJsonBody ? JSON.stringify(options.body) : options.body,
+    body: isJsonBody ? JSON.stringify(options.body) : (options.body as BodyInit | null | undefined),
   };
 
   const response = await fetch(`${url}`, config);

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
-import { useAuthContext } from "../../../features/auth/authContext";
+import { useAuthContext } from "../../../features/auth/useAuthContext";
 import { useDashboard } from "../../../features/dashboard/hooks";
 import { useTransactions } from "../../../features/transactions/hooks";
 import BalanceHero from "../../../features/dashboard/components/balanceCard/balanceCard";

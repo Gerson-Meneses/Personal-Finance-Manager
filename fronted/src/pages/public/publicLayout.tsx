@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import "./publicLayout.css"
-import { useAuthContext } from "../../features/auth/authContext";
+import { useAuthContext } from "../../features/auth/useAuthContext";
 import LoadingScreen from "../../shared/components/LoadingScreen/LoadingScreen";
 import { getIcon } from "../../shared/utils/GetIcon";
 import { ThemeToggle } from "../../shared/theme/ThemeToggle";

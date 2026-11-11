@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "./authContext";
+import { useAuthContext } from "./useAuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 
 export function useLogout() {

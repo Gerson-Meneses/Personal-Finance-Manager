@@ -11,10 +11,12 @@ import { dashboardRouter } from './dashboardRouter'
 import { recurringPaymentRouter } from './recurringPaymentRouter'
 import { notificationRouter } from './recurringNotificationRouter'
 import { budgetRouter } from './budgetRouter'
+import { authRateLimit } from '../middlewares/security'
 
 const router = new Hono()
 
 router.get('/', (c) => { return c.json({ message: 'Servidor levantado correctamente' }) })
+router.use('/auth/*', authRateLimit)
 router.route('/auth', authRouter)
 router.route('/user', userRouter)
 router.use(authMiddleware);

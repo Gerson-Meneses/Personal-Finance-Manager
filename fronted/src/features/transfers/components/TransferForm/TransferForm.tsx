@@ -39,7 +39,7 @@ interface Props {
 const buildDefaults = (account?: Account): TransferInput => ({
     fromAccount: account?.id ?? "",
     toAccount:   "",
-    amount:      "" as any,      // el schema lo transforma a number
+    amount:      "",      // el schema lo transforma a number
     date:        dayjs().format("YYYY-MM-DD"),
     time:        dayjs().format("HH:mm"),
     description: "",

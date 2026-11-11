@@ -109,7 +109,7 @@ export class AuthService {
 			sub: credential.user.id,
 			email: credential.email,
 			role: credential.user.isAdmin ? 'admin' : 'user',
-			exp: Math.floor(Date.now() / 1000) + 60 * 15000 // 15 min
+			exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24 horas
 		}
 
 		const JWT_SECRET = process.env.JWT_SECRET

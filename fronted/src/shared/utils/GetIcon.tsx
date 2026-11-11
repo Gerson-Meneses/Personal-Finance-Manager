@@ -1,4 +1,5 @@
 import * as LucideIcons from "lucide-react";
+import type { ComponentType } from "react";
 
 const toPascalFormat = (string: string) => string
     .trim()
@@ -12,9 +13,17 @@ interface GetIconProps {
     color?: string;
 }
 
+type IconComponent = ComponentType<{ size?: number; color?: string }>;
+
+const icons = LucideIcons as unknown as Record<string, IconComponent>;
+
 export const getIcon = (iconName: string, props?: GetIconProps) => {
     const { defaultIcon, size = 20, color = "currentColor" } = props || {};
-    let IconComponent = (LucideIcons as any)[toPascalFormat(iconName)] || (LucideIcons as any)[defaultIcon ? toPascalFormat(defaultIcon) : "CircleEllipsis"]
-    if (!IconComponent) IconComponent = (LucideIcons as any)["CircleEllipsis"]
-    return <IconComponent size={size} color={color} />;
+    const Icon =
+        icons[toPascalFormat(iconName)] ||
+        icons[toPascalFormat(defaultIcon ?? "")] ||
+        icons.CircleEllipsis;
+
+    if (!Icon) return null;
+    return <Icon size={size} color={color} />;
 };

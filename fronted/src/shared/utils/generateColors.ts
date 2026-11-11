@@ -2,7 +2,9 @@ export function getProgressColor(value: number) {
     // Aseguramos que el valor esté entre 0 y 110
     const val = Math.max(0, Math.min(110, value));
 
-    let r, g, b = 0;
+    let r = 0;
+    let g = 0;
+    const b = 0;
 
     if (val <= 55) {
 

@@ -1,4 +1,4 @@
-import type { DetailsError } from "../dataApiInterface";
+﻿import type { DetailsError } from "../dataApiInterface";
 
 export const handleFieldChange = <T extends object>(
     field: keyof T,
@@ -6,12 +6,13 @@ export const handleFieldChange = <T extends object>(
     setFormData: React.Dispatch<React.SetStateAction<T>> | React.Dispatch<React.SetStateAction<Partial<T>>>,
     setErrors: React.Dispatch<React.SetStateAction<DetailsError<T> | null>>
 ) => {
-    setFormData((prev:any) => ({ ...prev, [field]: value }));
+    const updateForm = setFormData as React.Dispatch<React.SetStateAction<Partial<T>>>;
+    updateForm((prev) => ({ ...prev, [field]: value }));
 
-    setErrors((prev: any) => {
+    setErrors((prev) => {
         if (!prev || !prev[field]) return prev;
 
-        const newErrors = { ...prev };
+        const newErrors: DetailsError<T> = { ...prev };
         delete newErrors[field];
 
         return Object.keys(newErrors).length > 0 ? newErrors : null;

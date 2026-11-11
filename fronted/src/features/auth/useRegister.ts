@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { register } from "./services";
-import { useAuthContext } from "./authContext";
+import { useAuthContext } from "./useAuthContext";
 import type { DataError } from "../../shared/dataApiInterface";
 import type { DataAuth, RegisterOotput } from "./types";
 

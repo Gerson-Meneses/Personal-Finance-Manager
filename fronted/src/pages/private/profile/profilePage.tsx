@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useAuthContext } from "../../../features/auth/authContext"
+import { useAuthContext } from "../../../features/auth/useAuthContext"
 import { useVerifyEmail } from "../../../features/auth/useVerifyAccount"
 import { apiFetch } from "../../../shared/api"
 import { useToast } from "../../../shared/Hooks/useToast"

@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { useAdminUsers } from "../../../features/admin/hooks";
 import { useIsAdmin } from "../../../features/auth/useIsAdmin";
-import { useAuthContext } from "../../../features/auth/authContext";
+import { useAuthContext } from "../../../features/auth/useAuthContext";
 import type { AdminUser } from "../../../features/admin/types";
 import { SearchInput } from "../../../shared/components/SearchInput/SearchInput";
 import { useClientSearch } from "../../../shared/Hooks/UseClientSearch";

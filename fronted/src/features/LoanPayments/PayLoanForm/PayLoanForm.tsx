@@ -128,7 +128,7 @@ export const CreateLoanPaymentForm = ({ loanId, loan, initialValues, onSuccess, 
         <TypeToggle<LoanType>
           value={loan?.type || "GIVEN"}
           label="Naturaleza de la Transacción"
-          onChange={() => console.log("No se puede cambiar el tipo de pago")}
+          onChange={() => {}}
           disabled={true}
           leftOption={{
             value: "GIVEN",

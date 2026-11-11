@@ -1,4 +1,4 @@
-import { useAuthContext } from "../../features/auth/authContext";
+import { useAuthContext } from "../../features/auth/useAuthContext";
 import { useLogout } from "../../features/auth/useLogout";
 import { matchPath, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";

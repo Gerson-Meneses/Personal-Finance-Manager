@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { login } from "./services";
-import { useAuthContext } from "./authContext";
+import { useAuthContext } from "./useAuthContext";
 import type { DataAuth, LoginOutput } from "./types";
 import type { DataError } from "../../shared/dataApiInterface";
 

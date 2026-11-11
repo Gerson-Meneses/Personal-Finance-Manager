@@ -44,7 +44,7 @@ interface Props {
 /* ------------------------------------------------------------------ */
 const defaultValues: CreateLoanInput = {
     lender:    "",
-    amount:    "" as any,
+    amount:    "",
     type:      "GIVEN",
     startDate: dayjs().format("YYYY-MM-DD"),
     date:      dayjs().format("YYYY-MM-DD"),

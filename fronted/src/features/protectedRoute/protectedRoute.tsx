@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 
 import type { JSX } from "react";
-import { useAuthContext } from "../auth/authContext";
+import { useAuthContext } from "../auth/useAuthContext";
 import LoadingScreen from "../../shared/components/LoadingScreen/LoadingScreen";
 
 export function ProtectedRoute({ children }: { children: JSX.Element }) {

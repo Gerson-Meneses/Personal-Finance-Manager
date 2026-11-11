@@ -97,7 +97,7 @@ const toYmd = (date: Date | string) => dayjs(date).format("YYYY-MM-DD");
 const clampDay = (year: number, monthIndex: number, day: number) =>
     Math.min(day, new Date(year, monthIndex + 1, 0).getDate());
 
-function daysInRange(payment: RecurringPayment, from: string, to: string): string[] {
+export function daysInRange(payment: RecurringPayment, from: string, to: string): string[] {
     const rangeStart = payment.startDate > from ? payment.startDate : from;
     const rangeEnd = payment.endDate && payment.endDate < to ? payment.endDate : to;
     if (rangeStart > rangeEnd) return [];

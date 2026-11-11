@@ -16,45 +16,10 @@ import { EntityManager, QueryRunner, SelectQueryBuilder } from "typeorm";
 import { toTransactionResponse } from "../mappers/TransactionMapper";
 import { TransactionResponse, TransactionStatsResponse } from "../ResponseInterfaces/TransactionInterface";
 import { money } from "../utils/normalizarMoney";
-
-type BalanceState = {
-    type: TypeTransaction;
-    amount: number;
-    account: Account;
-    relatedAccount?: Account | null;
-};
+import { computeBalanceEffect } from "../utils/balance";
 
 export class TransactionService {
     private transactionRepo = AppDataSourceProd.getRepository(Transaction);
-
-    /**
-     * Efecto puro de una transacción sobre los saldos: accountId -> delta.
-     * INCOME  -> cuenta +
-     * EXPENSE -> cuenta -
-     * TRANSFER / CREDIT_PAYMENT -> origen -, destino +
-     */
-    private computeBalanceEffect(state: BalanceState): Map<string, number> {
-        const effect = new Map<string, number>();
-        const add = (account: Account | null | undefined, delta: number) => {
-            if (!account) return;
-            effect.set(account.id, (effect.get(account.id) ?? 0) + delta);
-        };
-
-        switch (state.type) {
-            case TypeTransaction.INCOME:
-                add(state.account, state.amount);
-                break;
-            case TypeTransaction.EXPENSE:
-                add(state.account, -state.amount);
-                break;
-            case TypeTransaction.TRANSFER:
-            case TypeTransaction.CREDIT_PAYMENT:
-                add(state.account, -state.amount);
-                add(state.relatedAccount, state.amount);
-                break;
-        }
-        return effect;
-    }
 
     /**
      * Bloquea (SELECT ... FOR UPDATE) las cuentas indicadas dentro de la transacción
@@ -574,13 +539,13 @@ export class TransactionService {
             // 5) Efectos de saldo. base = saldo actual - efecto viejo = saldo como
             //    si esta transacción no existiera. Se valida el estado nuevo sobre
             //    esa base y luego se aplica el delta neto una sola vez.
-            const oldEffect = this.computeBalanceEffect({
+            const oldEffect = computeBalanceEffect({
                 type: oldType,
                 amount: oldAmount,
                 account: oldAccount,
                 relatedAccount: oldRelatedAccount
             });
-            const newEffect = this.computeBalanceEffect({
+            const newEffect = computeBalanceEffect({
                 type: nextType,
                 amount: nextAmount,
                 account: nextAccount,
@@ -685,7 +650,7 @@ export class TransactionService {
             );
 
             // Revertir el efecto exacto que la transacción tuvo sobre los saldos
-            const effect = this.computeBalanceEffect({
+            const effect = computeBalanceEffect({
                 type: transaction.type,
                 amount: transaction.amount,
                 account: transaction.account,

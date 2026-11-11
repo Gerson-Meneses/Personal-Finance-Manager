@@ -26,9 +26,10 @@ export const LoginPage = () => {
     useEffect(() => { login.reset() }, [])
 
     useEffect(() => {
-        if (login.error?.details) {
-            setErrors(login.error.details as DetailsError<LoginForm>)
-        }
+        if (!login.error?.details) return
+        const details = login.error.details as DetailsError<LoginForm>
+        const timer = window.setTimeout(() => setErrors(details), 0)
+        return () => window.clearTimeout(timer)
     }, [login.error])
 
     const onChange = <K extends keyof LoginForm>(field: K, value: LoginForm[K]) => {

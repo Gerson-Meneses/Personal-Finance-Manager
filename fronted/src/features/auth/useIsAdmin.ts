@@ -1,4 +1,4 @@
-import { useAuthContext } from "./authContext";
+import { useAuthContext } from "./useAuthContext";
 
 function decodeTokenRole(token: string): string | null {
   try {

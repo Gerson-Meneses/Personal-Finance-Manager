@@ -31,9 +31,10 @@ export const RegisterPage = () => {
 
     // Sincroniza errores del servidor con el estado local
     useEffect(() => {
-        if (register.error?.details) {
-            setErrors(register.error.details as DetailsError<RegisterOotput>)
-        }
+        if (!register.error?.details) return
+        const details = register.error.details as DetailsError<RegisterOotput>
+        const timer = window.setTimeout(() => setErrors(details), 0)
+        return () => window.clearTimeout(timer)
     }, [register.error])
 
     // Limpia errores al montar

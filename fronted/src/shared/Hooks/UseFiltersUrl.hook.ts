@@ -2,51 +2,50 @@ import { useSearchParams } from "react-router-dom";
 import { useCallback } from "react";
 
 /**
- * Hook Genérico para sincronizar cualquier esquema de filtros con la URL
+ * Hook genérico para sincronizar cualquier esquema de filtros con la URL.
  */
-export const useFilterURL = <T extends Record<string, any>>(defaultFilters: T) => {
+export const useFilterURL = <T extends object>(defaultFilters: T) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Convierte la URL en un objeto limpio respetando tipos básicos (números y booleanos)
   const getFiltersFromURL = useCallback((): Partial<T> => {
     const params = Object.fromEntries(searchParams);
-    const parsed: any = {};
+    const parsed: Partial<T> = {};
+    const target = parsed as Record<string, unknown>;
 
     Object.entries(params).forEach(([key, value]) => {
-      // Intentar parsear números automáticos
-      if (!isNaN(value as any) && value !== "") {
-        parsed[key] = value.includes(".") ? parseFloat(value) : parseInt(value, 10);
-      } 
-      // Parsear booleanos
-      else if (value === "true") parsed[key] = true;
-      else if (value === "false") parsed[key] = false;
-      // Queda como string
-      else parsed[key] = value;
+      if (value !== "" && !Number.isNaN(Number(value))) {
+        target[key] = value.includes(".") ? parseFloat(value) : parseInt(value, 10);
+      } else if (value === "true") {
+        target[key] = true;
+      } else if (value === "false") {
+        target[key] = false;
+      } else {
+        target[key] = value;
+      }
     });
-
-    console.log(parsed)
 
     return parsed;
   }, [searchParams]);
 
   const saveFiltersToURL = useCallback((filters: Partial<T>) => {
     const params = new URLSearchParams();
+    const defaults = defaultFilters as Record<string, unknown>;
 
     Object.entries(filters).forEach(([key, value]) => {
       if (
         value !== undefined &&
         value !== null &&
         value !== "" &&
-        value !== defaultFilters[key]
+        value !== defaults[key]
       ) {
         params.set(key, String(value));
       }
     });
 
-    setSearchParams(params, { replace: true }); // replace: true evita acumular historial basura al tipear
+    setSearchParams(params, { replace: true });
   }, [setSearchParams, defaultFilters]);
 
-  const updateFilterInURL = useCallback((key: keyof T, value: any) => {
+  const updateFilterInURL = useCallback((key: keyof T, value: unknown) => {
     const current = getFiltersFromURL();
     const updated = { ...current, [key]: value };
 
@@ -59,7 +58,7 @@ export const useFilterURL = <T extends Record<string, any>>(defaultFilters: T) =
   }, [getFiltersFromURL, saveFiltersToURL]);
 
   return {
-    filters: { ...defaultFilters, ...getFiltersFromURL() }, // Devuelve combinados los defaults y los de la URL
+    filters: { ...defaultFilters, ...getFiltersFromURL() },
     saveFiltersToURL,
     updateFilterInURL,
     clearFiltersFromURL: useCallback(() => setSearchParams(new URLSearchParams(), { replace: true }), [setSearchParams])

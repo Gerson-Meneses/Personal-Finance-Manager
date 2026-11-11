@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, Sparkles, X } from "lucide-react";
 import { focusFirstElement, trapTabKey } from "../../shared/utils/focus";
 import "./OnboardingTour.css";
@@ -9,6 +10,7 @@ interface Step {
     description: string;
     targets?: string[];
     optional?: boolean;
+    route?: string;
 }
 
 const STEPS: Step[] = [
@@ -18,7 +20,7 @@ const STEPS: Step[] = [
     },
     {
         title: "Muévete por la app",
-        description: "Usa la navegación para ir a movimientos, cuentas, préstamos, previstos o presupuestos. En móvil, la barra inferior siempre está a mano.",
+        description: "Usa la navegación superior para ir a transacciones, cuentas, préstamos, pagos previstos, presupuestos y categorías. En móvil, la barra inferior tiene Inicio, Movimientos y Previstos; el resto está en Más.",
         targets: ['[data-tour="nav"]', '[data-tour="bottom-nav"]'],
         optional: true,
     },
@@ -27,12 +29,14 @@ const STEPS: Step[] = [
         description: "Aquí ves el flujo previsto: ingresos esperados, gastos programados y el neto antes de que ocurran.",
         targets: ['[data-tour="forecast"]'],
         optional: true,
+        route: "/",
     },
     {
         title: "Tus cuentas, en un vistazo",
-        description: "Consulta saldos, deuda de tarjetas y movimientos recientes. Toca una cuenta para entrar a su detalle.",
+        description: "Consulta saldos y deuda de tarjetas de crédito. Toca una cuenta para abrir su detalle con todos sus movimientos.",
         targets: ['[data-tour="accounts"]'],
         optional: true,
+        route: "/",
     },
     {
         title: "Registra un movimiento",
@@ -42,29 +46,42 @@ const STEPS: Step[] = [
     },
     {
         title: "Pagos previstos y presupuestos",
-        description: "Programa sueldos, alquileres o suscripciones, define presupuestos por categoría y confirma pagos cuando llegue la fecha.",
+        description: "Programa sueldos, alquileres o suscripciones, define presupuestos por categoría y confirma los pagos cuando venzan.",
     },
     {
         title: "Nunca pierdas un vencimiento",
-        description: "La campana reúne avisos de pagos próximos y movimientos recurrentes. Márcalos como leídos cuando los revises.",
+        description: "La campana reúne avisos de ingresos y pagos previstos que vencen hoy. Márcalos como leídos cuando los revises.",
         targets: ['[data-tour="notifications"]'],
         optional: true,
     },
     {
         title: "Todo listo",
-        description: "Ya puedes empezar. Si necesitas repasar el tutorial, puedes abrirlo de nuevo desde el menú.",
+        description: "Ya puedes empezar. Si necesitas repasar el tutorial, puedes abrirlo de nuevo desde Mi perfil (o desde Más en el móvil).",
     },
 ];
 
 const KEY_VERSION = "v1";
+const TARGET_RETRY_MS = 120;
+const TARGET_TIMEOUT_MS = 4000;
 
 function isValidRect(rect: DOMRect | null | undefined): rect is DOMRect {
     return !!rect && rect.width > 0 && rect.height > 0;
 }
 
+function findTarget(selectors?: string[]): HTMLElement | null {
+    if (!selectors?.length) return null;
+    return (
+        selectors
+            .map((selector) => document.querySelector<HTMLElement>(selector))
+            .find((element) => isValidRect(element?.getBoundingClientRect())) ?? null
+    );
+}
+
 export function OnboardingTour({ userId, autoStart = false }: { userId: string; autoStart?: boolean }) {
     const storageKey = `finance-onboarding-${KEY_VERSION}-${userId}`;
     const visibleSteps = STEPS;
+    const navigate = useNavigate();
+    const { pathname } = useLocation();
     const [open, setOpen] = useState(false);
     const [index, setIndex] = useState(0);
     const [rect, setRect] = useState<DOMRect | null>(null);
@@ -95,17 +112,18 @@ export function OnboardingTour({ userId, autoStart = false }: { userId: string; 
         return () => window.removeEventListener("finance:open-onboarding", openTour);
     }, []);
 
+    useEffect(() => {
+        if (!open || !step?.route) return;
+        if (pathname !== step.route) navigate(step.route);
+    }, [open, step, pathname, navigate]);
+
     const updateRect = useCallback(() => {
         if (!open || !step?.targets?.length) {
             setRect(null);
             return;
         }
 
-        const target = step.targets
-            .map((selector) => document.querySelector<HTMLElement>(selector))
-            .find((element) => isValidRect(element?.getBoundingClientRect()));
-
-        setRect(target?.getBoundingClientRect() ?? null);
+        setRect(findTarget(step.targets)?.getBoundingClientRect() ?? null);
     }, [open, step]);
 
     useEffect(() => {
@@ -124,18 +142,43 @@ export function OnboardingTour({ userId, autoStart = false }: { userId: string; 
 
     useEffect(() => {
         if (!open || !step?.targets?.length) return;
-        const target = step.targets
-            .map((selector) => document.querySelector<HTMLElement>(selector))
-            .find((element) => isValidRect(element?.getBoundingClientRect()));
-        if (!target) return;
+        if (step.route && pathname !== step.route) return;
 
-        const targetRect = target.getBoundingClientRect();
-        const isVisible = targetRect.top >= 0 && targetRect.bottom <= window.innerHeight;
-        if (!isVisible) {
-            target.scrollIntoView({ block: "center", behavior: "smooth" });
-            window.setTimeout(updateRect, 350);
-        }
-    }, [open, step, updateRect]);
+        let cancelled = false;
+        let timer: number | undefined;
+        const startedAt = Date.now();
+
+        const attempt = () => {
+            if (cancelled) return;
+
+            const target = findTarget(step.targets);
+            if (target) {
+                const targetRect = target.getBoundingClientRect();
+                const isVisible = targetRect.top >= 8 && targetRect.bottom <= window.innerHeight - 8;
+                if (!isVisible) {
+                    target.scrollIntoView({ block: "center", behavior: "smooth" });
+                }
+                setRect(targetRect);
+                return;
+            }
+
+            if (Date.now() - startedAt >= TARGET_TIMEOUT_MS) {
+                if (step.optional) {
+                    setIndex((value) => Math.min(value + 1, STEPS.length - 1));
+                }
+                return;
+            }
+
+            timer = window.setTimeout(attempt, TARGET_RETRY_MS);
+        };
+
+        attempt();
+
+        return () => {
+            cancelled = true;
+            if (timer) window.clearTimeout(timer);
+        };
+    }, [open, step, pathname]);
 
     useEffect(() => {
         if (!open) return;
