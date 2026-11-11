@@ -7,7 +7,7 @@
     width: 100%;
     align-self: center;
     box-sizing: border-box;
-    background: #0b0d12;
+    background: var(--bg-surface);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
@@ -16,7 +16,7 @@
 .codeflow-title {
     margin: 0;
     font-size: 1.15rem;
-    color: #f5f5f5;
+    color: var(--text-primary);
     text-align: center;
 }
 
@@ -28,20 +28,20 @@
 
 .codeflow-description {
     margin: 0;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.88rem;
     text-align: center;
     line-height: 1.5;
 }
 
 .codeflow-description strong {
-    color: #f1c40f;
+    color: var(--accent);
     word-break: break-all;
 }
 
 .codeflow-primary-btn {
     padding: 0.65rem 1rem;
-    background: #f1c40f;
+    background: var(--accent);
     border: none;
     border-radius: 10px;
     color: #0f172a;
@@ -75,7 +75,7 @@
 .codeflow-link-btn {
     background: none;
     border: none;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.82rem;
     cursor: pointer;
     padding: 0;
@@ -83,7 +83,7 @@
 }
 
 .codeflow-link-btn:hover:not(:disabled) {
-    color: #f1c40f;
+    color: var(--accent);
     text-decoration: underline;
 }
 

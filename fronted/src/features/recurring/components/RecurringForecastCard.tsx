@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { Link } from "react-router-dom";
 import { ArrowRight, CalendarClock } from "lucide-react";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
+import { Skeleton } from "../../../shared/components/Skeleton/Skeleton";
 import { useRecurringProjection } from "../hooks";
 import "./RecurringForecastCard.css";
 
@@ -9,7 +10,16 @@ export function RecurringForecastCard() {
     const month = dayjs().format("YYYY-MM");
     const { projection, loading } = useRecurringProjection(month);
 
-    if (loading && !projection) return null;
+    if (loading && !projection) {
+        return (
+            <article className="card recurring-forecast">
+                <Skeleton className="skeleton-title" />
+                <Skeleton className="skeleton-amount" />
+                <Skeleton className="skeleton-line" />
+                <Skeleton className="skeleton-line" />
+            </article>
+        );
+    }
     if (!projection || projection.occurrences.length === 0) return null;
 
     const netClass = projection.projectedNet >= 0 ? "text-success" : "text-danger";

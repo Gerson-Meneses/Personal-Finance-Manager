@@ -9,7 +9,7 @@
     padding: 20px 22px;
     background:
         radial-gradient(ellipse 60% 120% at 0% 0%, rgba(34, 197, 94, 0.07), transparent 60%),
-        #0b0d12;
+        var(--bg-surface);
 }
 
 .budgets-header__eyebrow {
@@ -26,7 +26,7 @@
     margin: 0;
     font-size: clamp(1.45rem, 2.4vw, 1.9rem);
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-primary);
     line-height: 1.1;
 }
 
@@ -70,14 +70,14 @@
     flex-shrink: 0;
 }
 
-.budget-stat__icon.is-budget { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
-.budget-stat__icon.is-spent { background: rgba(241, 196, 15, 0.1); color: #f1c40f; }
-.budget-stat__icon.is-remaining { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
-.budget-stat.is-over .budget-stat__icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.budget-stat__icon.is-budget { background: rgba(56, 189, 248, 0.1); color: var(--info); }
+.budget-stat__icon.is-spent { background: rgba(241, 196, 15, 0.1); color: var(--accent); }
+.budget-stat__icon.is-remaining { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+.budget-stat.is-over .budget-stat__icon { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 
 .budget-stat > div { display: flex; flex-direction: column; min-width: 0; }
-.budget-stat span { font-size: 0.7rem; color: #64748b; }
-.budget-stat strong { font-size: 1rem; font-weight: 600; color: #e2e8f0; }
+.budget-stat span { font-size: 0.7rem; color: var(--text-tertiary); }
+.budget-stat strong { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
 
 .budgets-list-card { padding: 16px 18px; }
 
@@ -93,7 +93,7 @@
     margin: 0;
     font-size: 0.92rem;
     font-weight: 600;
-    color: #e2e8f0;
+    color: var(--text-primary);
 }
 
 .budgets-list-head span {
@@ -104,7 +104,7 @@
     padding: 1px 7px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.06);
-    color: #64748b;
+    color: var(--text-tertiary);
     font-size: 0.68rem;
 }
 
@@ -144,7 +144,7 @@
 
 .budget-row__title strong {
     font-size: 0.87rem;
-    color: #e2e8f0;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -180,7 +180,7 @@
     justify-content: space-between;
     gap: 10px;
     font-size: 0.68rem;
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .budget-row__remaining {
@@ -190,7 +190,7 @@
     min-width: 86px;
 }
 
-.budget-row__remaining span { font-size: 0.62rem; color: #64748b; text-transform: uppercase; }
+.budget-row__remaining span { font-size: 0.62rem; color: var(--text-tertiary); text-transform: uppercase; }
 .budget-row__remaining strong { font-size: 0.85rem; font-weight: 600; }
 
 .budget-row__actions { display: flex; gap: 2px; }
@@ -205,12 +205,12 @@
     border: none;
     border-radius: 6px;
     background: transparent;
-    color: #64748b;
+    color: var(--text-tertiary);
     cursor: pointer;
 }
 
-.budget-row__actions button:hover { color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
-.budget-row__actions button.danger:hover { color: #ef4444; background: rgba(239, 68, 68, 0.08); }
+.budget-row__actions button:hover { color: var(--info); background: rgba(56, 189, 248, 0.08); }
+.budget-row__actions button.danger:hover { color: var(--danger); background: rgba(239, 68, 68, 0.08); }
 
 .budgets-empty {
     display: flex;
@@ -219,7 +219,7 @@
     gap: 8px;
     text-align: center;
     padding: 30px 16px;
-    color: #64748b;
+    color: var(--text-tertiary);
     font-size: 0.82rem;
 }
 

@@ -11,7 +11,7 @@
     padding: 20px 22px;
     background:
         radial-gradient(ellipse 60% 120% at 0% 0%, rgba(56, 189, 248, 0.07), transparent 60%),
-        #0b0d12;
+        var(--bg-surface);
 }
 
 .recurring-header__eyebrow {
@@ -20,7 +20,7 @@
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #38bdf8;
+    color: var(--info);
     margin-bottom: 4px;
 }
 
@@ -28,7 +28,7 @@
     margin: 0;
     font-size: clamp(1.45rem, 2.4vw, 1.9rem);
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-primary);
     line-height: 1.1;
 }
 
@@ -78,9 +78,9 @@
     flex-shrink: 0;
 }
 
-.recurring-stat--income .recurring-stat__icon { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
-.recurring-stat--expense .recurring-stat__icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-.recurring-stat--net .recurring-stat__icon { background: rgba(56, 189, 248, 0.1); color: #38bdf8; }
+.recurring-stat--income .recurring-stat__icon { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+.recurring-stat--expense .recurring-stat__icon { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+.recurring-stat--net .recurring-stat__icon { background: rgba(56, 189, 248, 0.1); color: var(--info); }
 
 .recurring-stat > div {
     display: flex;
@@ -88,9 +88,9 @@
     min-width: 0;
 }
 
-.recurring-stat span { font-size: 0.7rem; color: #64748b; }
-.recurring-stat strong { font-size: 1rem; font-weight: 600; color: #e2e8f0; }
-.recurring-stat small { font-size: 0.68rem; color: #475569; }
+.recurring-stat span { font-size: 0.7rem; color: var(--text-tertiary); }
+.recurring-stat strong { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.recurring-stat small { font-size: 0.68rem; color: var(--text-tertiary); }
 
 /* ── Notificaciones ───────────────────────────────────── */
 .recurring-notifications {
@@ -113,10 +113,10 @@
     margin: 0;
     font-size: 0.92rem;
     font-weight: 600;
-    color: #e2e8f0;
+    color: var(--text-primary);
 }
 
-.recurring-section-head h2 svg { color: #64748b; }
+.recurring-section-head h2 svg { color: var(--text-tertiary); }
 
 .recurring-section-count {
     display: inline-flex;
@@ -126,7 +126,7 @@
     padding: 1px 7px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.06);
-    color: #64748b;
+    color: var(--text-tertiary);
     font-size: 0.68rem;
 }
 
@@ -148,7 +148,7 @@
 }
 
 .recurring-notification strong { font-size: 0.8rem; color: #fde68a; }
-.recurring-notification p { margin: 2px 0 0; font-size: 0.76rem; color: #94a3b8; }
+.recurring-notification p { margin: 2px 0 0; font-size: 0.76rem; color: var(--text-secondary); }
 .recurring-notification .btn-ghost { flex-shrink: 0; font-size: 0.72rem; }
 
 /* ── Layout ───────────────────────────────────────────── */
@@ -197,8 +197,8 @@
     border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.recurring-occurrence__date span { font-size: 1rem; font-weight: 700; color: #f8fafc; line-height: 1; }
-.recurring-occurrence__date small { font-size: 0.58rem; text-transform: uppercase; color: #64748b; }
+.recurring-occurrence__date span { font-size: 1rem; font-weight: 700; color: var(--text-primary); line-height: 1; }
+.recurring-occurrence__date small { font-size: 0.58rem; text-transform: uppercase; color: var(--text-tertiary); }
 
 .recurring-occurrence__body { min-width: 0; }
 
@@ -213,7 +213,7 @@
 .recurring-occurrence__title strong {
     font-size: 0.87rem;
     font-weight: 600;
-    color: #e2e8f0;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -224,7 +224,7 @@
     gap: 5px;
     margin-top: 2px;
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--text-tertiary);
     min-width: 0;
 }
 
@@ -238,12 +238,12 @@
     padding: 2px 6px;
     border-radius: 5px;
     background: rgba(148, 163, 184, 0.1);
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
-.recurring-status.is-due { background: rgba(241, 196, 15, 0.12); color: #f1c40f; }
-.recurring-status.is-paid { background: rgba(34, 197, 94, 0.12); color: #22c55e; }
-.recurring-status.is-failed { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+.recurring-status.is-due { background: rgba(241, 196, 15, 0.12); color: var(--accent); }
+.recurring-status.is-paid { background: rgba(34, 197, 94, 0.12); color: var(--success); }
+.recurring-status.is-failed { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
 
 .recurring-auto {
     display: inline-flex;
@@ -252,7 +252,7 @@
     padding: 2px 6px;
     border-radius: 5px;
     background: rgba(56, 189, 248, 0.1);
-    color: #38bdf8;
+    color: var(--info);
     font-size: 0.58rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -296,14 +296,14 @@
 
 .recurring-rule__main strong {
     font-size: 0.82rem;
-    color: #e2e8f0;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.recurring-rule__main span { font-size: 0.7rem; color: #64748b; }
-.recurring-rule__main small { font-size: 0.65rem; color: #475569; }
+.recurring-rule__main span { font-size: 0.7rem; color: var(--text-tertiary); }
+.recurring-rule__main small { font-size: 0.65rem; color: var(--text-tertiary); }
 .recurring-rule > strong { font-size: 0.82rem; white-space: nowrap; }
 
 .recurring-rule__actions { display: flex; gap: 2px; }
@@ -318,13 +318,13 @@
     border: none;
     border-radius: 6px;
     background: transparent;
-    color: #64748b;
+    color: var(--text-tertiary);
     cursor: pointer;
     transition: color 0.15s, background 0.15s;
 }
 
-.recurring-icon-btn:hover { color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
-.recurring-icon-btn.danger:hover { color: #ef4444; background: rgba(239, 68, 68, 0.08); }
+.recurring-icon-btn:hover { color: var(--info); background: rgba(56, 189, 248, 0.08); }
+.recurring-icon-btn.danger:hover { color: var(--danger); background: rgba(239, 68, 68, 0.08); }
 
 .recurring-empty,
 .recurring-empty-text {
@@ -334,7 +334,7 @@
     gap: 8px;
     text-align: center;
     padding: 28px 16px;
-    color: #64748b;
+    color: var(--text-tertiary);
     font-size: 0.82rem;
 }
 
@@ -357,11 +357,11 @@
     background: rgba(56, 189, 248, 0.05);
 }
 
-.auto-debit-row input { margin-top: 3px; accent-color: #38bdf8; }
-.auto-debit-icon { color: #38bdf8; display: flex; margin-top: 2px; }
+.auto-debit-row input { margin-top: 3px; accent-color: var(--info); }
+.auto-debit-icon { color: var(--info); display: flex; margin-top: 2px; }
 .auto-debit-text { display: flex; flex-direction: column; gap: 2px; }
-.auto-debit-text strong { font-size: 0.82rem; color: #e2e8f0; font-weight: 500; }
-.auto-debit-text small { font-size: 0.72rem; color: #64748b; }
+.auto-debit-text strong { font-size: 0.82rem; color: var(--text-primary); font-weight: 500; }
+.auto-debit-text small { font-size: 0.72rem; color: var(--text-tertiary); }
 
 @media (max-width: 980px) {
     .recurring-layout { grid-template-columns: minmax(0, 1fr); }
@@ -391,6 +391,6 @@
 .recurring-clear-end {
     align-self: flex-start;
     font-size: 0.72rem;
-    color: #64748b;
+    color: var(--text-tertiary);
     padding: 0;
 }

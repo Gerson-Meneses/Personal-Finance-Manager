@@ -1,6 +1,6 @@
 /* ── Balance card base (usada también por accountPage) ─────── */
 .balance-card {
-    background: #0b0d12;
+    background: var(--bg-surface);
     border-radius: 14px;
     padding: 18px 20px;
     border: 1px solid rgba(255, 255, 255, 0.07);
@@ -29,7 +29,7 @@
 }
 
 .card-debit::before {
-    background: #22c55e;
+    background: var(--success);
 }
 
 .card-credit::before {
@@ -38,7 +38,7 @@
 
 .card-label {
     font-size: 0.72rem;
-    color: #64748b;
+    color: var(--text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     margin: 0;
@@ -47,14 +47,14 @@
 .card-amount {
     font-size: 1.6rem;
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-primary);
     margin: 0 0 10px;
     font-family: 'JetBrains Mono', monospace;
 }
 
 /* ── Hero: patrimonio neto ─────────────────────────────────── */
 .dash-hero::before {
-    background: linear-gradient(#22c55e, #3b82f6);
+    background: linear-gradient(var(--success), #3b82f6);
 }
 
 /* Brillo sutil del color de la deuda/crédito — esquina superior derecha */
@@ -95,7 +95,7 @@
     font-size: 2.4rem;
     font-weight: 700;
     line-height: 1.1;
-    color: #f8fafc;
+    color: var(--text-primary);
     margin: 10px 0 16px;
 }
 
@@ -119,7 +119,7 @@
 .hero-stat svg {
     flex-shrink: 0;
     margin-top: 2px;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .hero-stat-text {
@@ -133,7 +133,7 @@
     font-size: 0.66rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #64748b;
+    color: var(--text-tertiary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -143,7 +143,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.88rem;
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -164,11 +164,11 @@
     border-color: rgba(239, 68, 68, 0.28);
     background:
         radial-gradient(85% 130% at 100% 0%, rgba(239, 68, 68, 0.1) 0%, transparent 58%),
-        #0b0d12;
+        var(--bg-surface);
 }
 
 .dash-hero.is-negative::before {
-    background: linear-gradient(#ef4444, #7f1d1d);
+    background: linear-gradient(var(--danger), #7f1d1d);
 }
 
 .dash-hero.is-negative::after {

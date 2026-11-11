@@ -26,7 +26,7 @@
 
 .recurring-forecast__net span {
     font-size: 0.68rem;
-    color: #64748b;
+    color: var(--text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
 }
@@ -44,8 +44,8 @@
     background: rgba(255, 255, 255, 0.06);
 }
 
-.recurring-forecast__bar .is-income { background: #22c55e; }
-.recurring-forecast__bar .is-expense { background: #ef4444; }
+.recurring-forecast__bar .is-income { background: var(--success); }
+.recurring-forecast__bar .is-expense { background: var(--danger); }
 
 .recurring-forecast__legend {
     display: flex;
@@ -60,7 +60,7 @@
     align-items: center;
     gap: 5px;
     font-size: 0.72rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .recurring-forecast__legend i {
@@ -70,16 +70,16 @@
     flex-shrink: 0;
 }
 
-.recurring-forecast__legend i.is-income { background: #22c55e; }
-.recurring-forecast__legend i.is-expense { background: #ef4444; }
+.recurring-forecast__legend i.is-income { background: var(--success); }
+.recurring-forecast__legend i.is-expense { background: var(--danger); }
 
 .recurring-forecast__legend strong {
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-weight: 600;
 }
 
 .recurring-forecast__due {
     margin: 0;
     font-size: 0.72rem;
-    color: #f1c40f;
+    color: var(--accent);
 }

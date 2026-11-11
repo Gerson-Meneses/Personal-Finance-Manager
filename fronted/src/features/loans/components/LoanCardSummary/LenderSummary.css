@@ -47,7 +47,7 @@
     margin: 0;
     font-size: 0.98rem;
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -55,7 +55,7 @@
 
 .lender-card__identity span {
     font-size: 0.72rem;
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .lender-card__net {
@@ -71,7 +71,7 @@
     font-size: 0.64rem;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .lender-card__net strong {
@@ -80,8 +80,8 @@
     font-family: 'JetBrains Mono', monospace;
 }
 
-.lender-card__net.is-positive strong { color: #22c55e; }
-.lender-card__net.is-negative strong { color: #ef4444; }
+.lender-card__net.is-positive strong { color: var(--success); }
+.lender-card__net.is-negative strong { color: var(--danger); }
 
 /* ── Bloques me deben / yo debo ──────────────────────── */
 .lender-card__types {
@@ -114,7 +114,7 @@
 
 .lender-type__head > span {
     font-size: 0.7rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -149,7 +149,7 @@
 
 .lender-type__meta {
     font-size: 0.68rem;
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 /* ── Progreso total + footer ─────────────────────────── */
@@ -177,7 +177,7 @@
 
 .lender-card__footer > span {
     font-size: 0.7rem;
-    color: #475569;
+    color: var(--text-tertiary);
 }
 
 .lender-card__action {
@@ -187,7 +187,7 @@
     padding: 0;
     border: none;
     background: none;
-    color: #38bdf8;
+    color: var(--info);
     font-family: inherit;
     font-size: 0.76rem;
     font-weight: 600;

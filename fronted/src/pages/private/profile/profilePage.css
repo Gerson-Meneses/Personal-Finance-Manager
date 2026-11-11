@@ -10,7 +10,7 @@
     border-radius: 50%;
     background: rgba(241, 196, 15, 0.12);
     border: 1px solid rgba(241, 196, 15, 0.2);
-    color: #f1c40f;
+    color: var(--accent);
     font-size: 1.5rem;
     font-weight: 600;
     display: flex;
@@ -22,7 +22,7 @@
 .profile-identity h2 {
     margin: 0 0 6px;
     font-size: 1.25rem;
-    color: #f5f5f5;
+    color: var(--text-primary);
 }
 
 .profile-badge {
@@ -41,7 +41,7 @@
 
 .profile-badge.pending {
     background: rgba(241, 196, 15, 0.12);
-    color: #f1c40f;
+    color: var(--accent);
     border: 1px solid rgba(241, 196, 15, 0.25);
 }
 
@@ -65,12 +65,12 @@
 }
 
 .profile-row-label {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.88rem;
 }
 
 .profile-row-value {
-    color: #f5f5f5;
+    color: var(--text-primary);
     font-size: 0.92rem;
     font-weight: 500;
     text-align: right;
@@ -80,7 +80,7 @@
 
 .profile-email {
     display: block;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.88rem;
     margin-bottom: 8px;
     word-break: break-all;
@@ -104,7 +104,7 @@
 .profile-card-header h3 {
     margin: 0;
     font-size: 1rem;
-    color: #f5f5f5;
+    color: var(--text-primary);
 }
 
 .profile-row-action {
@@ -125,7 +125,7 @@
     background: transparent;
     border: 1px solid rgba(56, 189, 248, 0.45);
     border-radius: 8px;
-    color: #38bdf8;
+    color: var(--info);
     font-size: 0.8rem;
     font-weight: 600;
     padding: 5px 12px;
@@ -136,7 +136,7 @@
 
 .profile-action-btn:hover:not(:disabled) {
     background: rgba(56, 189, 248, 0.1);
-    border-color: #38bdf8;
+    border-color: var(--info);
 }
 
 .profile-action-btn:disabled {
@@ -152,7 +152,7 @@
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 8px;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.8rem;
     font-weight: 600;
     padding: 5px 12px;
@@ -161,7 +161,7 @@
 }
 
 .profile-secondary-btn:hover:not(:disabled) {
-    color: #f5f5f5;
+    color: var(--text-primary);
     border-color: rgba(255, 255, 255, 0.35);
 }
 
@@ -199,12 +199,12 @@
     align-items: center;
     gap: 7px;
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     transition: color 0.2s;
 }
 
 .profile-password-rules .password-rule.pass {
-    color: #22c55e;
+    color: var(--success);
 }
 
 .profile-password-rules .rule-dot {

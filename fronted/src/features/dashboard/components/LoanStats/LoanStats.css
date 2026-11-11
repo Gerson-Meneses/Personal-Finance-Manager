@@ -51,7 +51,7 @@
 .arrow-icon {
   font-size: 0.7rem;
   transition: transform 0.3s ease;
-  color: #64748b;
+  color: var(--text-tertiary);
   flex-shrink: 0;
 }
 

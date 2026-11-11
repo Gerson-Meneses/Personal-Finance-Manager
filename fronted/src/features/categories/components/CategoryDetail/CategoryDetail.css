@@ -6,7 +6,7 @@
     max-width: 100%;
     /* Tarjeta del modal — igual que FormContainer/InfoModal:
        sin esto el cuerpo queda transparente sobre el overlay */
-    background-color: #0b0d12;
+    background-color: var(--bg-surface);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 20px;
@@ -34,7 +34,7 @@
 .cat-detail-title h2 {
     margin: 0;
     font-size: 1.15rem;
-    color: #f8fafc;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -48,7 +48,7 @@
 
 .cat-detail-badge {
     font-size: 0.65rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 4px;
@@ -61,7 +61,7 @@
     position: relative;
     background: none;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #94a3b8;
+    color: var(--text-secondary);
     border-radius: 8px;
     padding: 6px;
     display: flex;
@@ -69,7 +69,7 @@
     transition: color 0.15s, border-color 0.15s;
 }
 .cat-detail-close:hover {
-    color: #f8fafc;
+    color: var(--text-primary);
     border-color: rgba(255, 255, 255, 0.25);
 }
 
@@ -91,18 +91,18 @@
 
 .cat-detail-stat span {
     font-size: 0.72rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .cat-detail-stat strong {
     font-size: 1rem;
-    color: #f8fafc;
+    color: var(--text-primary);
 }
 
 .cat-detail-tx h3 {
     margin: 0 0 8px;
     font-size: 0.82rem;
-    color: #64748b;
+    color: var(--text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -133,7 +133,7 @@
 
 .cat-detail-tx-name {
     font-size: 0.85rem;
-    color: #f8fafc;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -141,7 +141,7 @@
 
 .cat-detail-tx-date {
     font-size: 0.72rem;
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .cat-detail-tx-amount {
@@ -150,10 +150,10 @@
     white-space: nowrap;
 }
 .cat-detail-tx-amount.in {
-    color: #22c55e;
+    color: var(--success);
 }
 .cat-detail-tx-amount.out {
-    color: #ef4444;
+    color: var(--danger);
 }
 
 .cat-detail-footer {
@@ -169,7 +169,7 @@
 }
 
 .cat-detail-month {
-    color: #64748b;
+    color: var(--text-tertiary);
     font-weight: 400;
     text-transform: capitalize;
 }

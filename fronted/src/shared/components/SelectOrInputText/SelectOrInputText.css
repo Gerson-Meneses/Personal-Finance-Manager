@@ -13,7 +13,7 @@
 
 .input-wrapper-select:focus-within,
 .input-wrapper-select:hover {
-    border-color: #38bdf8;
+    border-color: var(--info);
     background: rgba(56, 189, 248, 0.05);
 }
 
@@ -40,7 +40,7 @@
     background: rgba(255, 255, 255, 0.1);
     border: none;
     border-radius: 6px;
-    color: #94a3b8;
+    color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -50,12 +50,12 @@
 }
 
 .back-to-list-btn:hover {
-    background: #38bdf8;
+    background: var(--info);
     color: white;
 }
 
 /* Error State */
 .has-error .input-wrapper-select {
-    border-color: #ef4444;
+    border-color: var(--danger);
 }
 

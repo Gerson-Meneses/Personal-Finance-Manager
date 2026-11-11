@@ -21,13 +21,13 @@
 .dash-header h1 {
     font-size: 1.7rem;
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-primary);
     margin: 0;
 }
 
 .dash-header p {
     font-size: 0.85rem;
-    color: #64748b;
+    color: var(--text-tertiary);
     margin: 4px 0 0;
     text-transform: capitalize;
 }
@@ -44,7 +44,7 @@
 
 .dashboard-error p {
     margin: 0;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 /* ─── Columna derecha: préstamos / categorías / actividad */
@@ -85,7 +85,7 @@
 /* Pista de uso bajo elementos con acciones ocultas */
 .dash-hint {
     font-size: 0.72rem;
-    color: #475569;
+    color: var(--text-tertiary);
     text-align: center;
     margin: 12px 0 0;
 }
@@ -114,11 +114,11 @@
 }
 
 .qs-flow-expense {
-    background: #ef4444;
+    background: var(--danger);
 }
 
 .qs-flow-net {
-    background: #22c55e;
+    background: var(--success);
 }
 
 .qs-flow-labels {
@@ -171,7 +171,7 @@ button.qs-item:focus-visible {
 
 .qs-label {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
 }
@@ -205,7 +205,7 @@ button.qs-item:focus-visible {
     padding: 6px 12px;
     font-size: 0.78rem;
     font-family: inherit;
-    color: #94a3b8;
+    color: var(--text-secondary);
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
 }
@@ -225,7 +225,7 @@ button.qs-item:focus-visible {
     background: rgba(239, 68, 68, 0.04);
 }
 
-.qs-tag strong { color: #f8fafc; font-weight: 500; }
+.qs-tag strong { color: var(--text-primary); font-weight: 500; }
 
 .qs-tag-dot {
     width: 8px;
@@ -303,13 +303,13 @@ button.qs-item:focus-visible {
 
 .cat-name {
     font-size: 0.83rem;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-weight: 400;
 }
 
 .cat-txcount {
     font-size: 0.7rem;
-    color: #475569;
+    color: var(--text-tertiary);
 }
 
 .cat-row-right {
@@ -327,7 +327,7 @@ button.qs-item:focus-visible {
 
 .cat-pct {
     font-size: 0.68rem;
-    color: #475569;
+    color: var(--text-tertiary);
 }
 
 .cat-bar-track {

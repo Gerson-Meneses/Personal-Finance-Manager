@@ -20,7 +20,7 @@
 }
 
 .not-found-icon {
-  color: #f1c40f;
+  color: var(--accent);
   margin-bottom: 20px;
   animation: float 3s ease-in-out infinite;
 }
@@ -30,7 +30,7 @@
   font-weight: 900;
   margin: 0;
   line-height: 1;
-  background: linear-gradient(180deg, #f1c40f 0%, #d4ac0d 100%);
+  background: linear-gradient(180deg, var(--accent) 0%, #d4ac0d 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -39,11 +39,11 @@
 .not-found-content h2 {
   font-size: 1.5rem;
   margin: 10px 0 20px;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .not-found-content p {
-  color: #94a3b8;
+  color: var(--text-secondary);
   margin-bottom: 40px;
   line-height: 1.6;
  text-align: center;

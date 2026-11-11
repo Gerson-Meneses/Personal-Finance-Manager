@@ -47,7 +47,7 @@
     flex-direction: column;
     gap: 10px;
     padding: 22px;
-    background: var(--bg-surface, #0b0d12);
+    background: var(--bg-surface, var(--bg-surface));
     border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
     border-radius: 20px;
     box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55);
@@ -80,13 +80,13 @@
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: var(--text-tertiary, #64748b);
+    color: var(--text-tertiary, var(--text-tertiary));
     cursor: pointer;
 }
 
 .onboarding-tour__close:hover {
     background: var(--bg-hover, rgba(255, 255, 255, 0.06));
-    color: var(--text-primary, #f8fafc);
+    color: var(--text-primary, var(--text-primary));
 }
 
 .onboarding-tour__spark {
@@ -98,7 +98,7 @@
     border-radius: 11px;
     background: rgba(241, 196, 15, 0.12);
     border: 1px solid rgba(241, 196, 15, 0.24);
-    color: var(--accent, #f1c40f);
+    color: var(--accent, var(--accent));
 }
 
 .onboarding-tour__progress {
@@ -106,18 +106,18 @@
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--text-tertiary, #64748b);
+    color: var(--text-tertiary, var(--text-tertiary));
 }
 
 .onboarding-tour__progress span {
-    color: var(--accent, #f1c40f);
+    color: var(--accent, var(--accent));
 }
 
 .onboarding-tour__card h2 {
     margin: 0;
     font-size: 1.2rem;
     font-weight: 700;
-    color: var(--text-primary, #f8fafc);
+    color: var(--text-primary, var(--text-primary));
     line-height: 1.25;
 }
 
@@ -125,7 +125,7 @@
     margin: 0;
     font-size: 0.88rem;
     line-height: 1.55;
-    color: var(--text-secondary, #94a3b8);
+    color: var(--text-secondary, var(--text-secondary));
 }
 
 .onboarding-tour__dots {
@@ -144,7 +144,7 @@
 
 .onboarding-tour__dots span.is-active {
     width: 18px;
-    background: var(--accent, #f1c40f);
+    background: var(--accent, var(--accent));
 }
 
 .onboarding-tour__actions {
@@ -158,7 +158,7 @@
 .onboarding-tour__ghost {
     border: none;
     background: none;
-    color: var(--text-tertiary, #64748b);
+    color: var(--text-tertiary, var(--text-tertiary));
     font-family: inherit;
     font-size: 0.78rem;
     cursor: pointer;
@@ -166,7 +166,7 @@
 }
 
 .onboarding-tour__ghost:hover {
-    color: var(--text-primary, #f8fafc);
+    color: var(--text-primary, var(--text-primary));
 }
 
 .onboarding-tour__nav {
@@ -194,7 +194,7 @@
     width: 36px;
     height: 36px;
     background: var(--bg-hover, rgba(255, 255, 255, 0.05));
-    color: var(--text-secondary, #94a3b8);
+    color: var(--text-secondary, var(--text-secondary));
 }
 
 .onboarding-tour__icon:disabled {
@@ -205,8 +205,8 @@
 .onboarding-tour__primary {
     height: 36px;
     padding: 0 14px;
-    background: var(--accent, #f1c40f);
-    color: var(--accent-contrast, #111318);
+    background: var(--accent, var(--accent));
+    color: var(--accent-contrast, var(--accent-contrast));
 }
 
 .onboarding-tour__primary:active,

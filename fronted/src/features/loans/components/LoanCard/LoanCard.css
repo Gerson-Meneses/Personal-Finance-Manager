@@ -70,7 +70,7 @@
 
 .loan-card__title {
   font-weight: 600;
-  color: #f8fafc;
+  color: var(--text-primary);
   font-size: 0.95rem;
   min-width: 0;
   overflow: hidden;
@@ -89,7 +89,7 @@
 .loan-card__chevron {
   display: flex;
   align-items: center;
-  color: #64748b;
+  color: var(--text-tertiary);
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
@@ -129,7 +129,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 4px 8px;
-  color: #64748b;
+  color: var(--text-tertiary);
   min-width: 0;
 }
 
@@ -146,11 +146,11 @@
   padding-left: 6px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .loan-card__meta-badge--account {
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 /* Barra de progreso sutil integrada debajo de los metas */
@@ -178,7 +178,7 @@
 
 .loan-card__progress-text {
   font-size: 0.7rem;
-  color: #475569;
+  color: var(--text-tertiary);
 }
 
 /* Colapso Avanzado CSS Grid */
@@ -213,14 +213,14 @@
 
 .loan-card__grid-label {
   font-size: 0.7rem;
-  color: #475569;
+  color: var(--text-tertiary);
   text-transform: uppercase;
 }
 
 .loan-card__grid-value {
   font-size: 0.9rem;
   font-weight: 500;
-  color: #cbd5e1;
+  color: var(--text-secondary);
   margin-top: 2px;
 }
 
@@ -250,7 +250,7 @@
 
 .loan-payments__title {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.025em;
   margin-bottom: 10px;
@@ -258,7 +258,7 @@
 
 .loan-payments__empty {
   font-size: 0.8rem;
-  color: #475569;
+  color: var(--text-tertiary);
   font-style: italic;
 }
 
@@ -286,7 +286,7 @@
 }
 
 .payment-row-item__icon {
-  color: #475569;
+  color: var(--text-tertiary);
   display: flex;
   align-items: center;
 }
@@ -299,7 +299,7 @@
 .payment-row-item__name {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .payment-row-item__meta {
@@ -307,7 +307,7 @@
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-tertiary);
   margin-top: 1px;
 }
 
@@ -332,8 +332,8 @@
 }
 
 /* Clases de Utilidad de Colores Globales */
-.text-success { color: #22c55e !important; }
-.text-danger { color: #ef4444 !important; }
+.text-success { color: var(--success) !important; }
+.text-danger { color: var(--danger) !important; }
 
 .description-section {
  padding: 12px;

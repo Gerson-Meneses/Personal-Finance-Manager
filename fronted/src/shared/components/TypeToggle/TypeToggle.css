@@ -56,7 +56,7 @@
     outline: none;
     padding: 0.9rem;
     border-radius: 8px;
-    color: #94a3b8; /* Color texto inactivo */
+    color: var(--text-secondary); /* Color texto inactivo */
     font-size: 0.75rem;
     font-weight: 600;
     cursor: pointer;
@@ -72,7 +72,7 @@
 
 /* Hover en botones inactivos */
 .toggle-button:hover:not(:disabled):not(.active) {
-    color: #f8fafc;
+    color: var(--text-primary);
 }
 
 /* Texto cuando está activo */
@@ -82,7 +82,7 @@
 
 /* Manejo de Errores y Deshabilitado (Igual que antes) */
 .has-error .toggle-wrapper {
-    border-color: #ef4444;
+    border-color: var(--danger);
 }
 
 .disabled .toggle-wrapper {
@@ -98,5 +98,5 @@
 
 /* Efecto focus en el contenedor */
 .toggle-wrapper:focus-within {
-    border-color: #38bdf8;
+    border-color: var(--info);
 }

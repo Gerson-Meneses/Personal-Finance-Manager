@@ -27,12 +27,12 @@
     transition: border-color 0.2s, background 0.2s;
 }
 .tf-search-wrap:focus-within {
-    border-color: #38bdf8;
+    border-color: var(--info);
     background: rgba(56, 189, 248, 0.05);
 }
 
 .tf-search-icon {
-    color: #475569;
+    color: var(--text-tertiary);
     display: flex;
     align-items: center;
     flex-shrink: 0;
@@ -43,11 +43,11 @@
     background: transparent;
     border: none;
     outline: none;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 0.875rem;
     font-family: inherit;
 }
-.tf-search-input::placeholder { color: #475569; }
+.tf-search-input::placeholder { color: var(--text-tertiary); }
 
 /* Controls */
 .tf-controls {
@@ -66,22 +66,22 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     padding: 0.5rem 0.9rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.82rem;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
 }
-.tf-filter-toggle:hover { border-color: rgba(255,255,255,0.25); color: #f8fafc; }
+.tf-filter-toggle:hover { border-color: rgba(255,255,255,0.25); color: var(--text-primary); }
 .tf-filter-toggle.active {
-    border-color: #38bdf8;
-    color: #38bdf8;
+    border-color: var(--info);
+    color: var(--info);
     background: rgba(56, 189, 248, 0.08);
 }
 
 .tf-active-count {
-    background: #38bdf8;
+    background: var(--info);
     color: #000000;
     font-size: 0.65rem;
     font-weight: 700;
@@ -102,17 +102,17 @@
     border: 1px solid rgba(239, 68, 68, 0.2);
     border-radius: 10px;
     padding: 0.5rem 0.75rem;
-    color: #ef4444;
+    color: var(--danger);
     font-size: 0.8rem;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.2s;
 }
-.tf-reset-btn:hover { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; }
+.tf-reset-btn:hover { background: rgba(239, 68, 68, 0.15); border-color: var(--danger); }
 
 /* ─── Panel ───────────────────────────────────────────── */
 .tf-panel {
-    background: #0b0d12;
+    background: var(--bg-surface);
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 14px;
     padding: 20px;
@@ -141,7 +141,7 @@
 
 .tf-group-label {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-weight: 500;
@@ -166,7 +166,7 @@
 
 .tf-field label {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .tf-field input {
@@ -174,7 +174,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     padding: 0.5rem 0.75rem;
-    color: #f8fafc;
+    color: var(--text-primary);
     font-size: 0.85rem;
     font-family: inherit;
     outline: none;
@@ -184,7 +184,7 @@
 }
 .tf-field input:hover,
 .tf-field input:focus {
-    border-color: #38bdf8;
+    border-color: var(--info);
     background: rgba(56, 189, 248, 0.04);
 }
 
@@ -211,7 +211,7 @@
     background: transparent;
     border: none;
     padding: 4px 10px;
-    color: #475569;
+    color: var(--text-tertiary);
     font-size: 0.72rem;
     font-family: inherit;
     cursor: pointer;
@@ -219,7 +219,7 @@
 }
 .tf-mode-toggle button.active {
     background: rgba(56, 189, 248, 0.15);
-    color: #38bdf8;
+    color: var(--info);
 }
 
 /* ─── Chips ───────────────────────────────────────────── */
@@ -234,17 +234,17 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
     padding: 4px 12px;
-    color: #64748b;
+    color: var(--text-tertiary);
     font-size: 0.78rem;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.2s;
 }
-.tf-chip:hover { border-color: rgba(255,255,255,0.2); color: #f8fafc; }
+.tf-chip:hover { border-color: rgba(255,255,255,0.2); color: var(--text-primary); }
 .tf-chip.active {
     background: rgba(56, 189, 248, 0.12);
-    border-color: #38bdf8;
-    color: #38bdf8;
+    border-color: var(--info);
+    color: var(--info);
 }
 
 /* ─── Responsive ──────────────────────────────────────── */
@@ -268,7 +268,7 @@
     }
 }
 
-/* --- Periodos espec�ficos (mes / semana) --------------- */
+/* --- Periodos espec�ficos (mes / semana) --------------- */
 .tf-period-selectors {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

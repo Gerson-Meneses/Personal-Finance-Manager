@@ -13,7 +13,7 @@
     padding: 20px 22px;
     background:
         radial-gradient(ellipse 55% 130% at 0% 0%, rgba(139, 92, 246, 0.09), transparent 62%),
-        #0b0d12;
+        var(--bg-surface);
 }
 
 .lender-hero__identity {
@@ -58,7 +58,7 @@
     margin: 0;
     font-size: clamp(1.35rem, 2.2vw, 1.75rem);
     font-weight: 600;
-    color: #f8fafc;
+    color: var(--text-primary);
     line-height: 1.15;
     white-space: nowrap;
     overflow: hidden;
@@ -82,7 +82,7 @@
     font-size: 0.66rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .lender-hero__net strong {
@@ -90,8 +90,8 @@
     font-weight: 700;
 }
 
-.lender-hero__net.is-positive strong { color: #22c55e; }
-.lender-hero__net.is-negative strong { color: #ef4444; }
+.lender-hero__net.is-positive strong { color: var(--success); }
+.lender-hero__net.is-negative strong { color: var(--danger); }
 
 .lender-hero__actions {
     display: flex;
@@ -136,12 +136,12 @@
 
 .lender-stat--received .lender-stat__icon {
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    color: var(--danger);
 }
 
 .lender-stat--total .lender-stat__icon {
     background: rgba(56, 189, 248, 0.1);
-    color: #38bdf8;
+    color: var(--info);
 }
 
 .lender-stat > div {
@@ -152,13 +152,13 @@
 
 .lender-stat__label {
     font-size: 0.7rem;
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .lender-stat strong {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #e2e8f0;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -166,7 +166,7 @@
 
 .lender-stat small {
     font-size: 0.68rem;
-    color: #475569;
+    color: var(--text-tertiary);
 }
 
 /* ── Barra de vista ───────────────────────────────────── */
@@ -184,7 +184,7 @@
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .lender-viewbar .custom-form-group {
@@ -209,7 +209,7 @@
     padding: 28px 16px;
     text-align: center;
     font-size: 0.85rem;
-    color: #64748b;
+    color: var(--text-tertiary);
 }
 
 .lender-timeline {

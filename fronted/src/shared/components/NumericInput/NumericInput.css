@@ -10,7 +10,7 @@
     align-items: center;
     gap: 6px;
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--text-tertiary);
     font-weight: 500;
     width: fit-content;
     text-wrap: nowrap;
@@ -31,7 +31,7 @@
 
 .input-wrapper-num .symbol-prefix {
     font-size: 0.85rem;
-    color: #475569;
+    color: var(--text-tertiary);
     margin-right: 4px;
     user-select: none;
 }
@@ -40,7 +40,7 @@
 .numeric-input {
     flex: 1;
     background-color: transparent;
-    color: #f8fafc;
+    color: var(--text-primary);
     border: none;
     outline: none;
     padding: 0;
@@ -52,7 +52,7 @@
 
 .input-wrapper-num:focus-within,
 .input-wrapper-num:hover {
-    border-color: #38bdf8;
+    border-color: var(--info);
     background: rgba(56, 189, 248, 0.04);
 }
 

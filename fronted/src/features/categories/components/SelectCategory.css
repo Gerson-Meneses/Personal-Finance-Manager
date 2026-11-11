@@ -9,7 +9,7 @@
 /* Estados: el acento sigue marcando hover/selección */
 .select-category .select-input-option.is-active,
 .select-category .select-input-option.is-selected {
-    color: #38bdf8;
+    color: var(--info);
 }
 
 /* Placeholder del trigger también legible */

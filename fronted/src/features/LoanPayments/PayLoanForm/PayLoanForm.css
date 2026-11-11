@@ -1,6 +1,6 @@
 /* Estenedor del Popup/Formulario contenedor */
 .payment-form-popup {
-  background-color: #0b0d12 !important;
+  background-color: var(--bg-surface) !important;
   border: 1px solid rgba(255, 255, 255, 0.05) !important;
   border-radius: 20px !important;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
@@ -50,7 +50,7 @@
 .loan-context-summary__title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -69,7 +69,7 @@
 .loan-context-summary__value {
   font-size: 1rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 /* Metadatos secundarios del header */
@@ -86,7 +86,7 @@
   align-items: center;
   gap: 4px;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 /* Grid inferior: Impacto en vivo del pago */
@@ -106,7 +106,7 @@
 .loan-context-summary__sublabel {
   display: block;
   font-size: 0.7rem;
-  color: #64748b;
+  color: var(--text-tertiary);
   text-transform: uppercase;
   margin-bottom: 1px;
 }
@@ -154,8 +154,8 @@
 }
 
 .spec-payment-actions .btn-submit.quickpay:disabled {
-  background: #1e293b !important;
-  color: #475569 !important;
+  background: var(--bg-elevated) !important;
+  color: var(--text-tertiary) !important;
   box-shadow: none !important;
   cursor: not-allowed !important;
 }

@@ -15,33 +15,33 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
-    color: #f8fafc;
+    color: var(--text-primary);
     outline: none;
     transition: border-color 0.2s, background 0.2s;
-    caret-color: #38bdf8;
+    caret-color: var(--info);
     box-sizing: border-box;
     -moz-appearance: textfield;
     appearance: textfield;
 }
 
 .code-input:focus {
-    border-color: #38bdf8;
+    border-color: var(--info);
     background: rgba(56, 189, 248, 0.06);
 }
 
 .code-input.filled {
     border-color: rgba(241, 196, 15, 0.35);
     background: rgba(241, 196, 15, 0.04);
-    color: #f1c40f;
+    color: var(--accent);
 }
 
 .code-input.code-input-error {
-    border-color: #ef4444;
+    border-color: var(--danger);
     background: rgba(239, 68, 68, 0.05);
 }
 
 .code-input:-webkit-autofill {
-    -webkit-box-shadow: 0 0 0px 1000px #0b0d12 inset !important;
+    -webkit-box-shadow: 0 0 0px 1000px var(--bg-surface) inset !important;
 }
 
 .code-input:disabled {

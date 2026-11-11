@@ -1,0 +1,43 @@
+.skeleton {
+    display: block;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(
+        90deg,
+        var(--surface-soft) 25%,
+        var(--surface-soft-strong) 37%,
+        var(--surface-soft) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeletonPulse 1.4s ease infinite;
+}
+
+.skeleton-line {
+    height: 12px;
+    width: 100%;
+}
+
+.skeleton-title {
+    height: 20px;
+    width: 42%;
+}
+
+.skeleton-amount {
+    height: 32px;
+    width: 55%;
+}
+
+@keyframes skeletonPulse {
+    0% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0 50%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton {
+        animation: none;
+    }
+}
