@@ -73,7 +73,7 @@ export function PrivateLayout() {
           </NavLink>
           <NavLink to="/recurring" className="header-nav-link">
             <CalendarClock size={17} />
-            <span>Previstos</span>
+            <span>Futuros</span>
           </NavLink>
           <NavLink to="/budgets" className="header-nav-link">
             <PiggyBank size={17} />
@@ -158,7 +158,7 @@ export function PrivateLayout() {
             </NavLink>
             <NavLink to="/recurring" className="header-mobile-link" onClick={() => setMenuOpen(false)}>
               <CalendarClock size={18} />
-              <span>Pagos previstos</span>
+              <span>Pagos futuros</span>
             </NavLink>
             <NavLink to="/budgets" className="header-mobile-link" onClick={() => setMenuOpen(false)}>
               <PiggyBank size={18} />
@@ -288,7 +288,7 @@ export function PrivateLayout() {
           className={({ isActive }) => `bottom-nav__item ${isActive ? "is-active" : ""}`}
         >
           <CalendarClock size={20} />
-          <span>Previstos</span>
+          <span>Futuros</span>
         </NavLink>
 
         <button

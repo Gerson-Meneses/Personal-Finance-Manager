@@ -3,6 +3,7 @@ import { computeBalanceEffect } from "../src/utils/balance";
 import { getMaxBalance } from "../src/utils/getBalanceToCreditCard";
 import { calculateLoanPaymentStatus } from "../src/mappers/LoansMapper";
 import { daysInRange } from "../src/services/recurringPaymentService";
+import { roundBudgetSuggestion } from "../src/services/budgetService";
 import { RecurrenceFrequency, TypeTransaction } from "../src/utils/Enums";
 import type { RecurringPayment } from "../src/entities/RecurringPayment.entity";
 import type { Loan } from "../src/entities/Loan.entity";
@@ -175,6 +176,81 @@ describe("recurrencia de pagos", () => {
         expect(dates).toEqual(["2025-02-28"]);
     });
 
+    test("único: genera solo la fecha de inicio dentro del rango", () => {
+        const dates = daysInRange(
+            payment({
+                frequency: RecurrenceFrequency.ONCE,
+                startDate: "2026-11-20",
+            }),
+            "2026-11-01",
+            "2026-11-30"
+        );
+
+        expect(dates).toEqual(["2026-11-20"]);
+    });
+
+    test("único: no se repite en meses posteriores", () => {
+        const dates = daysInRange(
+            payment({
+                frequency: RecurrenceFrequency.ONCE,
+                startDate: "2026-11-20",
+            }),
+            "2026-12-01",
+            "2026-12-31"
+        );
+
+        expect(dates).toEqual([]);
+    });
+
+    test("cada 15 días: genera fechas exactas de 15 días", () => {
+        const dates = daysInRange(
+            payment({
+                frequency: RecurrenceFrequency.FIFTEEN_DAYS,
+                startDate: "2026-11-01",
+            }),
+            "2026-11-01",
+            "2026-12-31"
+        );
+
+        expect(dates).toEqual([
+            "2026-11-01",
+            "2026-11-16",
+            "2026-12-01",
+            "2026-12-16",
+            "2026-12-31",
+        ]);
+    });
+
+    test("límite por número de repeticiones: corta el cronograma", () => {
+        const dates = daysInRange(
+            payment({
+                frequency: RecurrenceFrequency.BIWEEKLY,
+                dayOfWeek: 1,
+                startDate: "2026-11-02",
+                maxOccurrences: 3,
+            }),
+            "2026-11-01",
+            "2026-12-31"
+        );
+
+        expect(dates).toEqual(["2026-11-02", "2026-11-16", "2026-11-30"]);
+    });
+
+    test("el límite cuenta ocurrencias anteriores al rango consultado", () => {
+        const dates = daysInRange(
+            payment({
+                frequency: RecurrenceFrequency.MONTHLY,
+                dayOfMonth: 5,
+                startDate: "2026-01-01",
+                maxOccurrences: 2,
+            }),
+            "2026-03-01",
+            "2026-12-31"
+        );
+
+        expect(dates).toEqual([]);
+    });
+
     test("respeta la fecha de fin", () => {
         const dates = daysInRange(
             payment({ dayOfMonth: 5, startDate: "2026-01-01", endDate: "2026-03-31" }),
@@ -193,5 +269,14 @@ describe("recurrencia de pagos", () => {
         );
 
         expect(dates).toEqual([]);
+    });
+});
+
+describe("sugerencias de presupuesto", () => {
+    test("redondea hacia arriba en pasos de 5 unidades", () => {
+        expect(roundBudgetSuggestion(0)).toBe(0);
+        expect(roundBudgetSuggestion(1)).toBe(500);
+        expect(roundBudgetSuggestion(501)).toBe(1000);
+        expect(roundBudgetSuggestion(12_345)).toBe(12_500);
     });
 });

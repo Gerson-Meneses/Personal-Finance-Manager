@@ -11,6 +11,7 @@ import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal";
 import { useTransfers } from "../../../../features/transfers/hooks";
 import type { Transaction } from "../../../../features/transactions/types";
 import AccountCard from "../../../../features/accounts/components/accountCard/accountCard";
+import { CreditHealthCard } from "../../../../features/accounts/components/CreditHealthCard";
 import TransferForm from "../../../../features/transfers/components/TransferForm/TransferForm";
 import { getIcon } from "../../../../shared/utils/GetIcon";
 import AccountForm from "../../../../features/accounts/components/accountForm/accountForm";
@@ -62,6 +63,8 @@ export function AccountDetail() {
                 {/* COLUMNA IZQUIERDA: Info de Cuenta */}
                 <aside className="default-column">
                     <AccountCard account={account} />
+
+                    {isCredit && <CreditHealthCard accounts={[account]} />}
 
                     <div className="card action-card mt-6">
                         <h3>• Acciones Rápidas</h3>

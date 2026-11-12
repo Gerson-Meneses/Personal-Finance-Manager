@@ -17,11 +17,14 @@ import type {
 import {
     RecurrenceFrequency,
     RecurringEntryType,
+    RecurringLoanAction,
     RecurringOccurrenceStatus,
+    TypeLoan,
     TypeTransaction,
 } from "../utils/Enums";
 import { money } from "../utils/normalizarMoney";
 import { TransactionService } from "./transactionService";
+import { LoansService } from "./loansService";
 import type { TransactionSchema } from "../schemas/transaction.schema";
 
 export interface RecurringPaymentResponse {
@@ -36,8 +39,13 @@ export interface RecurringPaymentResponse {
     dayOfWeek?: number | null;
     startDate: string;
     endDate?: string | null;
+    maxOccurrences?: number | null;
     isActive: boolean;
     autoDebit: boolean;
+    loanAction: RecurringLoanAction;
+    loanId?: string | null;
+    loanCounterparty?: string | null;
+    loan?: { id: string; lender: string; type: TypeLoan } | null;
     nextDueDate?: string | null;
     account?: { id: string; name: string; color?: string; icon?: string };
     category?: { id: string; name: string; color?: string; icon?: string };
@@ -55,6 +63,8 @@ export interface RecurringOccurrenceResponse {
     dueDate: string;
     status: RecurringOccurrenceStatus;
     autoDebit: boolean;
+    loanAction: RecurringLoanAction;
+    loanCounterparty?: string | null;
     account?: { id: string; name: string; color?: string; icon?: string } | null;
     category?: { id: string; name: string; color?: string; icon?: string } | null;
     transactionId?: string | null;
@@ -102,6 +112,18 @@ export function daysInRange(payment: RecurringPayment, from: string, to: string)
     const rangeEnd = payment.endDate && payment.endDate < to ? payment.endDate : to;
     if (rangeStart > rangeEnd) return [];
 
+    if (payment.frequency === RecurrenceFrequency.ONCE) {
+        return payment.startDate >= rangeStart && payment.startDate <= rangeEnd
+            ? [payment.startDate]
+            : [];
+    }
+
+    const maxOccurrences = payment.maxOccurrences && payment.maxOccurrences > 0
+        ? payment.maxOccurrences
+        : Number.POSITIVE_INFINITY;
+    let generated = 0;
+    const dates: string[] = [];
+
     if (payment.frequency === RecurrenceFrequency.WEEKLY || payment.frequency === RecurrenceFrequency.BIWEEKLY) {
         const start = dayjs(payment.startDate);
         const dayOfWeek = payment.dayOfWeek ?? start.day();
@@ -109,12 +131,32 @@ export function daysInRange(payment: RecurringPayment, from: string, to: string)
         const stepWeeks = payment.frequency === RecurrenceFrequency.BIWEEKLY ? 2 : 1;
         const step = stepWeeks * Math.max(1, payment.intervalCount);
 
-        const dates: string[] = [];
         let cursor = first;
         while (cursor.format("YYYY-MM-DD") <= rangeEnd) {
             const due = cursor.format("YYYY-MM-DD");
-            if (due >= rangeStart) dates.push(due);
+            if (due >= payment.startDate) {
+                generated += 1;
+                if (generated > maxOccurrences) break;
+                if (due >= rangeStart) dates.push(due);
+            }
             cursor = cursor.add(step, "week");
+        }
+        return dates;
+    }
+
+    if (payment.frequency === RecurrenceFrequency.FIFTEEN_DAYS) {
+        const start = dayjs(payment.startDate);
+        const stepDays = 15 * Math.max(1, payment.intervalCount);
+        let cursor = start;
+
+        while (cursor.format("YYYY-MM-DD") <= rangeEnd) {
+            const due = cursor.format("YYYY-MM-DD");
+            if (due >= payment.startDate) {
+                generated += 1;
+                if (generated > maxOccurrences) break;
+                if (due >= rangeStart) dates.push(due);
+            }
+            cursor = cursor.add(stepDays, "day");
         }
         return dates;
     }
@@ -123,7 +165,6 @@ export function daysInRange(payment: RecurringPayment, from: string, to: string)
         const start = dayjs(payment.startDate);
         const day = payment.dayOfMonth ?? start.date();
         const monthIndex = start.month();
-        const dates: string[] = [];
         let year = start.year();
         const endYear = dayjs(rangeEnd).year();
 
@@ -131,7 +172,11 @@ export function daysInRange(payment: RecurringPayment, from: string, to: string)
             const due = dayjs(new Date(year, monthIndex, 1))
                 .date(clampDay(year, monthIndex, day))
                 .format("YYYY-MM-DD");
-            if (due >= rangeStart && due <= rangeEnd) dates.push(due);
+            if (due >= payment.startDate) {
+                generated += 1;
+                if (generated > maxOccurrences) break;
+                if (due >= rangeStart && due <= rangeEnd) dates.push(due);
+            }
             year += Math.max(1, payment.intervalCount);
         }
         return dates;
@@ -140,7 +185,6 @@ export function daysInRange(payment: RecurringPayment, from: string, to: string)
     // MONTHLY (también es el fallback)
     const start = dayjs(payment.startDate);
     const day = payment.dayOfMonth ?? start.date();
-    const dates: string[] = [];
     let cursor = start.startOf("month");
     let monthStep = 0;
     const end = dayjs(rangeEnd).startOf("month");
@@ -148,7 +192,11 @@ export function daysInRange(payment: RecurringPayment, from: string, to: string)
     while (cursor.isBefore(end, "month") || cursor.isSame(end, "month")) {
         if (monthStep % Math.max(1, payment.intervalCount) === 0) {
             const due = cursor.date(clampDay(cursor.year(), cursor.month(), day)).format("YYYY-MM-DD");
-            if (due >= rangeStart && due <= rangeEnd) dates.push(due);
+            if (due >= payment.startDate) {
+                generated += 1;
+                if (generated > maxOccurrences) break;
+                if (due >= rangeStart && due <= rangeEnd) dates.push(due);
+            }
         }
         cursor = cursor.add(1, "month");
         monthStep += 1;
@@ -161,6 +209,7 @@ export class RecurringPaymentService {
     private occurrenceRepo = AppDataSourceProd.getRepository(RecurringPaymentOccurrence);
     private notificationRepo = AppDataSourceProd.getRepository(PaymentNotification);
     private transactionService = new TransactionService();
+    private loansService = new LoansService();
 
     private mapPayment(payment: RecurringPayment): RecurringPaymentResponse {
         const nextDates = payment.isActive
@@ -179,8 +228,15 @@ export class RecurringPaymentService {
             dayOfWeek: payment.dayOfWeek,
             startDate: payment.startDate,
             endDate: payment.endDate,
+            maxOccurrences: payment.maxOccurrences ?? null,
             isActive: payment.isActive,
             autoDebit: payment.autoDebit,
+            loanAction: payment.loanAction ?? RecurringLoanAction.NONE,
+            loanId: payment.loanId ?? null,
+            loanCounterparty: payment.loanCounterparty ?? null,
+            loan: payment.loan
+                ? { id: payment.loan.id, lender: payment.loan.lender, type: payment.loan.type }
+                : null,
             nextDueDate: nextDates[0] ?? null,
             account: payment.account
                 ? {
@@ -214,6 +270,8 @@ export class RecurringPaymentService {
             dueDate: occurrence.dueDate,
             status: occurrence.status,
             autoDebit: occurrence.autoDebit,
+            loanAction: occurrence.payment?.loanAction ?? RecurringLoanAction.NONE,
+            loanCounterparty: occurrence.payment?.loanCounterparty ?? null,
             account: occurrence.account
                 ? {
                     id: occurrence.account.id,
@@ -283,7 +341,11 @@ export class RecurringPaymentService {
             dayOfWeek: data.dayOfWeek ?? null,
             startDate: data.startDate,
             endDate: data.endDate ?? null,
+            maxOccurrences: data.maxOccurrences ?? null,
             autoDebit: data.autoDebit,
+            loanAction: data.loanAction,
+            loanId: data.loanId ?? null,
+            loanCounterparty: data.loanCounterparty ?? null,
             accountId: data.accountId,
             categoryId: data.categoryId,
             userId,
@@ -360,7 +422,7 @@ export class RecurringPaymentService {
     async listPayments(userId: UuidSchema): Promise<RecurringPaymentResponse[]> {
         const payments = await this.paymentRepo.find({
             where: { user: { id: userId } },
-            relations: ["account", "category"],
+            relations: ["account", "category", "loan"],
             order: { createdAt: "DESC" },
         });
         return payments.map((payment) => this.mapPayment(payment));
@@ -487,7 +549,7 @@ export class RecurringPaymentService {
 
             const payment = await manager.findOne(RecurringPayment, {
                 where: { id: occurrence.paymentId, user: { id: userId } },
-                relations: ["account", "category"],
+                relations: ["account", "category", "loan"],
             });
             if (!payment) throw new NotFoundError("Regla de pago no encontrada");
 
@@ -497,29 +559,100 @@ export class RecurringPaymentService {
             });
             if (!account) throw new NotFoundError("Cuenta de ejecución no encontrada");
 
-            const transactionData = {
-                name: payment.name,
-                type: payment.type === RecurringEntryType.INCOME
-                    ? TypeTransaction.INCOME
-                    : TypeTransaction.EXPENSE,
-                amount: occurrence.amount,
-                date: data.date ?? occurrence.dueDate,
-                time: data.time,
-                description: data.description ?? payment.description ?? undefined,
-                categoryId: payment.categoryId,
-                accountId,
-                isRecurrent: false,
-            } as TransactionSchema;
+            const action = payment.loanAction ?? RecurringLoanAction.NONE;
+            let transactionId: string | null = null;
 
-            const transaction = await this.transactionService.createTransaction(
-                transactionData,
-                userId,
-                true,
-                manager
-            );
+            if (action === RecurringLoanAction.PAY_LOAN) {
+                if (payment.loanCounterparty) {
+                    const result = await this.loansService.payLenderDebt(
+                        userId,
+                        {
+                            lender: payment.loanCounterparty,
+                            type: payment.type === RecurringEntryType.INCOME
+                                ? TypeLoan.GIVEN
+                                : TypeLoan.RECEIVED,
+                            amount: occurrence.amount,
+                            date: data.date ?? occurrence.dueDate,
+                            time: data.time,
+                            description: data.description ?? payment.description ?? undefined,
+                            accountId,
+                        },
+                        manager
+                    );
+                    transactionId = result.payments[0]?.transaction?.id ?? null;
+                } else if (payment.loanId) {
+                    const result = await this.loansService.payLoan(
+                        userId,
+                        payment.loanId as UuidSchema,
+                        {
+                            amount: occurrence.amount,
+                            date: data.date ?? occurrence.dueDate,
+                            time: data.time,
+                            description: data.description ?? payment.description ?? undefined,
+                            accountId,
+                        },
+                        manager
+                    );
+                    transactionId = result.transaction?.id ?? null;
+                } else {
+                    throw new ConflictError("El pago no tiene una persona o préstamo vinculado");
+                }
+            } else if (
+                action === RecurringLoanAction.GIVE_LOAN ||
+                action === RecurringLoanAction.RECEIVE_LOAN
+            ) {
+                if (!payment.loanCounterparty) {
+                    throw new ConflictError("El pago no tiene una persona vinculada");
+                }
+
+                const result = await this.loansService.createLoan(
+                    userId,
+                    {
+                        type:
+                            action === RecurringLoanAction.GIVE_LOAN
+                                ? TypeLoan.GIVEN
+                                : TypeLoan.RECEIVED,
+                        lender: payment.loanCounterparty,
+                        amount: occurrence.amount,
+                        startDate: data.date ?? occurrence.dueDate,
+                        date: dayjs(data.date ?? occurrence.dueDate).toDate(),
+                        time: data.time,
+                        description: data.description ?? payment.description ?? undefined,
+                        accountId,
+                    },
+                    manager
+                );
+                transactionId = result.transaction?.id ?? null;
+            } else {
+                const transactionData = {
+                    name: payment.name,
+                    type: payment.type === RecurringEntryType.INCOME
+                        ? TypeTransaction.INCOME
+                        : TypeTransaction.EXPENSE,
+                    amount: occurrence.amount,
+                    date: data.date ?? occurrence.dueDate,
+                    time: data.time,
+                    description: data.description ?? payment.description ?? undefined,
+                    categoryId: payment.categoryId,
+                    accountId,
+                    isRecurrent: false,
+                } as TransactionSchema;
+
+                const transaction = await this.transactionService.createTransaction(
+                    transactionData,
+                    userId,
+                    true,
+                    manager
+                );
+                transactionId = transaction.id;
+            }
+
+            if (!transactionId) {
+                throw new ConflictError("No se pudo registrar la transacción del préstamo");
+            }
 
             occurrence.status = RecurringOccurrenceStatus.PAID;
-            occurrence.transactionId = transaction.id;
+            occurrence.transactionId = transactionId;
             occurrence.executedAt = new Date();
             occurrence.accountId = accountId;
             occurrence.failureReason = null;

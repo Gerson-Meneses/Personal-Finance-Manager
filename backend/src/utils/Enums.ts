@@ -17,7 +17,9 @@ export enum RecurrenceFrequency {
     MONTHLY = "MONTHLY",
     WEEKLY = "WEEKLY",
     BIWEEKLY = "BIWEEKLY",
-    YEARLY = "YEARLY"
+    FIFTEEN_DAYS = "FIFTEEN_DAYS",
+    YEARLY = "YEARLY",
+    ONCE = "ONCE"
 }
 
 export enum RecurringEntryType {
@@ -31,4 +33,11 @@ export enum RecurringOccurrenceStatus {
     PAID = "PAID",
     SKIPPED = "SKIPPED",
     FAILED = "FAILED"
+}
+
+export enum RecurringLoanAction {
+    NONE = "NONE",
+    PAY_LOAN = "PAY_LOAN",
+    GIVE_LOAN = "GIVE_LOAN",
+    RECEIVE_LOAN = "RECEIVE_LOAN"
 }

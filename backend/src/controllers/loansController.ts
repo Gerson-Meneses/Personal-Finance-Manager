@@ -37,13 +37,12 @@ export const payLoan = async (c: Context, userId: UuidSchema, loanId: UuidSchema
     return c.json({ payment }, 201)
 }
 export const quickPayLender = async (c: Context, userId: UuidSchema, data: QuickPaymentSchema) => {
-    const payments = await loanService.quickPayMultipleLoans(
+    const result = await loanService.quickPayMultipleLoans(
         userId,
         data
     );
     return c.json({
         message: "Pagos procesados exitosamente",
-        count: payments.length,
-        payments
+        ...result,
     }, 201);
 }

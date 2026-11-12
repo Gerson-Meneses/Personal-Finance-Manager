@@ -11,6 +11,8 @@ interface Step {
     targets?: string[];
     optional?: boolean;
     route?: string;
+    action?: "open-budget-wizard";
+    actionLabel?: string;
 }
 
 const STEPS: Step[] = [
@@ -20,7 +22,7 @@ const STEPS: Step[] = [
     },
     {
         title: "Muévete por la app",
-        description: "Usa la navegación superior para ir a transacciones, cuentas, préstamos, pagos previstos, presupuestos y categorías. En móvil, la barra inferior tiene Inicio, Movimientos y Previstos; el resto está en Más.",
+        description: "Usa la navegación superior para ir a transacciones, cuentas, préstamos, pagos futuros, presupuestos y categorías. En móvil, la barra inferior tiene Inicio, Movimientos y Futuros; el resto está en Más.",
         targets: ['[data-tour="nav"]', '[data-tour="bottom-nav"]'],
         optional: true,
     },
@@ -45,12 +47,21 @@ const STEPS: Step[] = [
         optional: true,
     },
     {
-        title: "Pagos previstos y presupuestos",
-        description: "Programa sueldos, alquileres o suscripciones, define presupuestos por categoría y confirma los pagos cuando venzan.",
+        title: "Pagos futuros y presupuestos",
+        description: "Programa sueldos, alquileres, cuotas de préstamos o dinero que planeas prestar. También puedes confirmar los pagos cuando venzan.",
+    },
+    {
+        title: "Tu presupuesto, con montos sugeridos",
+        description: "Calculamos montos sugeridos con tus gastos recientes. Ajusta las categorías y guárdalas sin salir del tutorial.",
+        targets: ['[data-tour="budget-suggestions"]'],
+        optional: true,
+        route: "/budgets",
+        action: "open-budget-wizard",
+        actionLabel: "Configurar mi presupuesto",
     },
     {
         title: "Nunca pierdas un vencimiento",
-        description: "La campana reúne avisos de ingresos y pagos previstos que vencen hoy. Márcalos como leídos cuando los revises.",
+        description: "La campana reúne avisos de ingresos y pagos futuros que vencen hoy. Márcalos como leídos cuando los revises.",
         targets: ['[data-tour="notifications"]'],
         optional: true,
     },
@@ -94,6 +105,15 @@ export function OnboardingTour({ userId, autoStart = false }: { userId: string; 
         window.localStorage.setItem(storageKey, "done");
         setOpen(false);
     }, [storageKey]);
+
+    const runStepAction = () => {
+        if (step?.action === "open-budget-wizard") {
+            markDone();
+            window.setTimeout(() => {
+                window.dispatchEvent(new CustomEvent("finance:open-budget-wizard"));
+            }, 80);
+        }
+    };
 
     useEffect(() => {
         if (!userId || !autoStart) return;
@@ -262,6 +282,17 @@ export function OnboardingTour({ userId, autoStart = false }: { userId: string; 
 
                 <h2>{step.title}</h2>
                 <p>{step.description}</p>
+
+                {step.action && step.actionLabel && (
+                    <button
+                        type="button"
+                        className="onboarding-tour__action"
+                        onClick={runStepAction}
+                    >
+                        <Sparkles size={15} />
+                        {step.actionLabel}
+                    </button>
+                )}
 
                 <div className="onboarding-tour__dots" aria-hidden="true">
                     {visibleSteps.map((item, dotIndex) => (

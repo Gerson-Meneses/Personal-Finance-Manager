@@ -12,8 +12,9 @@ import {
 import type { Account } from "./Account.entity";
 import type { Category } from "./Category.entity";
 import type { User } from "./User.entity";
-import { RecurrenceFrequency, RecurringEntryType } from "../utils/Enums";
+import { RecurrenceFrequency, RecurringEntryType, RecurringLoanAction } from "../utils/Enums";
 import type { RecurringPaymentOccurrence } from "./RecurringPaymentOccurrence.entity";
+import type { Loan } from "./Loan.entity";
 
 @Entity({ name: "recurring_payments" })
 @Index("IDX_recurring_payments_user", ["user"])
@@ -56,11 +57,35 @@ export class RecurringPayment {
     @Column({ type: "date", nullable: true })
     endDate?: string | null;
 
+    /** Alternativa a endDate: detiene la regla después de N ocurrencias */
+    @Column({ type: "integer", nullable: true })
+    maxOccurrences?: number | null;
+
     @Column({ type: "boolean", default: true })
     isActive: boolean;
 
     @Column({ type: "boolean", default: false })
     autoDebit: boolean;
+
+    /** Acción de préstamo que se ejecuta al confirmar la ocurrencia */
+    @Column({
+        type: "enum",
+        enum: RecurringLoanAction,
+        enumName: "recurring_loan_action_enum",
+        default: RecurringLoanAction.NONE,
+    })
+    loanAction: RecurringLoanAction;
+
+    @ManyToOne("Loan", { nullable: true, onDelete: "SET NULL" })
+    @JoinColumn({ name: "loanId" })
+    loan?: Loan | null;
+
+    @Column({ type: "uuid", nullable: true })
+    loanId?: string | null;
+
+    /** Persona del préstamo cuando la ocurrencia crea uno nuevo */
+    @Column({ type: "varchar", length: 100, nullable: true })
+    loanCounterparty?: string | null;
 
     @ManyToOne("User", { nullable: false, onDelete: "CASCADE" })
     @JoinColumn({ name: "userId" })

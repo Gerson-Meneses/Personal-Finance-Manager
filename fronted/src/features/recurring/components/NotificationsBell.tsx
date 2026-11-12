@@ -94,7 +94,7 @@ export function NotificationsBell() {
                             navigate("/recurring");
                         }}
                     >
-                        Ver pagos previstos
+                        Ver pagos futuros
                         <ChevronRight size={14} />
                     </button>
                 </div>

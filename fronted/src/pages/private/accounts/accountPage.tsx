@@ -8,6 +8,7 @@ import { getCreditDebt, getCreditMax } from "../../../features/accounts/utils";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import AccountCard from "../../../features/accounts/components/accountCard/accountCard";
 import AccountForm from "../../../features/accounts/components/accountForm/accountForm";
+import { CreditHealthCard } from "../../../features/accounts/components/CreditHealthCard";
 import { SearchInput } from "../../../shared/components/SearchInput/SearchInput";
 import { SelectInput } from "../../../shared/components/SelectInput/SelectInput";
 import "./accountPage.css";
@@ -200,6 +201,8 @@ export function AccountPage() {
           </article>
         </div>
       </section>
+
+      <CreditHealthCard accounts={creditAccounts} />
 
       {/* Grid de Cuentas */}
       {accounts.length === 0 ? (

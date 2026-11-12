@@ -12,11 +12,17 @@ export const useBudgets = (month?: string) => {
 
     const invalidate = () => {
         queryClient.invalidateQueries({ queryKey: ["budgets"] });
+        queryClient.invalidateQueries({ queryKey: ["budgetSuggestions"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     };
 
     const upsertMutation = useMutation({
         mutationFn: service.upsertBudget,
+        onSuccess: invalidate,
+    });
+
+    const bulkUpsertMutation = useMutation({
+        mutationFn: service.bulkUpsertBudgets,
         onSuccess: invalidate,
     });
 
@@ -31,6 +37,22 @@ export const useBudgets = (month?: string) => {
         error: query.error,
         refetch: query.refetch,
         upsertBudget: upsertMutation,
+        bulkUpsertBudgets: bulkUpsertMutation,
         deleteBudget: deleteMutation,
+    };
+};
+
+export const useBudgetSuggestions = (month?: string, lookback = 3) => {
+    const query = useQuery({
+        queryKey: ["budgetSuggestions", month ?? "current", lookback],
+        queryFn: () => service.getBudgetSuggestions(month, lookback),
+        placeholderData: (previousData) => previousData,
+    });
+
+    return {
+        data: query.data,
+        loading: query.isLoading,
+        error: query.error,
+        refetch: query.refetch,
     };
 };

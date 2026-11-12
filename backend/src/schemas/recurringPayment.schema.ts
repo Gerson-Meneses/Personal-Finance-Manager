@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { RecurrenceFrequency, RecurringEntryType } from "../utils/Enums";
+import { RecurrenceFrequency, RecurringEntryType, RecurringLoanAction } from "../utils/Enums";
 
 const dateString = (label: string) =>
     z.string({ message: `${label} es requerida` }).refine((value) => !isNaN(Date.parse(value)), {
@@ -54,9 +54,19 @@ const baseRecurringPayment = z.object({
     dayOfWeek: optionalInt(0, 6, "El día de la semana debe estar entre 0 y 6"),
     startDate: dateString("La fecha de inicio"),
     endDate: optionalDateString("La fecha de fin"),
+    maxOccurrences: optionalInt(1, 500, "El número de repeticiones debe estar entre 1 y 500"),
     autoDebit: z.boolean().default(false),
     accountId: z.uuid({ message: "La cuenta es requerida" }),
     categoryId: z.uuid({ message: "La categoría es requerida" }),
+    loanAction: z.enum(RecurringLoanAction).default(RecurringLoanAction.NONE),
+    loanId: z.preprocess(
+        (value) => (value === "" || value === null ? undefined : value),
+        z.uuid({ message: "El préstamo seleccionado no es válido" }).optional()
+    ),
+    loanCounterparty: z.preprocess(
+        (value) => (value === "" || value === null ? undefined : value),
+        z.string().trim().min(3, { message: "La persona debe tener al menos 3 caracteres" }).max(99).optional()
+    ),
 });
 
 export const createRecurringPaymentSchema = baseRecurringPayment.superRefine((data, ctx) => {
@@ -87,6 +97,61 @@ export const createRecurringPaymentSchema = baseRecurringPayment.superRefine((da
             });
         }
     }
+
+    if (data.loanAction !== RecurringLoanAction.NONE) {
+        if (
+            data.loanAction === RecurringLoanAction.PAY_LOAN &&
+            !data.loanId &&
+            !data.loanCounterparty
+        ) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["loanCounterparty"],
+                message: "Selecciona la persona o el préstamo que se va a pagar",
+            });
+        }
+        if (
+            data.loanAction !== RecurringLoanAction.PAY_LOAN &&
+            data.frequency !== RecurrenceFrequency.ONCE
+        ) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["frequency"],
+                message: "Solo los pagos de préstamo pueden tener cronograma",
+            });
+        }
+        if (
+            (data.loanAction === RecurringLoanAction.GIVE_LOAN ||
+                data.loanAction === RecurringLoanAction.RECEIVE_LOAN) &&
+            !data.loanCounterparty
+        ) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["loanCounterparty"],
+                message: "Indica la persona del préstamo",
+            });
+        }
+        if (
+            data.loanAction === RecurringLoanAction.GIVE_LOAN &&
+            data.type !== RecurringEntryType.EXPENSE
+        ) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["type"],
+                message: "Un préstamo que otorgas es un gasto",
+            });
+        }
+        if (
+            data.loanAction === RecurringLoanAction.RECEIVE_LOAN &&
+            data.type !== RecurringEntryType.INCOME
+        ) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["type"],
+                message: "Un préstamo que recibes es un ingreso",
+            });
+        }
+    }
 });
 
 export type CreateRecurringPaymentInput = z.input<typeof createRecurringPaymentSchema>;
@@ -104,9 +169,19 @@ export const updateRecurringPaymentSchema = z
         dayOfWeek: nullableOptionalInt(0, 6),
         startDate: dateString("La fecha de inicio").optional(),
         endDate: nullableOptionalDate("La fecha de fin"),
+        maxOccurrences: nullableOptionalInt(1, 500),
         autoDebit: z.boolean().optional(),
         accountId: z.uuid().optional(),
         categoryId: z.uuid().optional(),
+        loanAction: z.enum(RecurringLoanAction).optional(),
+        loanId: z.preprocess(
+            (value) => (value === "" ? null : value),
+            z.uuid().nullable().optional()
+        ),
+        loanCounterparty: z.preprocess(
+            (value) => (value === "" ? null : value),
+            z.string().trim().min(3).max(99).nullable().optional()
+        ),
         isActive: z.boolean().optional(),
     })
     .refine((data) => Object.values(data).some((value) => value !== undefined), {

@@ -14,7 +14,7 @@ import { StatusLoan, TypeAccount, TypeLoan, TypeTransaction } from "../utils/Enu
 import { money, round } from "../utils/normalizarMoney";
 import { TransactionService } from "./transactionService";
 import { UserService } from "./userService";
-import { EntityManager, QueryRunner, Repository } from "typeorm";
+import { EntityManager, In, QueryRunner, Repository } from "typeorm";
 import { Category } from "../entities/Category.entity";
 import { User } from "../entities/User.entity";
 import { TransactionSchema } from "../schemas/transaction.schema";
@@ -510,13 +510,30 @@ export class LoansService {
   }
 
 
-  async createLoan(userId: UuidSchema, loanData: LoanSchema): Promise<LoanResponse> {
-    const queryRunner = AppDataSourceProd.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  async createLoan(
+    userId: UuidSchema,
+    loanData: LoanSchema,
+    entityManager?: EntityManager
+  ): Promise<LoanResponse> {
+    let queryRunner: QueryRunner | undefined;
+    let manager: EntityManager;
+    let isOwnTransaction = false;
 
     try {
-      const user = await this.userService.getUserById(userId);
+      if (!entityManager) {
+        queryRunner = AppDataSourceProd.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        manager = queryRunner.manager;
+        isOwnTransaction = true;
+      } else {
+        manager = entityManager;
+      }
+
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+        relations: ["categories"],
+      });
 
       if (!user) {
         throw new NotFoundError("Usuario no encontrado");
@@ -542,7 +559,6 @@ export class LoansService {
         );
       }
 
-      // Crear transacción
       const transactionReferenceData = await this.transactionService.createTransaction(
         {
           name:
@@ -557,32 +573,34 @@ export class LoansService {
           description: loanData.description,
           accountId: loanData.accountId,
         },
-        userId, false
+        userId,
+        false,
+        manager
       );
 
-      const transactionReference = queryRunner.manager.create(Transaction, transactionReferenceData);
+      const transactionReference = manager.create(Transaction, transactionReferenceData);
 
-      // Crear préstamo
-      const loan = queryRunner.manager.create(Loan, {
+      const loan = manager.create(Loan, {
         user,
         ...loanData,
         principalAmount: loanData.amount,
         transactionReference,
       });
 
-      const savedLoan = await queryRunner.manager.save(Loan, loan);
+      const savedLoan = await manager.save(Loan, loan);
 
-      // Actualizar referencia de transacción
       transactionReference.loan = savedLoan;
+      await manager.save(Transaction, transactionReference);
 
-      await queryRunner.manager.save(Transaction, transactionReference);
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.commitTransaction();
+      }
 
-      await queryRunner.commitTransaction();
-
-      return toLoanResponse(savedLoan, { moneyTransaction: false })
-
+      return toLoanResponse(savedLoan, { moneyTransaction: false });
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.rollbackTransaction();
+      }
 
       if (error instanceof NotFoundError || error instanceof ConflictError) {
         throw error;
@@ -592,9 +610,12 @@ export class LoansService {
         "Error al crear préstamo: " + (error instanceof Error ? error.message : "Error desconocido")
       );
     } finally {
-      await queryRunner.release();
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.release();
+      }
     }
   }
+
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   async payLoan(
     userId: UuidSchema,
@@ -750,148 +771,139 @@ export class LoansService {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  async quickPayMultipleLoans(
+  async payLenderDebt(
     userId: UuidSchema,
     data: QuickPaymentSchema,
-  ): Promise<any> {
-
-    const queryRunner = AppDataSourceProd.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    let isError = false;
-
-    const { lender, type, amount } = data;
+    entityManager?: EntityManager
+  ): Promise<{
+    success: boolean;
+    totalPayments: number;
+    totalAmount: number;
+    payments: LoanPaymentResponse[];
+    remainingAmount: number;
+  }> {
+    let queryRunner: QueryRunner | undefined;
+    let manager: EntityManager;
+    let isOwnTransaction = false;
 
     try {
-      const loans = await queryRunner.manager.find(Loan, {
-        relations: ["payments"],
-        where: {
-          userId,
-          lender,
-          type,
-          status: StatusLoan.PENDING,
-        },
-        order: {
-          startDate: "ASC",
-        },
-      });
+      if (!entityManager) {
+        queryRunner = AppDataSourceProd.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        manager = queryRunner.manager;
+        isOwnTransaction = true;
+      } else {
+        manager = entityManager;
+      }
+
+      const loans = await manager
+        .createQueryBuilder(Loan, "loan")
+        .setLock("pessimistic_write")
+        .where("loan.userId = :userId", { userId })
+        .andWhere("LOWER(loan.lender) = LOWER(:lender)", { lender: data.lender })
+        .andWhere("loan.type = :type", { type: data.type })
+        .andWhere("loan.status = :status", { status: StatusLoan.PENDING })
+        .orderBy("loan.startDate", "ASC")
+        .getMany();
 
       if (loans.length === 0) {
         throw new NotFoundError(
-          `No hay préstamos pendientes con ${lender} de tipo ${type}`
+          `No hay préstamos pendientes con ${data.lender} de tipo ${data.type}`
         );
       }
 
-      let remainingAmount = amount;
-      const payments: LoanPaymentResponse[] = [];
-      const errors: PaymentError[] = [];
+      const loanPayments = await manager.find(LoanPayment, {
+        where: { loan: { id: In(loans.map((loan) => loan.id)) } },
+        relations: ["loan"],
+      });
+      const paymentsByLoan = new Map<string, LoanPayment[]>();
+      for (const payment of loanPayments) {
+        const loanId = (payment.loan as unknown as { id?: string })?.id;
+        if (!loanId) continue;
+        const list = paymentsByLoan.get(loanId) ?? [];
+        list.push(payment);
+        paymentsByLoan.set(loanId, list);
+      }
+
+      let remainingAmount = data.amount;
+      const appliedPayments: LoanPaymentResponse[] = [];
 
       for (const loan of loans) {
-
         if (remainingAmount <= 0) break;
 
-        try {
-          const payment = calculateLoanPaymentStatus(loan);
-          const loanRemainingInCents =
-            loan.principalAmount - payment.totalPaidInCents;
+        loan.payments = paymentsByLoan.get(loan.id) ?? [];
+        const status = calculateLoanPaymentStatus(loan);
+        const loanRemaining = loan.principalAmount - status.totalPaidInCents;
+        if (loanRemaining <= 0) continue;
 
-          if (loanRemainingInCents <= 0) {
-            continue;
-          }
+        const paymentAmount = Math.min(remainingAmount, loanRemaining);
+        if (paymentAmount <= 0) break;
 
-          const paymentAmount = Math.min(remainingAmount, loanRemainingInCents);
-
-          const paymentData: LoanPaymentSchema = {
-            ...data,
+        const payment = await this.payLoan(
+          userId,
+          loan.id as UuidSchema,
+          {
             amount: paymentAmount,
-          };
+            date: data.date,
+            time: data.time,
+            description: data.description,
+            accountId: data.accountId,
+            strategy: data.strategy,
+          },
+          manager
+        );
 
-          const result = await this.payLoan(
-            userId,
-            loan.id,
-            paymentData,
-            queryRunner.manager
-          );
-
-          payments.push(result);
-          remainingAmount -= paymentAmount;
-
-        } catch (error: any) {
-          errors.push({
-            loanId: loan.id,
-            error:
-              error instanceof Error ? error.message : "Error desconocido",
-            statusCode: error.statusCode || "INTERNAL_ERROR",
-          });
-          continue;
-        }
+        appliedPayments.push(payment);
+        remainingAmount -= paymentAmount;
       }
 
-      if (payments.length === 0) {
-        isError = true
-        const errorDetails = errors
-          .map((e) => `${e.loanId}: ${e.error}`)
-          .join("; ");
-        throw new ConflictError(
-          `No se pudo procesar ningún pago. Detalles: ${errorDetails}`,
-          {
-            payments: errors.map((e) => e.error),
-          }
-        );
+      if (appliedPayments.length === 0) {
+        throw new ConflictError("No se pudo aplicar el pago a ningún préstamo pendiente");
       }
 
-      if (errors.length > 0) {
-        isError = true
-        const errorDetails = errors.map((e) => `${e.loanId}: ${e.error}`).join("; ");
-        console.warn(
-          `Algunos pagos no se pudieron procesar. Detalles: ${errorDetails}`
-        );
-        throw new ConflictError(
-          `Algunos pagos no se pudieron procesar. Detalles: ${errorDetails}`,
-          {
-            payments: errors.map((e) => e.error),
-          }
-        );
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.commitTransaction();
       }
-
-      if (isError) await queryRunner.rollbackTransaction();
-
-      await queryRunner.commitTransaction();
 
       return {
         success: true,
-        totalPayments: payments.length,
-        totalAmount: money(amount - remainingAmount),
-        payments,
-        notes: remainingAmount > 0 ? `Dinero Sobrante: S/ ${money(remainingAmount)}` : "Todos los fondos fueron utilizados",
-        errors:
-          errors.length > 0
-            ? errors.map((e) => ({
-              loanId: e.loanId,
-              message: e.error,
-            }))
-            : [],
+        totalPayments: appliedPayments.length,
+        totalAmount: money(data.amount - remainingAmount),
+        payments: appliedPayments,
+        remainingAmount: money(remainingAmount),
       };
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.rollbackTransaction();
+      }
 
-      if (error instanceof NotFoundError || error instanceof ConflictError) {
+      if (error instanceof NotFoundError || error instanceof ConflictError || error instanceof BadRequestError) {
         throw error;
       }
 
-      if (error instanceof BadRequestError) {
-        throw error;
-      }
-
-      const errorMessage =
-        error instanceof Error ? error.message : "Error desconocido";
       throw new Error(
-        `Error al realizar pagos múltiples: ${errorMessage}`
+        "Error al distribuir el pago entre préstamos: " +
+          (error instanceof Error ? error.message : "Error desconocido")
       );
     } finally {
-      await queryRunner.release();
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.release();
+      }
     }
+  }
+
+  async quickPayMultipleLoans(
+    userId: UuidSchema,
+    data: QuickPaymentSchema,
+  ): Promise<{
+    success: boolean;
+    totalPayments: number;
+    totalAmount: number;
+    payments: LoanPaymentResponse[];
+    remainingAmount: number;
+  }> {
+    return this.payLenderDebt(userId, data);
   }
 
   async getLoanStatistics(userId: UuidSchema): Promise<{

@@ -1,0 +1,193 @@
+.credit-health {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 18px;
+}
+
+.credit-health__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.credit-health__head h2 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    font-size: 0.94rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.credit-health__head h2 svg {
+    color: var(--info);
+}
+
+.credit-health__head p {
+    margin: 3px 0 0;
+    font-size: 0.73rem;
+}
+
+.credit-health__info {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 6px;
+    max-width: 440px;
+    padding: 6px 9px;
+    border-radius: 8px;
+    background: rgba(56, 189, 248, 0.06);
+    border: 1px solid rgba(56, 189, 248, 0.14);
+    color: var(--text-tertiary);
+    font-size: 0.68rem;
+    line-height: 1.4;
+}
+
+.credit-health__info svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--info);
+}
+
+.credit-health__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+}
+
+.credit-health__card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.credit-health__card.is-success {
+    border-color: rgba(34, 197, 94, 0.24);
+    background: rgba(34, 197, 94, 0.035);
+}
+
+.credit-health__card.is-warning {
+    border-color: rgba(241, 196, 15, 0.24);
+    background: rgba(241, 196, 15, 0.035);
+}
+
+.credit-health__card.is-danger {
+    border-color: rgba(239, 68, 68, 0.26);
+    background: rgba(239, 68, 68, 0.035);
+}
+
+.credit-health__card-head {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.credit-health__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(56, 189, 248, 0.09);
+    color: var(--info);
+}
+
+.credit-health__card-head > div {
+    min-width: 0;
+}
+
+.credit-health__card-head strong {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.credit-health__card-head small {
+    display: block;
+    font-size: 0.64rem;
+    color: var(--text-tertiary);
+}
+
+.credit-health__usage {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.credit-health__bar {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+}
+
+.credit-health__bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--text-tertiary);
+}
+
+.credit-health__card.is-success .credit-health__bar span { background: var(--success); }
+.credit-health__card.is-warning .credit-health__bar span { background: var(--accent); }
+.credit-health__card.is-danger .credit-health__bar span { background: var(--danger); }
+
+.credit-health__amounts {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.66rem;
+    color: var(--text-tertiary);
+}
+
+.credit-health__status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.65rem;
+    color: var(--text-tertiary);
+}
+
+.credit-health__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.11);
+    color: var(--text-secondary);
+    font-size: 0.61rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.is-success .credit-health__badge { background: rgba(34, 197, 94, 0.12); color: #86efac; }
+.is-warning .credit-health__badge { background: rgba(241, 196, 15, 0.12); color: #fde68a; }
+.is-danger .credit-health__badge { background: rgba(239, 68, 68, 0.12); color: #fca5a5; }
+
+.credit-health__recommendation {
+    margin: 0;
+    font-size: 0.7rem;
+    line-height: 1.42;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 620px) {
+    .credit-health__grid { grid-template-columns: minmax(0, 1fr); }
+}

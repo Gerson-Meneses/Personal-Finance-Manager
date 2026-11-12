@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
-import { AlertTriangle, Pencil, PiggyBank, Plus, Trash2, Wallet } from "lucide-react";
+import { AlertTriangle, Lightbulb, Pencil, PiggyBank, Plus, ShieldCheck, Sparkles, Trash2, Wallet } from "lucide-react";
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import InfoModal from "../../../shared/components/InfoModal/InfoModal";
@@ -9,8 +9,9 @@ import { SelectInput } from "../../../shared/components/SelectInput/SelectInput"
 import { useToast } from "../../../shared/Hooks/useToast";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import { getIcon } from "../../../shared/utils/GetIcon";
-import { useBudgets } from "../../../features/budgets/hooks";
+import { useBudgetSuggestions, useBudgets } from "../../../features/budgets/hooks";
 import { BudgetForm } from "../../../features/budgets/components/BudgetForm";
+import { BudgetWizard } from "../../../features/budgets/components/BudgetWizard";
 import type { BudgetItem } from "../../../features/budgets/types";
 import "./BudgetsPage.css";
 
@@ -26,10 +27,19 @@ export default function BudgetsPage() {
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<BudgetItem | null>(null);
     const [pendingDelete, setPendingDelete] = useState<BudgetItem | null>(null);
+    const [showWizard, setShowWizard] = useState(false);
     const toast = useToast();
 
-    const { data, loading, upsertBudget, deleteBudget } = useBudgets(month);
+    const { data, loading, upsertBudget, bulkUpsertBudgets, deleteBudget } = useBudgets(month);
+    const { data: suggestionData, loading: suggestionsLoading } = useBudgetSuggestions(month);
     const budgets = data?.budgets ?? [];
+    const suggestions = suggestionData?.suggestions ?? [];
+
+    useEffect(() => {
+        const openWizard = () => setShowWizard(true);
+        window.addEventListener("finance:open-budget-wizard", openWizard);
+        return () => window.removeEventListener("finance:open-budget-wizard", openWizard);
+    }, []);
 
     const handleSubmit = async ({ categoryId, amount }: { categoryId: string; amount: number }) => {
         try {
@@ -39,6 +49,16 @@ export default function BudgetsPage() {
             setEditing(null);
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "No se pudo guardar el presupuesto");
+        }
+    };
+
+    const handleWizardSubmit = async (items: { categoryId: string; amount: number }[]) => {
+        try {
+            await bulkUpsertBudgets.mutateAsync({ month, items });
+            toast.success("Presupuestos creados con montos sugeridos");
+            setShowWizard(false);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "No se pudieron guardar los presupuestos");
         }
     };
 
@@ -56,6 +76,11 @@ export default function BudgetsPage() {
     if (loading && !data) return <LoadingScreen message="Cargando presupuestos..." />;
 
     const totalRemaining = data?.totalRemaining ?? 0;
+    const topSuggestions = suggestions.filter((item) => item.currentBudget === null).slice(0, 4);
+    const budgetedCategories = new Set(budgets.map((budget) => budget.category.id));
+    const pendingSuggestions = suggestions.filter(
+        (item) => item.suggested > 0 && !budgetedCategories.has(item.category.id)
+    );
 
     return (
         <div className="page-container budgets-page">
@@ -76,6 +101,10 @@ export default function BudgetsPage() {
                         options={MONTH_OPTIONS}
                         className="budgets-month-select"
                     />
+                    <button className="btn-secondary" onClick={() => setShowWizard(true)}>
+                        <Sparkles size={18} />
+                        Usar sugerencias
+                    </button>
                     <button className="btn-primary" onClick={() => { setEditing(null); setShowForm(true); }}>
                         <Plus size={18} />
                         Nuevo presupuesto
@@ -113,7 +142,83 @@ export default function BudgetsPage() {
                 </article>
             </section>
 
-            <section className="card budgets-list-card">
+            <section className="budgets-insights">
+                <article className="card budgets-suggestions" data-tour="budget-suggestions">
+                    <div className="budgets-list-head">
+                        <h2>
+                            <Sparkles size={16} /> Montos sugeridos
+                        </h2>
+                        {pendingSuggestions.length > 0 && (
+                            <button className="btn-ghost" onClick={() => setShowWizard(true)}>
+                                Configurar {pendingSuggestions.length}
+                            </button>
+                        )}
+                    </div>
+
+                    {suggestionsLoading && suggestions.length === 0 ? (
+                        <p className="budgets-suggestions__empty">Calculando montos sugeridos...</p>
+                    ) : topSuggestions.length === 0 ? (
+                        <p className="budgets-suggestions__empty">
+                            Ya cubriste las categorías con sugerencia. Registra más gastos para mejorar el cálculo.
+                        </p>
+                    ) : (
+                        <>
+                            <p className="budgets-suggestions__hint">
+                                Basado en el promedio de tus transacciones de los últimos meses.
+                            </p>
+                            <div className="budgets-suggestion-grid">
+                                {topSuggestions.map((item) => (
+                                    <div key={item.category.id} className="budgets-suggestion">
+                                        <span
+                                            className="budgets-suggestion__dot"
+                                            style={{ background: item.category.color }}
+                                        />
+                                        <div>
+                                            <strong>{item.category.name}</strong>
+                                            <small>
+                                                {item.source === "HISTORY"
+                                                    ? `Promedio ${formatCurrency(item.average)}`
+                                                    : item.source === "INCOME"
+                                                        ? "Basado en tus ingresos"
+                                                        : "Estimación inicial"}
+                                            </small>
+                                        </div>
+                                        <span className="amount-font">{formatCurrency(item.suggested)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <button className="btn-secondary budgets-suggestions__cta" onClick={() => setShowWizard(true)}>
+                                Crear presupuestos con estos montos
+                            </button>
+                        </>
+                    )}
+                </article>
+
+                <aside className="card budgets-guide">
+                    <div className="budgets-list-head">
+                        <h2>
+                            <Lightbulb size={16} /> Guía rápida
+                        </h2>
+                    </div>
+                    <ul>
+                        <li>
+                            <strong>Regla 50/30/20:</strong> 50% necesidades, 30% estilo de vida y 20% ahorro o inversión.
+                        </li>
+                        <li>
+                            <strong>Fondo de emergencia:</strong> apunta a cubrir entre 3 y 6 meses de gastos fijos.
+                        </li>
+                        <li>
+                            <strong>Revisión semanal:</strong> ajusta antes de cerrar el mes, no después.
+                        </li>
+                    </ul>
+                    <div className="budgets-guide__tip">
+                        <ShieldCheck size={15} />
+                        <span>Los préstamos y tarjetas se controlan mejor desde una categoría propia.</span>
+                    </div>
+                </aside>
+            </section>
+
+            <section className="card budgets-list-card" data-tour="budget-list">
                 <div className="budgets-list-head">
                     <h2>Presupuestos de {dayjs(`${month}-01`).format("MMMM YYYY")}</h2>
                     <span>{budgets.length}</span>
@@ -187,9 +292,21 @@ export default function BudgetsPage() {
                 <BudgetForm
                     budget={editing ?? undefined}
                     month={month}
+                    suggestions={suggestions}
                     isPending={upsertBudget.isPending}
                     onSubmit={handleSubmit}
                     onClose={() => { setShowForm(false); setEditing(null); }}
+                />
+            </ModalPortal>
+
+            <ModalPortal isOpen={showWizard} onClose={() => setShowWizard(false)}>
+                <BudgetWizard
+                    key={suggestions.map((item) => item.category.id).join(",") || "empty"}
+                    month={month}
+                    suggestions={suggestions}
+                    isPending={bulkUpsertBudgets.isPending}
+                    onSubmit={handleWizardSubmit}
+                    onClose={() => setShowWizard(false)}
                 />
             </ModalPortal>
 

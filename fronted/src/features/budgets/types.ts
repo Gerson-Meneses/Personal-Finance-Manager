@@ -23,3 +23,19 @@ export interface BudgetMonth {
     totalRemaining: number;
     budgets: BudgetItem[];
 }
+
+export interface BudgetSuggestion {
+    category: BudgetCategory;
+    suggested: number;
+    average: number;
+    monthsWithData: number;
+    currentBudget: number | null;
+    source: "HISTORY" | "INCOME" | "STARTER";
+}
+
+export interface BudgetSuggestionResponse {
+    month: string;
+    lookbackMonths: number;
+    monthlyIncome: number;
+    suggestions: BudgetSuggestion[];
+}

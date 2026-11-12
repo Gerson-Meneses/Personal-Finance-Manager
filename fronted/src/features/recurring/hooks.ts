@@ -16,6 +16,9 @@ export const useRecurringPayments = () => {
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
         queryClient.invalidateQueries({ queryKey: ["transactions"] });
         queryClient.invalidateQueries({ queryKey: ["accounts"] });
+        queryClient.invalidateQueries({ queryKey: ["loans"] });
+        queryClient.invalidateQueries({ queryKey: ["loanSummary"] });
+        queryClient.invalidateQueries({ queryKey: ["summary"] });
     };
 
     const createMutation = useMutation({
