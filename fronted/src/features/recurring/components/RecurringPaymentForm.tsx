@@ -137,6 +137,12 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
     const estimatedEnd = startDate && installmentCount > 0
         ? dayjs(startDate).add((installmentCount - 1) * 15, "day").format("D MMM YYYY")
         : "";
+    const debtPendingAfterPlan = selectedDebt
+        ? Math.max(0, selectedDebt.total - scheduleTotal)
+        : 0;
+    const scheduleOverpay = selectedDebt
+        ? Math.max(0, scheduleTotal - selectedDebt.total)
+        : 0;
 
     const assignLoanCategory = (action: string, paymentType: string) => {
         const targetName = action === "PAY_LOAN" ? "DEVOLUCION DE PRESTAMO" : "PRESTAMOS";
@@ -166,9 +172,6 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
         if (mode === "ONCE") {
             setValue("frequency", "ONCE", { shouldValidate: true });
             setValue("maxOccurrences", "", { shouldValidate: true });
-            if (selectedDebt) {
-                setValue("amount", String(selectedDebt.total), { shouldValidate: true });
-            }
             return;
         }
 
@@ -176,7 +179,12 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
         setValue("frequency", "FIFTEEN_DAYS", { shouldValidate: true });
         setValue("intervalCount", "1", { shouldValidate: true });
         setValue("maxOccurrences", String(count), { shouldValidate: true });
-        applyInstallmentAmount(count);
+
+        const total = selectedDebt?.total ?? 0;
+        const currentAmount = Number(amount || 0);
+        if (total > 0 && (!currentAmount || Math.abs(currentAmount - total) < 0.01)) {
+            applyInstallmentAmount(count);
+        }
     };
 
     const onInvalid = (errors: FieldErrors<RecurringPaymentFormInput>) => {
@@ -498,13 +506,10 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                                             name="maxOccurrences"
                                             render={({ field, fieldState }) => (
                                                 <NumericInput
-                                                    label="Número de cuotas hasta saldar"
+                                                    label="Número de cuotas a programar"
                                                     icon="Hash"
                                                     value={String(field.value ?? "")}
-                                                    onChange={(value) => {
-                                                        field.onChange(value);
-                                                        applyInstallmentAmount(Number(value));
-                                                    }}
+                                                    onChange={field.onChange}
                                                     error={fieldState.error?.message}
                                                     disabled={isPending}
                                                     required
@@ -514,7 +519,7 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
 
                                         <div className="loan-schedule-preview">
                                             <div>
-                                                <span>Cuota estimada</span>
+                                                <span>Monto por cuota</span>
                                                 <strong>{formatCurrency(Number(amount || 0))}</strong>
                                             </div>
                                             <div>
@@ -523,10 +528,20 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                                             </div>
                                             <small>
                                                 {installmentCount} cuota{installmentCount === 1 ? "" : "s"} · Total planificado {formatCurrency(scheduleTotal)}
-                                                {selectedDebt && scheduleTotal + 0.01 < selectedDebt.total
-                                                    ? " · Ajusta la cuota o sube el número de cuotas para cubrir toda la deuda."
-                                                    : " · Cubre la deuda pendiente."}
+                                                {scheduleOverpay > 0
+                                                    ? ` · El último pago se ajustará al saldo restante (${formatCurrency(scheduleOverpay)} de margen).`
+                                                    : debtPendingAfterPlan > 0
+                                                        ? ` · Quedarán ${formatCurrency(debtPendingAfterPlan)} pendientes al terminar.`
+                                                        : " · Cubre la deuda completa."}
                                             </small>
+                                            <button
+                                                type="button"
+                                                className="btn-ghost loan-schedule-preview__adjust"
+                                                onClick={() => applyInstallmentAmount(installmentCount)}
+                                                disabled={installmentCount <= 0 || isPending}
+                                            >
+                                                Calcular cuota para saldar toda la deuda
+                                            </button>
                                         </div>
                                     </>
                                 )}
