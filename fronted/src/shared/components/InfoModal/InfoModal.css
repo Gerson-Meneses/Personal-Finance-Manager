@@ -96,6 +96,6 @@
 }
 
 .info-cancel-btn:hover:not(:disabled) {
-    background-color: #334155;
+    background-color: var(--bg-hover);
     color: var(--text-primary);
 }

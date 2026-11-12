@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
-import { Check, Moon, Snowflake, Sun } from "lucide-react";
+import { Check, Moon, Snowflake, Sun, TreePine } from "lucide-react";
 import { useTheme } from "./useTheme";
 import type { Theme } from "./themeContext";
 import "./ThemeToggle.css";
@@ -15,6 +15,7 @@ const THEME_OPTIONS: ThemeOption[] = [
     { value: "light", label: "Claro", hint: "Luminoso y sobrio", icon: Sun },
     { value: "dark", label: "Oscuro", hint: "Contraste clásico", icon: Moon },
     { value: "midnight", label: "Midnight Luxury", hint: "Navidad elegante", icon: Snowflake },
+    { value: "noel", label: "Navidad", hint: "Pino, oro y nieve", icon: TreePine },
 ];
 
 export function ThemeToggle({ className = "" }: { className?: string }) {

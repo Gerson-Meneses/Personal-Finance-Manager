@@ -1,6 +1,7 @@
 import { twMerge } from "tailwind-merge";
 import type { ReactNode } from "react";
 import { X, AlertTriangle } from "lucide-react";
+import "./FormContainer.css";
 
 interface FormContainerProps {
   title: string;
@@ -22,14 +23,14 @@ export const FormContainer = ({
   onClose
 }: FormContainerProps) => {
   return (
-    <div className={twMerge(`w-full bg-[#0b0d12] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl relative`, className)}>
-      <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
-        <div className="min-w-0">
-          <section className="flex items-center gap-3">
-            {icon && <div className="text-[#f1c40f] shrink-0">{icon}</div>}
-            <h2 className="text-lg font-semibold text-white truncate">{title}</h2>
-          </section>
-          {subtitle && <p className="text-sm text-slate-400 mt-1 truncate">{subtitle}</p>}
+    <div className={twMerge("form-container", className)}>
+      <div className="form-container__head">
+        <div className="form-container__heading">
+          {icon && <div className="form-container__icon">{icon}</div>}
+          <div className="form-container__titles">
+            <h2 className="form-container__title">{title}</h2>
+            {subtitle && <p className="form-container__subtitle">{subtitle}</p>}
+          </div>
         </div>
 
         {onClose && (
@@ -38,7 +39,7 @@ export const FormContainer = ({
             onClick={onClose}
             aria-label="Cerrar"
             data-tooltip="Cerrar ventana"
-            className="relative tooltip-left text-zinc-400 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ml-3"
+            className="form-container__close tooltip-left"
           >
             <X size={18} />
           </button>
@@ -46,17 +47,13 @@ export const FormContainer = ({
       </div>
 
       {error && (
-        <div
-          role="alert"
-          aria-live="assertive"
-          className="mb-4 flex items-start gap-2.5 rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm text-red-300"
-        >
-          <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-          <p className="m-0 leading-relaxed">{error}</p>
+        <div role="alert" aria-live="assertive" className="form-container__error">
+          <AlertTriangle size={16} />
+          <p>{error}</p>
         </div>
       )}
 
-      <div className="w-full flex flex-col justify-center items-center">
+      <div className="form-container__body">
         {children}
       </div>
     </div>

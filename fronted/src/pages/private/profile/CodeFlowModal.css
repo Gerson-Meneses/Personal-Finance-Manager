@@ -44,7 +44,7 @@
     background: var(--accent);
     border: none;
     border-radius: 10px;
-    color: #0f172a;
+    color: var(--accent-contrast);
     font-size: 0.9rem;
     font-weight: 600;
     font-family: inherit;
@@ -53,7 +53,7 @@
 }
 
 .codeflow-primary-btn:hover:not(:disabled) {
-    background: #d4ac0d;
+    filter: brightness(1.06);
 }
 
 .codeflow-primary-btn:active:not(:disabled) {

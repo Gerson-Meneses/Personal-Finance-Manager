@@ -570,9 +570,9 @@ a,
 }
 
 /* --------------------------------------------------------
-   MIDNIGHT LUXURY — tema de temporada (Navidad)
-   Azul noche profundo, plata escarcha y champán cálido.
-   Microinteracciones: brillo metálico sutil, sin nieve.
+   MIDNIGHT LUXURY ï¿½ tema de temporada (Navidad)
+   Azul noche profundo, plata escarcha y champï¿½n cï¿½lido.
+   Microinteracciones: brillo metï¿½lico sutil, sin nieve.
 -------------------------------------------------------- */
 :root[data-theme="midnight"] {
     --bg-canvas: #0F172A;
@@ -606,7 +606,7 @@ a,
     --font-display: "Playfair Display", "Cinzel", Georgia, "Times New Roman", serif;
 }
 
-/* Fondo: estrellas geométricas de 4 puntas + brillo frío/champán */
+/* Fondo: estrellas geomï¿½tricas de 4 puntas + brillo frï¿½o/champï¿½n */
 :root[data-theme="midnight"] body {
     background-color: var(--bg-canvas);
     background-image:
@@ -622,13 +622,13 @@ a,
 
 /* Encabezados principales con serif elegante */
 :root[data-theme="midnight"] h1,
-:root[data-theme="midnight"] h2,
+:root[data-theme="midnight"] h2:not(.hero-amount):not(.card-amount),
 :root[data-theme="midnight"] .header-app-name {
     font-family: var(--font-display);
     letter-spacing: 0.01em;
 }
 
-/* Cabecera, menú móvil, footer y barra inferior */
+/* Cabecera, menï¿½ mï¿½vil, footer y barra inferior */
 :root[data-theme="midnight"] .app-header {
     background-color: color-mix(in srgb, var(--bg-canvas) 88%, transparent);
     backdrop-filter: blur(16px);
@@ -654,7 +654,7 @@ a,
     border-top-color: var(--border-subtle);
 }
 
-/* Acentos de navegación en champán */
+/* Acentos de navegaciï¿½n en champï¿½n */
 :root[data-theme="midnight"] .header-logo {
     background: var(--accent-gold-soft);
     border: 1px solid rgba(197, 160, 89, 0.28);
@@ -693,7 +693,7 @@ a,
     border-color: var(--border-strong);
 }
 
-/* Botón principal: plata con destello metálico champán */
+/* Botï¿½n principal: plata con destello metï¿½lico champï¿½n */
 :root[data-theme="midnight"] .btn-primary {
     background-color: #E2E8F0;
     background-image: linear-gradient(110deg, #E2E8F0 0%, #F8FAFC 36%, #C5A059 52%, #E8EDF5 68%, #E2E8F0 100%);
@@ -745,7 +745,7 @@ a,
     border-color: var(--accent-gold);
 }
 
-/* FAB y acción móvil: degradado plata ? champán */
+/* FAB y acciï¿½n mï¿½vil: degradado plata ? champï¿½n */
 :root[data-theme="midnight"] .fab,
 :root[data-theme="midnight"] .bottom-nav__fab {
     background: linear-gradient(140deg, #E2E8F0 0%, #C5A059 55%, #B08A45 100%);
@@ -781,7 +781,7 @@ a,
     color: var(--text-primary);
 }
 
-/* Hero del dashboard con brillo champán */
+/* Hero del dashboard con brillo champï¿½n */
 :root[data-theme="midnight"] .dash-hero::before {
     background: linear-gradient(var(--accent-gold), #E2E8F0);
 }
@@ -794,7 +794,7 @@ a,
     );
 }
 
-/* Modales, selección e imágenes */
+/* Modales, selecciï¿½n e imï¿½genes */
 :root[data-theme="midnight"] .modal-overlay {
     background: rgba(2, 6, 23, 0.78);
 }
@@ -810,4 +810,400 @@ a,
 
 :root[data-theme="midnight"] .qs-sub {
     color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------
+   NAVIDAD ï¿½ tema oscuro de pino, oro y nieve
+   La nieve y las estrellas viven solo en el fondo.
+-------------------------------------------------------- */
+:root[data-theme="noel"] {
+    --bg-canvas: #0A1512;
+    --bg-surface: #11221C;
+    --bg-elevated: #172E26;
+    --bg-hover: rgba(244, 241, 234, 0.06);
+    --surface-soft: rgba(244, 241, 234, 0.04);
+    --surface-soft-strong: rgba(244, 241, 234, 0.08);
+    --border-subtle: #254236;
+    --border-soft: rgba(37, 66, 54, 0.66);
+    --border-strong: #3A5C4B;
+    --text-primary: #F4F1EA;
+    --text-secondary: #A9B8B0;
+    --text-tertiary: #7E9188;
+    --accent: #E6B94D;
+    --accent-contrast: #1A1408;
+    --accent-soft: rgba(230, 185, 77, 0.12);
+    --success: #5BD6A0;
+    --success-soft: rgba(91, 214, 160, 0.12);
+    --danger: #FF7A66;
+    --danger-soft: rgba(255, 122, 102, 0.12);
+    --warning: #E6B94D;
+    --info: #E6B94D;
+    --info-soft: rgba(230, 185, 77, 0.12);
+    --input-bg: rgba(10, 21, 18, 0.45);
+    --input-border: #254236;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.50);
+    --shadow-md: 0 20px 44px -24px rgba(0, 0, 0, 0.90);
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+    --gold: var(--accent);
+    --xmas-red: #C8323C;
+    --xmas-green: #2F8F5B;
+    --gain: var(--success);
+    --loss: var(--danger);
+}
+
+:root[data-theme="noel"] body {
+    background-color: var(--bg-canvas);
+    background-image: radial-gradient(1200px 500px at 50% -10%, #12261E 0%, var(--bg-canvas) 60%);
+    background-attachment: fixed;
+}
+
+/* Titulares con serif y degradado dorado */
+:root[data-theme="noel"] h1,
+:root[data-theme="noel"] h2:not(.hero-amount):not(.card-amount),
+:root[data-theme="noel"] .header-app-name {
+    font-family: var(--font-display);
+    background: linear-gradient(90deg, #F6D989, var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Cabecera, footer y guirnalda rojo-oro-verde */
+:root[data-theme="noel"] .app-header {
+    background-color: color-mix(in srgb, var(--bg-canvas) 90%, transparent);
+    backdrop-filter: blur(16px);
+    border-bottom-color: var(--border-subtle);
+}
+
+:root[data-theme="noel"] .app-header::after,
+:root[data-theme="midnight"] .app-header::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 3px;
+    pointer-events: none;
+}
+
+:root[data-theme="noel"] .app-header::after {
+    background: linear-gradient(90deg, var(--xmas-red), var(--accent), var(--xmas-green));
+    opacity: 0.85;
+}
+
+:root[data-theme="midnight"] .app-header::after {
+    background: linear-gradient(90deg, var(--accent-gold), #E2E8F0, var(--accent-gold));
+    opacity: 0.65;
+}
+
+:root[data-theme="noel"] .app-footer {
+    background-color: var(--bg-canvas);
+    border-top-color: var(--border-soft);
+}
+
+:root[data-theme="noel"] .header-mobile-menu {
+    background-color: var(--bg-surface);
+    border-color: var(--border-subtle);
+}
+
+:root[data-theme="noel"] .header-menu-backdrop {
+    background: rgba(3, 9, 7, 0.72);
+}
+
+/* Acentos dorados de navegaciï¿½n */
+:root[data-theme="noel"] .header-logo,
+:root[data-theme="noel"] .header-avatar {
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--accent);
+}
+
+:root[data-theme="noel"] .header-logo svg {
+    color: var(--accent);
+}
+
+:root[data-theme="noel"] .header-nav-link.active,
+:root[data-theme="noel"] .header-mobile-link.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* Navegaciï¿½n mï¿½vil: barra, lï¿½nea festiva y FAB dorado */
+:root[data-theme="noel"] .bottom-nav {
+    background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+    border-top-color: var(--border-subtle);
+}
+
+:root[data-theme="noel"] .bottom-nav::after,
+:root[data-theme="midnight"] .bottom-nav::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
+    height: 3px;
+    pointer-events: none;
+}
+
+:root[data-theme="noel"] .bottom-nav::after {
+    background: linear-gradient(90deg, var(--xmas-red), var(--accent), var(--xmas-green));
+    opacity: 0.8;
+}
+
+:root[data-theme="midnight"] .bottom-nav::after {
+    background: linear-gradient(90deg, var(--accent-gold), #E2E8F0, var(--accent-gold));
+    opacity: 0.6;
+}
+
+:root[data-theme="noel"] .bottom-nav__item.is-active {
+    color: var(--accent);
+}
+
+:root[data-theme="noel"] .bottom-nav__item.is-active svg {
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 45%, transparent));
+}
+
+:root[data-theme="noel"] .bottom-nav__fab {
+    background: linear-gradient(140deg, #F6D989 0%, var(--accent) 55%, #C99B36 100%);
+    color: var(--accent-contrast);
+    border-color: var(--bg-surface);
+    box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+
+:root[data-theme="noel"] .fab {
+    background: linear-gradient(140deg, #F6D989 0%, var(--accent) 55%, #C99B36 100%);
+    color: var(--accent-contrast);
+    box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+
+:root[data-theme="noel"] .nav-pill {
+    background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+    border-color: var(--border-subtle);
+}
+
+:root[data-theme="noel"] .nav-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Superficies y brillo dorado al pasar el cursor */
+:root[data-theme="noel"] .card,
+:root[data-theme="noel"] .balance-card {
+    border-color: var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+}
+
+:root[data-theme="noel"] .card:hover,
+:root[data-theme="noel"] .balance-card:hover,
+:root[data-theme="noel"] .card-interactive:hover {
+    border-color: var(--border-strong);
+    box-shadow:
+        0 0 0 1px var(--accent),
+        0 8px 30px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* Botones */
+:root[data-theme="noel"] .btn-primary {
+    background: linear-gradient(110deg, #F6D989 0%, var(--accent) 55%, #D9A83E 100%);
+    color: var(--accent-contrast);
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: 12px;
+    box-shadow: 0 10px 26px -18px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+:root[data-theme="noel"] .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(110deg, #FBE3A4 0%, #EDC65F 55%, #E6B94D 100%);
+    box-shadow: 0 12px 30px -16px color-mix(in srgb, var(--accent) 78%, transparent);
+}
+
+:root[data-theme="noel"] .btn-primary:disabled {
+    background: rgba(244, 241, 234, 0.10);
+    color: rgba(244, 241, 234, 0.45);
+    border-color: transparent;
+}
+
+:root[data-theme="noel"] .btn-secondary {
+    background-color: var(--bg-elevated);
+    border-color: var(--border-subtle);
+    color: var(--text-secondary);
+}
+
+:root[data-theme="noel"] .btn-secondary:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--bg-elevated) 82%, var(--accent) 18%);
+    color: var(--text-primary);
+}
+
+:root[data-theme="noel"] .btn-outline {
+    border-color: var(--border-strong);
+}
+
+:root[data-theme="noel"] .btn-circle {
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+    color: var(--accent);
+}
+
+:root[data-theme="noel"] .btn-circle:hover {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    border-color: var(--accent);
+}
+
+/* Formularios nativos */
+:root[data-theme="noel"] .input-wrapper,
+:root[data-theme="noel"] .input-wrapper-num,
+:root[data-theme="noel"] .input-wrapper-select,
+:root[data-theme="noel"] .tf-search-wrap,
+:root[data-theme="noel"] .select-input-trigger,
+:root[data-theme="noel"] .dx-trigger {
+    background: var(--input-bg);
+    border-color: var(--input-border);
+}
+
+:root[data-theme="noel"] select,
+:root[data-theme="noel"] input,
+:root[data-theme="noel"] textarea {
+    color: var(--text-primary);
+}
+
+:root[data-theme="noel"] option {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+/* Cifras tabulares */
+:root[data-theme="noel"] .amount-font,
+:root[data-theme="noel"] .hero-amount,
+:root[data-theme="noel"] .card-amount {
+    font-family: var(--font-ui);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Hero y selecciï¿½n */
+:root[data-theme="noel"] .dash-hero::before {
+    background: linear-gradient(var(--accent), var(--xmas-green));
+}
+
+:root[data-theme="noel"] .dash-hero::after {
+    background: radial-gradient(
+        85% 130% at 100% 0%,
+        color-mix(in srgb, var(--accent) 18%, transparent) 0%,
+        transparent 55%
+    );
+}
+
+:root[data-theme="noel"] ::selection {
+    background: rgba(230, 185, 77, 0.30);
+    color: var(--text-primary);
+}
+
+/* --------------------------------------------------------
+   MODALES ï¿½ acabado comï¿½n para los temas festivos
+-------------------------------------------------------- */
+:root[data-theme="midnight"] .form-container,
+:root[data-theme="midnight"] .info-modal-card,
+:root[data-theme="midnight"] .codeflow-card,
+:root[data-theme="midnight"] .cat-detail,
+:root[data-theme="noel"] .form-container,
+:root[data-theme="noel"] .info-modal-card,
+:root[data-theme="noel"] .codeflow-card,
+:root[data-theme="noel"] .cat-detail {
+    position: relative;
+    border-color: var(--border-subtle);
+    box-shadow: 0 24px 70px -30px rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="midnight"] .onboarding-tour__card,
+:root[data-theme="noel"] .onboarding-tour__card {
+    border-color: var(--border-subtle);
+    box-shadow: 0 24px 70px -30px rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme="midnight"] .form-container::before,
+:root[data-theme="midnight"] .info-modal-card::before,
+:root[data-theme="midnight"] .codeflow-card::before,
+:root[data-theme="midnight"] .cat-detail::before,
+:root[data-theme="midnight"] .onboarding-tour__card::before,
+:root[data-theme="noel"] .form-container::before,
+:root[data-theme="noel"] .info-modal-card::before,
+:root[data-theme="noel"] .codeflow-card::before,
+:root[data-theme="noel"] .cat-detail::before,
+:root[data-theme="noel"] .onboarding-tour__card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+:root[data-theme="midnight"] .form-container::before,
+:root[data-theme="midnight"] .info-modal-card::before,
+:root[data-theme="midnight"] .codeflow-card::before,
+:root[data-theme="midnight"] .cat-detail::before,
+:root[data-theme="midnight"] .onboarding-tour__card::before {
+    background: linear-gradient(90deg, #E2E8F0, var(--accent-gold), #E2E8F0);
+}
+
+:root[data-theme="noel"] .form-container::before,
+:root[data-theme="noel"] .info-modal-card::before,
+:root[data-theme="noel"] .codeflow-card::before,
+:root[data-theme="noel"] .cat-detail::before,
+:root[data-theme="noel"] .onboarding-tour__card::before {
+    background: linear-gradient(90deg, var(--xmas-red), var(--accent), var(--xmas-green));
+}
+
+:root[data-theme="noel"] .modal-overlay {
+    background: rgba(3, 9, 7, 0.78);
+    backdrop-filter: blur(8px);
+}
+
+:root[data-theme="noel"] .form-container,
+:root[data-theme="noel"] .info-modal-card,
+:root[data-theme="noel"] .codeflow-card,
+:root[data-theme="noel"] .cat-detail {
+    background: var(--bg-surface);
+}
+
+:root[data-theme="noel"] .info-cancel-btn,
+:root[data-theme="noel"] .form-container__close {
+    background-color: var(--bg-elevated);
+    border-color: var(--border-subtle);
+}
+
+:root[data-theme="midnight"] .info-cancel-btn,
+:root[data-theme="midnight"] .form-container__close {
+    background-color: rgba(226, 232, 240, 0.05);
+    border-color: var(--border-subtle);
+}
+
+/* Detalle interno del modal de pago de préstamo */
+:root[data-theme="midnight"] .loan-context-summary,
+:root[data-theme="noel"] .loan-context-summary {
+    background: radial-gradient(100% 100% at 0% 0%, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+    border-color: var(--border-subtle);
+}
+
+:root[data-theme="midnight"] .loan-context-summary__label,
+:root[data-theme="noel"] .loan-context-summary__label {
+    color: var(--text-tertiary);
+}
+
+:root[data-theme="midnight"] .loan-context-summary__badge.given,
+:root[data-theme="noel"] .loan-context-summary__badge.given {
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+:root[data-theme="midnight"] .loan-context-summary__badge.received,
+:root[data-theme="noel"] .loan-context-summary__badge.received {
+    background: var(--success-soft);
+    color: var(--success);
 }

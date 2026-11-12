@@ -1,8 +1,9 @@
 ﻿import { useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { ThemeContext, type Theme } from "./themeContext";
+import { ThemeBackdrop } from "./ThemeBackdrop";
 
 const STORAGE_KEY = "finance-theme";
-const THEMES: Theme[] = ["dark", "light", "midnight"];
+const THEMES: Theme[] = ["dark", "light", "midnight", "noel"];
 
 function getInitialTheme(): Theme {
     if (typeof window === "undefined") return "dark";
@@ -30,5 +31,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         [theme]
     );
 
-    return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+    return (
+        <ThemeContext.Provider value={value}>
+            <ThemeBackdrop />
+            {children}
+        </ThemeContext.Provider>
+    );
 }

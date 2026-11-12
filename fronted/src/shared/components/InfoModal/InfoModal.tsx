@@ -37,9 +37,9 @@ export default function InfoModal({
 
     // Mapeo de colores e iconos por defecto
     const config = {
-        success: { icon: <CheckCircle size={22} />, color: "#22c55e" },
-        error: { icon: <AlertCircle size={22} />, color: "#ef4444" },
-        info: { icon: <Info size={22} />, color: "#f1c40f" },
+        success: { icon: <CheckCircle size={22} />, color: "var(--success)" },
+        error: { icon: <AlertCircle size={22} />, color: "var(--danger)" },
+        info: { icon: <Info size={22} />, color: "var(--accent)" },
     };
 
     const themeColor = customColor || config[type].color;
