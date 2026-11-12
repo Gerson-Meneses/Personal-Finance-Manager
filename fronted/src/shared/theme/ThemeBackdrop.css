@@ -11,19 +11,36 @@
     display: block;
 }
 
-.theme-backdrop__stars {
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0 L58 42 L100 50 L58 58 L50 100 L42 58 L0 50 L42 42 Z' fill='%23E6B94D' fill-opacity='0.20'/%3E%3C/svg%3E");
-    background-repeat: repeat;
-    background-size: 190px 190px;
-    opacity: 0.55;
-    animation: themeTwinkle 10s ease-in-out infinite alternate;
-}
-
+.theme-backdrop__stars,
+.theme-backdrop__ornaments,
 .theme-backdrop__snow {
     position: absolute;
     inset: 0;
+}
+
+.theme-backdrop__star {
+    position: absolute;
+    display: block;
+    color: #E6B94D;
+    transform-origin: center;
+    animation: themeStarTwinkle 7s ease-in-out infinite alternate;
+    will-change: filter;
+}
+
+.theme-backdrop__star svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.theme-backdrop__ornament {
+    position: absolute;
+    display: block;
+    transform-origin: center;
+}
+
+.theme-backdrop__ornament svg {
+    display: block;
 }
 
 .theme-backdrop__flake {
@@ -51,20 +68,25 @@
     }
 }
 
-@keyframes themeTwinkle {
+@keyframes themeStarTwinkle {
     from {
-        opacity: 0.4;
+        filter: brightness(0.75);
     }
 
     to {
-        opacity: 0.72;
+        filter: brightness(1.3);
+    }
+}
+
+@media (max-width: 640px) {
+    .theme-backdrop__ornament:nth-child(n + 15) {
+        display: none;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .theme-backdrop__stars {
+    .theme-backdrop__star {
         animation: none;
-        opacity: 0.45;
     }
 
     .theme-backdrop__flake {

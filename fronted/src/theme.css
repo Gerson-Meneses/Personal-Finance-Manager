@@ -1025,8 +1025,21 @@ a,
 }
 
 :root[data-theme="noel"] .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(110deg, #FBE3A4 0%, #EDC65F 55%, #E6B94D 100%);
-    box-shadow: 0 12px 30px -16px color-mix(in srgb, var(--accent) 78%, transparent);
+    background: radial-gradient(120% 170% at 50% -30%, #FFF6D6 0%, #F7D97F 38%, var(--accent) 100%);
+    box-shadow:
+        0 0 0 1px rgba(255, 240, 190, 0.55),
+        0 0 26px 6px rgba(230, 185, 77, 0.35),
+        0 14px 34px -16px rgba(230, 185, 77, 0.80);
+}
+
+:root[data-theme="noel"] .fab:hover,
+:root[data-theme="noel"] .bottom-nav__fab:hover,
+:root[data-theme="noel"] .codeflow-primary-btn:hover:not(:disabled) {
+    background: radial-gradient(120% 170% at 50% -30%, #FFF6D6 0%, #F7D97F 38%, var(--accent) 100%);
+    box-shadow:
+        0 0 0 1px rgba(255, 240, 190, 0.50),
+        0 0 24px 6px rgba(230, 185, 77, 0.35),
+        0 10px 24px -12px rgba(230, 185, 77, 0.75);
 }
 
 :root[data-theme="noel"] .btn-primary:disabled {
