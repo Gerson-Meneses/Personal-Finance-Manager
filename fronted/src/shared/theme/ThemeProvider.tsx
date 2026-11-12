@@ -2,11 +2,12 @@
 import { ThemeContext, type Theme } from "./themeContext";
 
 const STORAGE_KEY = "finance-theme";
+const THEMES: Theme[] = ["dark", "light", "midnight"];
 
 function getInitialTheme(): Theme {
     if (typeof window === "undefined") return "dark";
     const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved === "light" || saved === "dark") return saved;
+    if (saved && THEMES.includes(saved as Theme)) return saved as Theme;
     return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
 }
 
@@ -15,7 +16,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     useLayoutEffect(() => {
         document.documentElement.dataset.theme = theme;
-        document.documentElement.style.colorScheme = theme;
+        document.documentElement.style.colorScheme = theme === "light" ? "light" : "dark";
         window.localStorage.setItem(STORAGE_KEY, theme);
     }, [theme]);
 
@@ -23,7 +24,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         () => ({
             theme,
             setTheme: setThemeState,
-            toggleTheme: () => setThemeState((current) => (current === "dark" ? "light" : "dark")),
+            toggleTheme: () =>
+                setThemeState((current) => THEMES[(THEMES.indexOf(current) + 1) % THEMES.length]),
         }),
         [theme]
     );

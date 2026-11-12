@@ -1,3 +1,8 @@
+.theme-switcher {
+    position: relative;
+    display: inline-flex;
+}
+
 .theme-toggle {
     position: relative;
     display: inline-flex;
@@ -18,4 +23,103 @@
     color: var(--text-primary, var(--text-primary));
     border-color: var(--border-strong, rgba(255, 255, 255, 0.24));
     background: var(--surface-hover, rgba(255, 255, 255, 0.04));
+}
+
+.theme-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 300;
+    width: 238px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px;
+    border-radius: 14px;
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+    background: var(--bg-elevated, #141922);
+    box-shadow: var(--shadow-md, 0 12px 30px -12px rgba(0, 0, 0, 0.5));
+}
+
+.theme-menu__title {
+    padding: 5px 8px 7px;
+    font-size: 0.64rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+}
+
+.theme-menu__option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.theme-menu__option:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.theme-menu__option.is-selected {
+    background: var(--accent-soft, rgba(241, 196, 15, 0.1));
+    border-color: var(--border-subtle, rgba(255, 255, 255, 0.12));
+    color: var(--text-primary);
+}
+
+.theme-menu__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: var(--surface-soft-strong, rgba(255, 255, 255, 0.06));
+    color: var(--accent);
+}
+
+.theme-menu__text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1;
+}
+
+.theme-menu__text strong {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.theme-menu__text small {
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+}
+
+.theme-menu__check {
+    flex-shrink: 0;
+    color: var(--accent);
+}
+
+.header-mobile-theme .theme-menu {
+    top: auto;
+    bottom: calc(100% + 8px);
+}
+
+@media (max-width: 640px) {
+    .header-right .theme-switcher {
+        display: none;
+    }
 }

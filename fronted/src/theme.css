@@ -5,6 +5,7 @@
 ════════════════════════════════════════════════════════ */
 :root {
     --font-ui: Inter, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+    --font-display: var(--font-ui);
     --font-mono: "JetBrains Mono", "Cascadia Code", monospace;
 
     --bg-canvas: #000000;
@@ -566,4 +567,247 @@ a,
     .notif-bell__btn {
         transition: none;
     }
+}
+
+/* --------------------------------------------------------
+   MIDNIGHT LUXURY � tema de temporada (Navidad)
+   Azul noche profundo, plata escarcha y champ�n c�lido.
+   Microinteracciones: brillo met�lico sutil, sin nieve.
+-------------------------------------------------------- */
+:root[data-theme="midnight"] {
+    --bg-canvas: #0F172A;
+    --bg-surface: #1E293B;
+    --bg-elevated: #263449;
+    --bg-hover: rgba(226, 232, 240, 0.07);
+    --surface-soft: rgba(226, 232, 240, 0.045);
+    --surface-soft-strong: rgba(226, 232, 240, 0.09);
+    --border-subtle: rgba(226, 232, 240, 0.10);
+    --border-soft: rgba(226, 232, 240, 0.06);
+    --border-strong: rgba(226, 232, 240, 0.22);
+    --text-primary: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-tertiary: #94A3B8;
+    --accent: #E2E8F0;
+    --accent-contrast: #0F172A;
+    --accent-soft: rgba(226, 232, 240, 0.10);
+    --accent-gold: #C5A059;
+    --accent-gold-soft: rgba(197, 160, 89, 0.14);
+    --success: #4ADE80;
+    --success-soft: rgba(74, 222, 128, 0.10);
+    --danger: #F87171;
+    --danger-soft: rgba(248, 113, 113, 0.10);
+    --warning: #E2C27A;
+    --info: #C5A059;
+    --info-soft: rgba(197, 160, 89, 0.12);
+    --input-bg: rgba(15, 23, 42, 0.35);
+    --input-border: rgba(226, 232, 240, 0.14);
+    --shadow-sm: 0 1px 2px rgba(2, 6, 23, 0.45);
+    --shadow-md: 0 20px 44px -24px rgba(2, 6, 23, 0.90);
+    --font-display: "Playfair Display", "Cinzel", Georgia, "Times New Roman", serif;
+}
+
+/* Fondo: estrellas geom�tricas de 4 puntas + brillo fr�o/champ�n */
+:root[data-theme="midnight"] body {
+    background-color: var(--bg-canvas);
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0 L58 42 L100 50 L58 58 L50 100 L42 58 L0 50 L42 42 Z' fill='%23E2E8F0' fill-opacity='0.10'/%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0 L58 42 L100 50 L58 58 L50 100 L42 58 L0 50 L42 42 Z' fill='%23C5A059' fill-opacity='0.12'/%3E%3C/svg%3E"),
+        radial-gradient(ellipse 70% 45% at 50% -10%, rgba(226, 232, 240, 0.07), transparent 60%),
+        radial-gradient(ellipse 55% 40% at 100% 105%, rgba(197, 160, 89, 0.10), transparent 65%);
+    background-repeat: no-repeat;
+    background-position: 90% 7%, 5% 78%, center, center;
+    background-size: 150px 150px, 96px 96px, auto, auto;
+    background-attachment: fixed;
+}
+
+/* Encabezados principales con serif elegante */
+:root[data-theme="midnight"] h1,
+:root[data-theme="midnight"] h2,
+:root[data-theme="midnight"] .header-app-name {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+}
+
+/* Cabecera, men� m�vil, footer y barra inferior */
+:root[data-theme="midnight"] .app-header {
+    background-color: color-mix(in srgb, var(--bg-canvas) 88%, transparent);
+    backdrop-filter: blur(16px);
+    border-bottom-color: var(--border-subtle);
+}
+
+:root[data-theme="midnight"] .app-footer {
+    background-color: var(--bg-canvas);
+    border-top-color: var(--border-soft);
+}
+
+:root[data-theme="midnight"] .header-mobile-menu {
+    background-color: var(--bg-surface);
+    border-color: var(--border-subtle);
+}
+
+:root[data-theme="midnight"] .header-menu-backdrop {
+    background: rgba(15, 23, 42, 0.72);
+}
+
+:root[data-theme="midnight"] .bottom-nav {
+    background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+    border-top-color: var(--border-subtle);
+}
+
+/* Acentos de navegaci�n en champ�n */
+:root[data-theme="midnight"] .header-logo {
+    background: var(--accent-gold-soft);
+    border: 1px solid rgba(197, 160, 89, 0.28);
+}
+
+:root[data-theme="midnight"] .header-logo svg {
+    color: var(--accent-gold);
+}
+
+:root[data-theme="midnight"] .header-avatar {
+    background: var(--accent-gold-soft);
+    border-color: rgba(197, 160, 89, 0.28);
+    color: var(--accent-gold);
+}
+
+:root[data-theme="midnight"] .header-nav-link.active,
+:root[data-theme="midnight"] .header-mobile-link.active {
+    color: var(--accent-gold);
+    background: var(--accent-gold-soft);
+    border-color: rgba(197, 160, 89, 0.28);
+}
+
+:root[data-theme="midnight"] .bottom-nav__item.is-active {
+    color: var(--accent-gold);
+}
+
+/* Superficies con bordes finos y sombras suaves */
+:root[data-theme="midnight"] .card,
+:root[data-theme="midnight"] .balance-card {
+    border-color: var(--border-soft);
+    box-shadow: var(--shadow-sm);
+}
+
+:root[data-theme="midnight"] .card-interactive:hover,
+:root[data-theme="midnight"] .balance-card:hover {
+    border-color: var(--border-strong);
+}
+
+/* Bot�n principal: plata con destello met�lico champ�n */
+:root[data-theme="midnight"] .btn-primary {
+    background-color: #E2E8F0;
+    background-image: linear-gradient(110deg, #E2E8F0 0%, #F8FAFC 36%, #C5A059 52%, #E8EDF5 68%, #E2E8F0 100%);
+    background-size: 220% 100%;
+    background-position: 0% 0;
+    color: var(--accent-contrast);
+    border: 1px solid rgba(226, 232, 240, 0.50);
+    box-shadow: 0 10px 26px -18px rgba(197, 160, 89, 0.75);
+    transition: background-position 0.5s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+:root[data-theme="midnight"] .btn-primary:hover:not(:disabled) {
+    background-color: #E2E8F0;
+    background-position: 100% 0;
+    box-shadow:
+        0 12px 30px -16px rgba(197, 160, 89, 0.80),
+        0 0 0 1px rgba(197, 160, 89, 0.30);
+}
+
+:root[data-theme="midnight"] .btn-primary:disabled {
+    background: rgba(226, 232, 240, 0.12);
+    color: rgba(248, 250, 252, 0.45);
+    border-color: transparent;
+}
+
+:root[data-theme="midnight"] .btn-secondary {
+    background-color: rgba(226, 232, 240, 0.06);
+    border-color: var(--border-subtle);
+    color: var(--text-secondary);
+}
+
+:root[data-theme="midnight"] .btn-secondary:hover:not(:disabled) {
+    background-color: rgba(226, 232, 240, 0.12);
+    color: var(--text-primary);
+}
+
+:root[data-theme="midnight"] .btn-outline {
+    border-color: var(--border-strong);
+}
+
+:root[data-theme="midnight"] .btn-circle {
+    background: var(--accent-gold-soft);
+    border-color: rgba(197, 160, 89, 0.32);
+    color: var(--accent-gold);
+}
+
+:root[data-theme="midnight"] .btn-circle:hover {
+    background: rgba(197, 160, 89, 0.22);
+    border-color: var(--accent-gold);
+}
+
+/* FAB y acci�n m�vil: degradado plata ? champ�n */
+:root[data-theme="midnight"] .fab,
+:root[data-theme="midnight"] .bottom-nav__fab {
+    background: linear-gradient(140deg, #E2E8F0 0%, #C5A059 55%, #B08A45 100%);
+    color: #0F172A;
+    box-shadow: 0 10px 24px -12px rgba(197, 160, 89, 0.70);
+}
+
+:root[data-theme="midnight"] .bottom-nav__fab {
+    border-color: var(--bg-surface);
+}
+
+:root[data-theme="midnight"] .fab:hover {
+    box-shadow: 0 12px 28px -12px rgba(197, 160, 89, 0.90);
+}
+
+/* Selector de tema */
+:root[data-theme="midnight"] .theme-menu__icon {
+    background: var(--accent-gold-soft);
+    color: var(--accent-gold);
+}
+
+:root[data-theme="midnight"] .theme-menu__option.is-selected {
+    border-color: rgba(197, 160, 89, 0.28);
+}
+
+/* Formularios y selects nativos */
+:root[data-theme="midnight"] select {
+    color: var(--text-primary);
+}
+
+:root[data-theme="midnight"] option {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+/* Hero del dashboard con brillo champ�n */
+:root[data-theme="midnight"] .dash-hero::before {
+    background: linear-gradient(var(--accent-gold), #E2E8F0);
+}
+
+:root[data-theme="midnight"] .dash-hero::after {
+    background: radial-gradient(
+        85% 130% at 100% 0%,
+        rgba(197, 160, 89, 0.18) 0%,
+        transparent 55%
+    );
+}
+
+/* Modales, selecci�n e im�genes */
+:root[data-theme="midnight"] .modal-overlay {
+    background: rgba(2, 6, 23, 0.78);
+}
+
+:root[data-theme="midnight"] ::selection {
+    background: rgba(197, 160, 89, 0.30);
+    color: #F8FAFC;
+}
+
+:root[data-theme="midnight"] img {
+    filter: saturate(0.85) contrast(1.05);
+}
+
+:root[data-theme="midnight"] .qs-sub {
+    color: var(--text-tertiary);
 }
