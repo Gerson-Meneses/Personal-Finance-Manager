@@ -631,7 +631,6 @@ a,
 /* Cabecera, men� m�vil, footer y barra inferior */
 :root[data-theme="midnight"] .app-header {
     background-color: color-mix(in srgb, var(--bg-canvas) 88%, transparent);
-    backdrop-filter: blur(16px);
     border-bottom-color: var(--border-subtle);
 }
 
@@ -875,8 +874,16 @@ a,
 /* Cabecera, footer y guirnalda rojo-oro-verde */
 :root[data-theme="noel"] .app-header {
     background-color: color-mix(in srgb, var(--bg-canvas) 90%, transparent);
-    backdrop-filter: blur(16px);
     border-bottom-color: var(--border-subtle);
+}
+
+/* El blur del header solo en escritorio: en móvil crea un containing block
+   que rompe el posicionamiento fixed del menú "Más" y del selector de temas. */
+@media (min-width: 641px) {
+    :root[data-theme="midnight"] .app-header,
+    :root[data-theme="noel"] .app-header {
+        backdrop-filter: blur(16px);
+    }
 }
 
 :root[data-theme="noel"] .app-header::after,
@@ -1184,7 +1191,7 @@ a,
     border-color: var(--border-subtle);
 }
 
-/* Detalle interno del modal de pago de pr�stamo */
+/* Detalle interno del modal de pago de pr�stamo */
 :root[data-theme="midnight"] .loan-context-summary,
 :root[data-theme="noel"] .loan-context-summary {
     background: radial-gradient(100% 100% at 0% 0%, var(--bg-elevated) 0%, var(--bg-surface) 100%);
