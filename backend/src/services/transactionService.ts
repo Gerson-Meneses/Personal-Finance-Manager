@@ -3,13 +3,15 @@ import { Account } from "../entities/Account.entity";
 import { Category } from "../entities/Category.entity";
 import { ReccurentTransaction } from "../entities/ReccurentTransaction.entity";
 import { Transaction } from "../entities/Transaction.entity";
+import { LoanMovement } from "../entities/LoanMovement.entity";
+import { RecurringPaymentOccurrence } from "../entities/RecurringPaymentOccurrence.entity";
 import { User } from "../entities/User.entity";
 import { BadRequestError, ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
 import { PaymentCreditCardSchema } from "../schemas/paymentCreditCard.schema";
 import { TransactionSchema, UpdateTransactionSchema } from "../schemas/transaction.schema";
 import { TransferSchema } from "../schemas/transfers.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
-import { TypeAccount, TypeTransaction } from "../utils/Enums";
+import { RecurringOccurrenceStatus, TypeAccount, TypeTransaction } from "../utils/Enums";
 import { PaginatedResult } from "../types";
 import { TransactionQuerySchema } from "../schemas/querysTransaction.schema";
 import { EntityManager, QueryRunner, SelectQueryBuilder } from "typeorm";
@@ -639,9 +641,32 @@ export class TransactionService {
 
             const transaction = await manager.findOne(Transaction, {
                 where: { id, user: { id: userId } },
-                relations: ['account', 'relatedAccount']
+                relations: ['account', 'relatedAccount', 'loan']
             });
             if (!transaction) throw new NotFoundError("Transacción no encontrada para el usuario");
+
+            const linkedMovement = await manager.findOne(LoanMovement, {
+                where: { transactionId: id },
+            });
+            if (linkedMovement || transaction.loan) {
+                throw new ConflictError(
+                    "Esta transacción está vinculada a un préstamo. Reversa el pago desde Préstamos antes de eliminarla."
+                );
+            }
+
+            const occurrence = await manager.findOne(RecurringPaymentOccurrence, {
+                where: { transactionId: id, userId },
+            });
+            if (occurrence) {
+                occurrence.status = RecurringOccurrenceStatus.PENDING;
+                occurrence.transactionId = null;
+                occurrence.executedAt = null;
+                occurrence.executedAmount = null;
+                occurrence.executionNote = null;
+                occurrence.failureReason = null;
+                occurrence.notifiedAt = null;
+                await manager.save(occurrence);
+            }
 
             const accountsById = await this.lockAccounts(
                 manager,

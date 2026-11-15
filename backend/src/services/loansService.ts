@@ -6,6 +6,7 @@ import { DebtInstallment } from "../entities/DebtInstallment.entity";
 import { LoanPaymentAllocation } from "../entities/LoanPaymentAllocation.entity";
 import { Contact } from "../entities/Contact.entity";
 import { RecurringPayment } from "../entities/RecurringPayment.entity";
+import { RecurringPaymentOccurrence } from "../entities/RecurringPaymentOccurrence.entity";
 import dayjs from "dayjs";
 import { Transaction } from "../entities/Transaction.entity";
 import { Account } from "../entities/Account.entity";
@@ -20,6 +21,8 @@ import {
   DebtInstallmentStatus,
   LoanMovementType,
   LoanPlanStatus,
+  RecurringLoanAction,
+  RecurringOccurrenceStatus,
   StatusLoan,
   TransactionReportingImpact,
   TypeAccount,
@@ -950,6 +953,47 @@ export class LoansService {
     }
   }
 
+  private async restoreOccurrenceForRepayment(
+    manager: EntityManager,
+    userId: UuidSchema,
+    loan: Loan,
+    movement: LoanMovement
+  ): Promise<void> {
+    const qb = manager
+      .createQueryBuilder(RecurringPaymentOccurrence, "occurrence")
+      .leftJoinAndSelect("occurrence.payment", "payment")
+      .where("occurrence.userId = :userId", { userId })
+      .andWhere("occurrence.status = :status", { status: RecurringOccurrenceStatus.PAID });
+
+    if (movement.transactionId) {
+      qb.andWhere("occurrence.transactionId = :transactionId", {
+        transactionId: movement.transactionId,
+      });
+    } else {
+      qb.andWhere("occurrence.transactionId IS NULL")
+        .andWhere("occurrence.dueDate = :dueDate", { dueDate: movement.date })
+        .andWhere("occurrence.executedAmount = :amount", { amount: movement.amount })
+        .andWhere("payment.loanAction = :loanAction", {
+          loanAction: RecurringLoanAction.PAY_LOAN,
+        });
+      if (loan.contactId) {
+        qb.andWhere("payment.loanContactId = :contactId", { contactId: loan.contactId });
+      }
+    }
+
+    const occurrence = await qb.getOne();
+    if (!occurrence) return;
+
+    occurrence.status = RecurringOccurrenceStatus.PENDING;
+    occurrence.transactionId = null;
+    occurrence.executedAt = null;
+    occurrence.executedAmount = null;
+    occurrence.executionNote = null;
+    occurrence.failureReason = null;
+    occurrence.notifiedAt = null;
+    await manager.save(occurrence);
+  }
+
   async reverseMovement(
     userId: UuidSchema,
     loanId: UuidSchema,
@@ -976,50 +1020,51 @@ export class LoansService {
       if (movement.type !== LoanMovementType.REPAYMENT) {
         throw new ConflictError("Solo se pueden reversar pagos de préstamo");
       }
-      if (!movement.transaction || !movement.transaction.account) {
-        throw new ConflictError("El pago no tiene una transacción asociada para reversar");
-      }
-
       const existing = await manager.findOne(LoanMovement, {
         where: { reversalOfMovementId: movement.id },
       });
       if (existing) throw new ConflictError("Este pago ya fue reversado");
 
-      const reversalType =
-        movement.transaction.type === TypeTransaction.INCOME
-          ? TypeTransaction.EXPENSE
-          : TypeTransaction.INCOME;
-
-      const category = await manager.findOne(Category, {
-        where: {
-          name: "DEVOLUCIÓN DE PRÉSTAMO",
-          type: reversalType,
-          user: { id: userId },
-        },
-      });
-      if (!category) throw new NotFoundError("Categoría de devolución no encontrada");
-
       const date = data.date ?? dayjs().format("YYYY-MM-DD");
-      const transactionResponse = await this.transactionService.createTransaction(
-        {
-          name: `Reversión de pago ${loan.type === TypeLoan.GIVEN ? "de" : "a"} ${loan.lender}`,
-          type: reversalType,
-          amount: movement.amount,
-          date,
-          description: data.reason ?? "Pago reversado",
-          categoryId: category.id,
-          accountId: movement.transaction.account.id,
-          reportingImpact: TransactionReportingImpact.CASHFLOW_ONLY,
-        } as TransactionSchema,
-        userId,
-        false,
-        manager
-      );
+      const sourceTransaction = movement.transaction;
+      let transaction: Transaction | null = null;
 
-      const transaction = await manager.findOneOrFail(Transaction, {
-        where: { id: transactionResponse.id },
-        relations: ["account", "category"],
-      });
+      if (sourceTransaction?.account) {
+        const reversalType =
+          sourceTransaction.type === TypeTransaction.INCOME
+            ? TypeTransaction.EXPENSE
+            : TypeTransaction.INCOME;
+
+        const category = await manager.findOne(Category, {
+          where: {
+            name: "DEVOLUCIÓN DE PRÉSTAMO",
+            type: reversalType,
+            user: { id: userId },
+          },
+        });
+        if (!category) throw new NotFoundError("Categoría de devolución no encontrada");
+
+        const transactionResponse = await this.transactionService.createTransaction(
+          {
+            name: `Reversión de pago ${loan.type === TypeLoan.GIVEN ? "de" : "a"} ${loan.lender}`,
+            type: reversalType,
+            amount: movement.amount,
+            date,
+            description: data.reason ?? "Pago reversado",
+            categoryId: category.id,
+            accountId: sourceTransaction.account.id,
+            reportingImpact: TransactionReportingImpact.CASHFLOW_ONLY,
+          } as TransactionSchema,
+          userId,
+          false,
+          manager
+        );
+
+        transaction = await manager.findOneOrFail(Transaction, {
+          where: { id: transactionResponse.id },
+          relations: ["account", "category"],
+        });
+      }
 
       const reversal = await manager.save(
         manager.create(LoanMovement, {
@@ -1028,7 +1073,7 @@ export class LoansService {
           amount: movement.amount,
           date,
           note: data.reason ?? `Reversión del pago ${movement.id}`,
-          transactionId: transaction.id,
+          transactionId: transaction?.id ?? null,
           transaction,
           reversalOfMovementId: movement.id,
         })
@@ -1060,6 +1105,7 @@ export class LoansService {
       this.refreshLoanStatus(loan);
       await manager.save(loan);
       await this.refreshPlans(manager, planIds);
+      await this.restoreOccurrenceForRepayment(manager, userId, loan, movement);
 
       await this.auditService.log(
         userId,

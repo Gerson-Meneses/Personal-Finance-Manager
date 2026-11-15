@@ -57,7 +57,13 @@ export const useTransactions = (filters?: TransactionQuerySchemaOutput) => {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => service.deleteTransaction(id),
-    onSuccess: invalidateAll,
+    onSuccess: () => {
+      invalidateAll();
+      queryClient.invalidateQueries({ queryKey: ["recurringProjection"] });
+      queryClient.invalidateQueries({ queryKey: ["recurringPayments"] });
+      queryClient.invalidateQueries({ queryKey: ["paymentNotifications"] });
+      queryClient.invalidateQueries({ queryKey: ["debtInstallments"] });
+    },
   });
 
 

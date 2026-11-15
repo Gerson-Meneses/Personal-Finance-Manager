@@ -122,25 +122,15 @@ export const createRecurringPaymentSchema = baseRecurringPayment.superRefine((da
             });
         }
         if (
-            data.loanAction !== RecurringLoanAction.PAY_LOAN &&
-            data.loanAction !== RecurringLoanAction.ADVANCE_LOAN &&
-            data.frequency !== RecurrenceFrequency.ONCE
-        ) {
-            ctx.addIssue({
-                code: "custom",
-                path: ["frequency"],
-                message: "Solo los pagos de préstamo pueden tener cronograma",
-            });
-        }
-        if (
             (data.loanAction === RecurringLoanAction.GIVE_LOAN ||
                 data.loanAction === RecurringLoanAction.RECEIVE_LOAN) &&
+            !data.loanContactId &&
             !data.loanCounterparty
         ) {
             ctx.addIssue({
                 code: "custom",
-                path: ["loanCounterparty"],
-                message: "Indica la persona del préstamo",
+                path: ["loanContactId"],
+                message: "Selecciona o crea la persona del préstamo",
             });
         }
         if (

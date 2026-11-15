@@ -164,9 +164,6 @@ export const RecurringPaymentFormSchema = z
             if (data.loanAction === "PAY_LOAN" && !data.loanId && !data.loanCounterparty) {
                 ctx.addIssue({ code: "custom", path: ["loanCounterparty"], message: "Selecciona la persona o el préstamo que se va a pagar" });
             }
-            if (data.loanAction !== "PAY_LOAN" && data.loanAction !== "ADVANCE_LOAN" && data.frequency !== "ONCE") {
-                ctx.addIssue({ code: "custom", path: ["frequency"], message: "Solo los pagos y avances de préstamo pueden tener cronograma" });
-            }
             if (data.loanAction === "ADVANCE_LOAN" && !data.loanId) {
                 ctx.addIssue({ code: "custom", path: ["loanId"], message: "Selecciona el préstamo que se va a aumentar" });
             }

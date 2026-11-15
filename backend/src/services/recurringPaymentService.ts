@@ -640,7 +640,13 @@ export class RecurringPaymentService {
                 action === RecurringLoanAction.GIVE_LOAN ||
                 action === RecurringLoanAction.RECEIVE_LOAN
             ) {
-                if (!payment.loanCounterparty) {
+                const contact = payment.loanContactId
+                    ? await manager.findOne(Contact, {
+                          where: { id: payment.loanContactId, userId },
+                      })
+                    : null;
+                const lender = contact?.name ?? payment.loanCounterparty;
+                if (!lender) {
                     throw new ConflictError("El pago no tiene una persona vinculada");
                 }
 
@@ -651,7 +657,8 @@ export class RecurringPaymentService {
                             action === RecurringLoanAction.GIVE_LOAN
                                 ? TypeLoan.GIVEN
                                 : TypeLoan.RECEIVED,
-                        lender: payment.loanCounterparty,
+                        contactId: contact?.id,
+                        lender,
                         amount: actualAmount,
                         startDate: data.date ?? occurrence.dueDate,
                         date: dayjs(data.date ?? occurrence.dueDate).toDate(),

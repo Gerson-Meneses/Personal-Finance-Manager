@@ -354,7 +354,7 @@ export default function RecurringPaymentsPage() {
                     <span className="recurring-header__eyebrow">Flujo de caja proyectado</span>
                     <h1>Pagos futuros</h1>
                     <p className="text-muted">
-                        Anticipa gastos e ingresos, pagos de préstamos o dinero que planeas prestar.
+                        Anticipa gastos, ingresos y préstamos. Los préstamos actualizan deuda y saldo, no tus reportes.
                     </p>
                 </div>
 
@@ -374,48 +374,88 @@ export default function RecurringPaymentsPage() {
                     </button>
                     <button className="btn-primary" onClick={() => openNew()}>
                         <Plus size={18} />
-                        Nuevo pago futuro
+                        Nuevo movimiento
                     </button>
                 </div>
             </header>
 
             <section className="recurring-quick card" aria-label="Plantillas de pagos futuros">
                 <div className="recurring-quick__intro">
-                    <strong>Planifica en segundos</strong>
-                    <span>Elige una plantilla y solo completa el monto y la fecha.</span>
+                    <strong>¿Qué quieres programar?</strong>
+                    <span>Los préstamos se registran desde una persona, nunca como gasto o ingreso normal.</span>
                 </div>
-                <div className="recurring-quick__grid">
+                <div className="recurring-quick__grid recurring-quick__grid--six">
                     <button
                         type="button"
                         className="recurring-quick__item"
-                        onClick={() => openNew({ type: "EXPENSE", frequency: "ONCE", name: "Pago de préstamo", autoDebit: false })}
-                    >
-                        <span>Pago de préstamo</span>
-                        <small>Cuota o abono que harás este mes</small>
-                    </button>
-                    <button
-                        type="button"
-                        className="recurring-quick__item"
-                        onClick={() => openNew({ type: "EXPENSE", frequency: "ONCE", name: "Préstamo a ", autoDebit: false })}
+                        onClick={() => openNew({
+                            type: "EXPENSE",
+                            frequency: "ONCE",
+                            name: "Préstamo otorgado",
+                            loanAction: "GIVE_LOAN",
+                            autoDebit: false,
+                        })}
                     >
                         <span>Prestar a alguien</span>
-                        <small>Dinero que planeas entregar</small>
+                        <small>Elige o crea la persona que recibirá el dinero</small>
                     </button>
                     <button
                         type="button"
                         className="recurring-quick__item"
-                        onClick={() => openNew({ type: "INCOME", frequency: "ONCE", name: "Cobro de préstamo", autoDebit: false })}
+                        onClick={() => openNew({
+                            type: "INCOME",
+                            frequency: "ONCE",
+                            name: "Préstamo recibido",
+                            loanAction: "RECEIVE_LOAN",
+                            autoDebit: false,
+                        })}
+                    >
+                        <span>Recibir préstamo</span>
+                        <small>Elige o crea la persona que te presta</small>
+                    </button>
+                    <button
+                        type="button"
+                        className="recurring-quick__item"
+                        onClick={() => openNew({
+                            type: "EXPENSE",
+                            frequency: "ONCE",
+                            name: "Pago de préstamo",
+                            loanAction: "PAY_LOAN",
+                            autoDebit: false,
+                        })}
+                    >
+                        <span>Pagar préstamo</span>
+                        <small>Selecciona una deuda pendiente contigo</small>
+                    </button>
+                    <button
+                        type="button"
+                        className="recurring-quick__item"
+                        onClick={() => openNew({
+                            type: "INCOME",
+                            frequency: "ONCE",
+                            name: "Cobro de préstamo",
+                            loanAction: "PAY_LOAN",
+                            autoDebit: false,
+                        })}
                     >
                         <span>Cobrar préstamo</span>
-                        <small>Devolución que esperas recibir</small>
+                        <small>Selecciona una deuda pendiente a tu favor</small>
                     </button>
                     <button
                         type="button"
-                        className="recurring-quick__item"
-                        onClick={() => openNew({ type: "EXPENSE", frequency: "ONCE", autoDebit: false })}
+                        className="recurring-quick__item recurring-quick__item--neutral"
+                        onClick={() => openNew({ type: "EXPENSE", frequency: "ONCE", name: "Gasto futuro", autoDebit: false })}
                     >
-                        <span>Otro pago único</span>
-                        <small>Gasto o ingreso no recurrente</small>
+                        <span>Gasto futuro</span>
+                        <small>Pago normal, sin relación con préstamos</small>
+                    </button>
+                    <button
+                        type="button"
+                        className="recurring-quick__item recurring-quick__item--neutral"
+                        onClick={() => openNew({ type: "INCOME", frequency: "ONCE", name: "Ingreso futuro", autoDebit: false })}
+                    >
+                        <span>Ingreso futuro</span>
+                        <small>Ingreso normal, sin relación con préstamos</small>
                     </button>
                 </div>
             </section>
@@ -424,7 +464,7 @@ export default function RecurringPaymentsPage() {
                 <article className="recurring-stat card recurring-stat--income">
                     <span className="recurring-stat__icon"><ArrowDownLeft size={17} /></span>
                     <div>
-                        <span>Ingresos esperados</span>
+                        <span>Entradas previstas</span>
                         <strong className="amount-font">{formatCurrency(projection?.expectedIncome ?? 0)}</strong>
                         <small>Pendientes {formatCurrency(projection?.pendingIncome ?? 0)}</small>
                     </div>
@@ -433,7 +473,7 @@ export default function RecurringPaymentsPage() {
                 <article className="recurring-stat card recurring-stat--expense">
                     <span className="recurring-stat__icon"><ArrowUpRight size={17} /></span>
                     <div>
-                        <span>Gastos previstos</span>
+                        <span>Salidas previstas</span>
                         <strong className="amount-font">{formatCurrency(projection?.expectedExpense ?? 0)}</strong>
                         <small>Pendientes {formatCurrency(projection?.pendingExpense ?? 0)}</small>
                     </div>
@@ -495,7 +535,7 @@ export default function RecurringPaymentsPage() {
                                                     autoDebit: false,
                                                 })}
                                             >
-                                                Planificar pago
+                                                Programar pago
                                             </button>
                                         </div>
                                     </div>
@@ -526,7 +566,7 @@ export default function RecurringPaymentsPage() {
                                                     autoDebit: false,
                                                 })}
                                             >
-                                                Planificar cobro
+                                                Programar cobro
                                             </button>
                                         </div>
                                     </div>

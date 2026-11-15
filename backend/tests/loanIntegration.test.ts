@@ -9,14 +9,18 @@ import { Loan } from "../src/entities/Loan.entity";
 import { LoanMovement } from "../src/entities/LoanMovement.entity";
 import { LoanPlan } from "../src/entities/LoanPlan.entity";
 import { RecurringPayment } from "../src/entities/RecurringPayment.entity";
+import { RecurringPaymentOccurrence } from "../src/entities/RecurringPaymentOccurrence.entity";
 import { User } from "../src/entities/User.entity";
 import { ContactService } from "../src/services/contactService";
 import { LoanPlanService } from "../src/services/loanPlanService";
 import { LoansService } from "../src/services/loansService";
+import { RecurringPaymentService } from "../src/services/recurringPaymentService";
+import { TransactionService } from "../src/services/transactionService";
 import {
     DebtInstallmentStatus,
     LoanPlanStatus,
     RecurrenceFrequency,
+    RecurringOccurrenceStatus,
     StatusLoan,
     TypeLoan,
     TypeTransaction,
@@ -172,6 +176,126 @@ describeDb("integración del ledger de préstamos", () => {
         expect(reversedPlan.status).toBe(LoanPlanStatus.ACTIVE);
         expect(reversedLoan.status).not.toBe(StatusLoan.PAID);
         expect(reversedInstallment.status).not.toBe(DebtInstallmentStatus.PAID);
+    }, 30000);
+
+    test("crea un préstamo futuro vinculado a un contacto existente", async () => {
+        const contact = await AppDataSourceProd.getRepository(Contact).save(
+            AppDataSourceProd.getRepository(Contact).create({
+                userId,
+                name: "Integration Future Contact",
+                normalizedName: "INTEGRATION FUTURE CONTACT",
+            })
+        );
+        const category = await AppDataSourceProd.getRepository(Category).findOneOrFail({
+            where: { name: "PRÉSTAMOS", type: TypeTransaction.EXPENSE, user: { id: userId } },
+        });
+        const recurringService = new RecurringPaymentService();
+        const payment = await recurringService.createPayment(userId as any, {
+            name: "Integration future loan",
+            type: "EXPENSE",
+            amount: 2_500,
+            frequency: RecurrenceFrequency.ONCE,
+            intervalCount: 1,
+            startDate: dayjs().format("YYYY-MM-DD"),
+            autoDebit: false,
+            accountId,
+            categoryId: category.id,
+            loanAction: "GIVE_LOAN",
+            loanContactId: contact.id,
+            loanCounterparty: contact.name,
+        } as any);
+        const occurrence = await AppDataSourceProd.getRepository(RecurringPaymentOccurrence).findOneByOrFail({
+            paymentId: payment.id,
+        });
+
+        await recurringService.executeOccurrence(userId as any, occurrence.id as any, {});
+
+        const futureLoan = await AppDataSourceProd.getRepository(Loan).findOneOrFail({
+            where: { userId, contactId: contact.id },
+            relations: ["movements"],
+        });
+
+        expect(futureLoan.lender).toBe(contact.name);
+        expect(futureLoan.contactId).toBe(contact.id);
+        expect(futureLoan.movements).toHaveLength(1);
+    }, 30000);
+
+    test("bloquea eliminar una transacción vinculada a un pago de préstamo", async () => {
+        const loans = new LoansService();
+        const today = dayjs().format("YYYY-MM-DD");
+        const loan = await loans.createLoan(userId as any, {
+            type: TypeLoan.GIVEN,
+            lender: "Integration Block Contact",
+            date: new Date(),
+            startDate: today,
+            amount: 2_000,
+            accountId,
+        } as any);
+        await loans.payLoan(userId as any, loan.id as any, {
+            amount: 500,
+            date: today,
+            accountId,
+        } as any);
+
+        const [movement] = await AppDataSourceProd.query(
+            `SELECT id, "transactionId" FROM "loan_movements"
+             WHERE "loanId" = $1 AND type = 'REPAYMENT' AND "transactionId" IS NOT NULL
+             ORDER BY date DESC LIMIT 1`,
+            [loan.id]
+        );
+        expect(movement).toBeTruthy();
+
+        const transactionService = new TransactionService();
+        let deleteError = "";
+        try {
+            await transactionService.deleteTransaction(movement.transactionId, userId as any);
+        } catch (error) {
+            deleteError = error instanceof Error ? error.message : String(error);
+        }
+        expect(deleteError).toMatch(/préstamo/i);
+    }, 30000);
+
+    test("vuelve a pendiente el previsto cuando se elimina su transacción", async () => {
+        const category = await AppDataSourceProd.getRepository(Category).save(
+            AppDataSourceProd.getRepository(Category).create({
+                name: "Integration Expense",
+                type: TypeTransaction.EXPENSE,
+                user: { id: userId } as User,
+            })
+        );
+        const recurringService = new RecurringPaymentService();
+        const payment = await recurringService.createPayment(userId as any, {
+            name: "Integration expense occurrence",
+            type: "EXPENSE",
+            amount: 1_200,
+            frequency: RecurrenceFrequency.ONCE,
+            intervalCount: 1,
+            startDate: dayjs().format("YYYY-MM-DD"),
+            autoDebit: false,
+            accountId,
+            categoryId: category.id,
+            loanAction: "NONE",
+        } as any);
+        const occurrence = await AppDataSourceProd.getRepository(RecurringPaymentOccurrence).findOneByOrFail({
+            paymentId: payment.id,
+        });
+
+        await recurringService.executeOccurrence(userId as any, occurrence.id as any, {});
+
+        const paid = await AppDataSourceProd.getRepository(RecurringPaymentOccurrence).findOneByOrFail({
+            id: occurrence.id,
+        });
+        expect(paid.status).toBe(RecurringOccurrenceStatus.PAID);
+        expect(paid.transactionId).toBeTruthy();
+
+        await new TransactionService().deleteTransaction(paid.transactionId as any, userId as any);
+
+        const reset = await AppDataSourceProd.getRepository(RecurringPaymentOccurrence).findOneByOrFail({
+            id: occurrence.id,
+        });
+        expect(reset.status).toBe(RecurringOccurrenceStatus.PENDING);
+        expect(reset.transactionId).toBeNull();
+        expect(reset.executedAt).toBeNull();
     }, 30000);
 
     test("fusiona contactos y reasigna recurrentes", async () => {

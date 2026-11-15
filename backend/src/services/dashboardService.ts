@@ -139,7 +139,7 @@ export class DashboardService {
                     user: { id: userId },
                     status: In([StatusLoan.PENDING, StatusLoan.PARTIALLY_PAID, StatusLoan.OVERDUE]),
                 },
-                relations: ["payments"],
+                relations: ["movements"],
                 order: { createdAt: "DESC" }
             }),
             incomeExpensePromise,

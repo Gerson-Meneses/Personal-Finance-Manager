@@ -15,6 +15,11 @@ export const useContacts = () => {
         queryClient.invalidateQueries({ queryKey: ["loanSummary"] });
     };
 
+    const createMutation = useMutation({
+        mutationFn: (data: { name: string; notes?: string }) => service.createContact(data),
+        onSuccess: invalidate,
+    });
+
     const updateMutation = useMutation({
         mutationFn: ({ id, data }: { id: string; data: { name?: string; notes?: string | null; archived?: boolean } }) =>
             service.updateContact(id, data),
@@ -32,6 +37,7 @@ export const useContacts = () => {
         loading: query.isLoading,
         error: query.error,
         refetch: query.refetch,
+        createContact: createMutation,
         updateContact: updateMutation,
         mergeContacts: mergeMutation,
     };

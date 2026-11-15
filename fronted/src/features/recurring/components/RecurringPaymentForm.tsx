@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { Controller, useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarClock, CheckCircle2, Repeat } from "lucide-react";
+import { CalendarClock, CheckCircle2, HandCoins, Plus, Repeat } from "lucide-react";
 import { FormContainer } from "../../../shared/components/FormContainer/FormContainer";
 import { TypeToggle } from "../../../shared/components/TypeToggle/TypeToggle";
 import { TextInput } from "../../../shared/components/TextInput/TextInput";
@@ -13,6 +13,9 @@ import { SelectAccount } from "../../accounts/components/selectAccount/selectAcc
 import SelectCategory from "../../categories/components/selectCategory";
 import { useLoansQuery } from "../../loans/hooks";
 import { useCategories } from "../../categories/hooks";
+import { useContacts } from "../../contacts/hooks";
+import { CreateContactModal } from "../../contacts/components/CreateContactModal";
+import type { Contact } from "../../contacts/types";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import {
     RecurringPaymentFormSchema,
@@ -39,14 +42,6 @@ const WEEKDAYS = [
     { value: "5", label: "Viernes" },
     { value: "6", label: "Sábado" },
     { value: "0", label: "Domingo" },
-];
-
-const LOAN_ACTIONS = [
-    { value: "NONE", label: "Solo movimiento de caja" },
-    { value: "PAY_LOAN", label: "Pagar un préstamo existente" },
-    { value: "GIVE_LOAN", label: "Registrar préstamo que otorgo" },
-    { value: "RECEIVE_LOAN", label: "Registrar préstamo que recibo" },
-    { value: "ADVANCE_LOAN", label: "Aumentar deuda de un préstamo" },
 ];
 
 const FREQUENCIES = [
@@ -86,11 +81,15 @@ const buildDefaults = (
 const normalizeCategoryName = (value: string) =>
     value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase();
 
+const isUuid = (value: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
 export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, onSuccess, onClose }: Props) {
     const [submitAttempted, setSubmitAttempted] = useState(false);
     const [terminationMode, setTerminationMode] = useState<"NEVER" | "DATE" | "COUNT">(
         payment?.maxOccurrences ? "COUNT" : payment?.endDate ? "DATE" : "NEVER"
     );
+    const [showCreateContact, setShowCreateContact] = useState(false);
 
     const {
         control,
@@ -111,12 +110,14 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
     const maxOccurrences = useWatch({ control, name: "maxOccurrences" });
     const startDate = useWatch({ control, name: "startDate" });
     const amount = useWatch({ control, name: "amount" });
+    const intervalCount = useWatch({ control, name: "intervalCount" });
     const isWeekly = frequency === "WEEKLY" || frequency === "BIWEEKLY";
     const isMonthly = frequency === "MONTHLY" || frequency === "YEARLY";
     const isOneTime = frequency === "ONCE";
     const isLoanAction = loanAction !== "NONE";
     const { loans, isLoading: loansLoading } = useLoansQuery({ status: "PENDING", limit: 100 });
     const { categories } = useCategories();
+    const { contacts, loading: contactsLoading } = useContacts();
     const loanTypeForDebt = type === "INCOME" ? "GIVEN" : "RECEIVED";
     const debtByLender = new Map<string, { contactId: string; lender: string; total: number; count: number }>();
     for (const loan of loans) {
@@ -137,12 +138,33 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
         value: debt.contactId,
         label: `${debt.lender} · ${formatCurrency(debt.total)} · ${debt.count} préstamo${debt.count === 1 ? "" : "s"}`,
     }));
-    const isLoanSchedule = loanAction === "PAY_LOAN" && frequency === "FIFTEEN_DAYS";
+    const selectedDebtValue = selectedDebt?.contactId ?? "";
+    const contactOptions = contacts.map((contact) => ({
+        value: contact.id,
+        label: contact.name,
+    }));
+    const loanTitle = loanAction === "PAY_LOAN"
+        ? `${payment ? "Editar" : "Programar"} ${type === "INCOME" ? "cobro" : "pago"} de préstamo`
+        : loanAction === "GIVE_LOAN"
+            ? `${payment ? "Editar" : "Programar"} préstamo otorgado`
+            : loanAction === "RECEIVE_LOAN"
+                ? `${payment ? "Editar" : "Programar"} préstamo recibido`
+                : loanAction === "ADVANCE_LOAN"
+                    ? `${payment ? "Editar" : "Programar"} aumento de deuda`
+                    : payment ? "Editar movimiento futuro" : "Nuevo movimiento futuro";
+    const isLoanSchedule = loanAction === "PAY_LOAN" && frequency !== "ONCE";
     const installmentCount = Number(maxOccurrences ?? 0);
     const scheduleTotal = installmentCount > 0 ? Number(amount || 0) * installmentCount : 0;
-    const estimatedEnd = startDate && installmentCount > 0
-        ? dayjs(startDate).add((installmentCount - 1) * 15, "day").format("D MMM YYYY")
-        : "";
+    const estimatedEnd = (() => {
+        if (!startDate || installmentCount <= 0) return "";
+        const steps = Math.max(1, installmentCount - 1) * Math.max(1, Number(intervalCount) || 1);
+        if (frequency === "WEEKLY") return dayjs(startDate).add(steps, "week").format("D MMM YYYY");
+        if (frequency === "BIWEEKLY") return dayjs(startDate).add(steps * 2, "week").format("D MMM YYYY");
+        if (frequency === "FIFTEEN_DAYS") return dayjs(startDate).add(steps * 15, "day").format("D MMM YYYY");
+        if (frequency === "MONTHLY") return dayjs(startDate).add(steps, "month").format("D MMM YYYY");
+        if (frequency === "YEARLY") return dayjs(startDate).add(steps, "year").format("D MMM YYYY");
+        return dayjs(startDate).add(steps, "day").format("D MMM YYYY");
+    })();
     const debtPendingAfterPlan = selectedDebt
         ? Math.max(0, selectedDebt.total - scheduleTotal)
         : 0;
@@ -150,7 +172,7 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
         ? Math.max(0, scheduleTotal - selectedDebt.total)
         : 0;
 
-    const assignLoanCategory = (action: string, paymentType: string) => {
+    const assignLoanCategory = useCallback((action: string, paymentType: string) => {
         const targetName = action === "PAY_LOAN" ? "DEVOLUCION DE PRESTAMO" : "PRESTAMOS";
         const category = categories.find(
             (item) =>
@@ -158,6 +180,19 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                 normalizeCategoryName(item.name) === targetName
         );
         if (category) setValue("categoryId", category.id, { shouldValidate: true });
+    }, [categories, setValue]);
+
+    const applyLoanContact = (contact?: Contact) => {
+        setValue("loanContactId", contact?.id ?? "", { shouldValidate: true });
+        setValue("loanCounterparty", contact?.name ?? "", { shouldValidate: true });
+        if (!contact) return;
+        setValue(
+            "name",
+            loanAction === "GIVE_LOAN"
+                ? `Préstamo a ${contact.name}`
+                : `Préstamo de ${contact.name}`,
+            { shouldValidate: true }
+        );
     };
 
     const applyInstallmentAmount = (count: number) => {
@@ -172,18 +207,36 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
     useEffect(() => {
         if (!isLoanAction || !type) return;
         assignLoanCategory(loanAction, type);
-    }, [categories.length, isLoanAction, loanAction, type]);
+    }, [assignLoanCategory, categories.length, isLoanAction, loanAction, type]);
 
-    const changeLoanSchedule = (mode: "ONCE" | "SCHEDULE") => {
-        if (mode === "ONCE") {
-            setValue("frequency", "ONCE", { shouldValidate: true });
+    useEffect(() => {
+        if (loanAction !== "GIVE_LOAN" && loanAction !== "RECEIVE_LOAN") return;
+        if (loanContactId || !loanCounterparty || contactsLoading) return;
+        const match = contacts.find(
+            (contact) => contact.name.toLowerCase() === String(loanCounterparty).toLowerCase()
+        );
+        if (match) setValue("loanContactId", match.id, { shouldValidate: true });
+    }, [contacts, contactsLoading, loanAction, loanContactId, loanCounterparty, setValue]);
+
+    useEffect(() => {
+        if (loanAction !== "GIVE_LOAN" && loanAction !== "RECEIVE_LOAN") return;
+        const expectedType = loanAction === "GIVE_LOAN" ? "EXPENSE" : "INCOME";
+        if (type !== expectedType) {
+            setValue("type", expectedType, { shouldValidate: true });
+            assignLoanCategory(loanAction, expectedType);
+        }
+    }, [assignLoanCategory, loanAction, type, setValue]);
+
+    const changeLoanFrequency = (value: string) => {
+        setValue("frequency", value as RecurringPaymentFormInput["frequency"], { shouldValidate: true });
+        setValue("intervalCount", "1", { shouldValidate: true });
+
+        if (value === "ONCE") {
             setValue("maxOccurrences", "", { shouldValidate: true });
             return;
         }
 
-        const count = 4;
-        setValue("frequency", "FIFTEEN_DAYS", { shouldValidate: true });
-        setValue("intervalCount", "1", { shouldValidate: true });
+        const count = maxOccurrences ? Number(maxOccurrences) : 4;
         setValue("maxOccurrences", String(count), { shouldValidate: true });
 
         const total = selectedDebt?.total ?? 0;
@@ -222,14 +275,18 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
             dayOfMonth: isMonthly ? data.dayOfMonth : undefined,
             dayOfWeek: isWeekly ? data.dayOfWeek : undefined,
             autoDebit: isOneTime || isLoanAction ? false : data.autoDebit,
-            loanAction: data.loanAction,
+            loanAction: isLoanAction ? data.loanAction : "NONE",
             loanId:
                 data.loanAction === "ADVANCE_LOAN" ||
                 (data.loanAction === "PAY_LOAN" && !data.loanCounterparty)
                     ? data.loanId
                     : undefined,
             loanContactId:
-                data.loanAction === "PAY_LOAN" ? data.loanContactId : undefined,
+                data.loanAction === "PAY_LOAN" ||
+                data.loanAction === "GIVE_LOAN" ||
+                data.loanAction === "RECEIVE_LOAN"
+                    ? data.loanContactId
+                    : undefined,
             loanCounterparty:
                 data.loanAction === "PAY_LOAN" ||
                 data.loanAction === "GIVE_LOAN" ||
@@ -243,7 +300,8 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
 
     return (
         <FormContainer
-            title={payment ? "Editar pago futuro" : "Nuevo pago futuro"}
+            title={loanTitle}
+            subtitle={isLoanAction ? "No cuenta como gasto ni ingreso." : undefined}
             icon={<CalendarClock size={20} />}
             error={submitAttempted && !isValid ? "Revisa los campos marcados para continuar." : null}
             className="max-w-2xl mx-auto"
@@ -256,6 +314,7 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                     handleSubmit(submit, onInvalid)(event);
                 }}
             >
+                {!isLoanAction && (
                 <Controller
                     control={control}
                     name="type"
@@ -266,24 +325,18 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                                 field.onChange(value);
                                 setValue("categoryId", "", { shouldValidate: true });
                                 if (value === "INCOME") setValue("autoDebit", false);
-                                if (loanAction === "PAY_LOAN") {
-                                    setValue("loanCounterparty", "", { shouldValidate: true });
-                                    setValue("loanId", "", { shouldValidate: true });
-                                    setValue("amount", "", { shouldValidate: true });
-                                    setValue("maxOccurrences", "", { shouldValidate: true });
-                                    setValue("frequency", "ONCE", { shouldValidate: true });
-                                    assignLoanCategory("PAY_LOAN", value);
-                                }
                             }}
-                            disabled={isPending || isLoanAction}
+                            disabled={isPending}
                             leftOption={{ value: "EXPENSE", label: "Gasto", color: "#ef4444", icon: "TrendingDown" }}
                             rightOption={{ value: "INCOME", label: "Ingreso", color: "#22c55e", icon: "TrendingUp" }}
                             label="Tipo de movimiento"
                         />
                     )}
                 />
+                )}
 
-                <div className="form-default-grid-2col">
+                <div className={isLoanAction ? "" : "form-default-grid-2col"}>
+                    {!isLoanAction && (
                     <Controller
                         control={control}
                         name="name"
@@ -300,6 +353,7 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                             />
                         )}
                     />
+                    )}
 
                     <Controller
                         control={control}
@@ -319,7 +373,7 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                     />
                 </div>
 
-                <div className="form-default-grid-2col">
+                <div className={isLoanAction ? "" : "form-default-grid-2col"}>
                     <Controller
                         control={control}
                         name="accountId"
@@ -335,6 +389,7 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                         )}
                     />
 
+                    {!isLoanAction && (
                     <Controller
                         control={control}
                         name="categoryId"
@@ -343,7 +398,7 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                                 value={field.value}
                                 onChange={field.onChange}
                                 type={type}
-                                noLoan={!isOneTime && !isLoanAction}
+                                noLoan
                                 label="Categoría"
                                 error={fieldState.error?.message}
                                 disabled={isPending}
@@ -351,9 +406,10 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                             />
                         )}
                     />
+                    )}
                 </div>
 
-                {(!isLoanAction || loanAction === "ADVANCE_LOAN") && (
+                {loanAction !== "PAY_LOAN" && (
 <div className={isOneTime ? "" : "form-default-grid-2col"}>
                     <Controller
                         control={control}
@@ -394,75 +450,49 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                 </div>
                 )}
 
-                {(isOneTime || loanAction === "PAY_LOAN" || loanAction === "ADVANCE_LOAN") && (
-                    <>
-                        <p className="recurring-form-hint">
-                            {loanAction === "PAY_LOAN"
-                                ? "Selecciona la persona para sumar todas sus deudas pendientes y distribuir cada pago entre sus préstamos."
-                                : loanAction === "GIVE_LOAN"
-                                    ? "Al confirmar se creará el préstamo otorgado y su movimiento de salida."
-                                    : loanAction === "RECEIVE_LOAN"
-                                        ? "Al confirmar se creará el préstamo recibido y su movimiento de entrada."
-                                        : loanAction === "ADVANCE_LOAN"
-                                            ? "Cada ejecución sumará el monto a la deuda del préstamo seleccionado. Puedes ajustar el monto al confirmar."
-                                            : "Ideal para prever un pago único. Elige una acción si también quieres actualizar Préstamos al confirmar."}
-                        </p>
+                {(loanAction === "GIVE_LOAN" || loanAction === "RECEIVE_LOAN") && !isOneTime && (
+                    <p className="recurring-form-hint">
+                        Cada fecha programada creará un préstamo independiente para esta persona.
+                    </p>
+                )}
 
-                        <Controller
-                            control={control}
-                            name="loanAction"
-                            render={({ field, fieldState }) => (
-                                <SelectInput
-                                    label="Acción al confirmar"
-                                    icon="HandCoins"
-                                    value={field.value}
-                                    onChange={(value) => {
-                                        field.onChange(value);
-                                        setValue("loanId", "", { shouldValidate: true });
-                                        setValue("loanContactId", "", { shouldValidate: true });
-                                        setValue("loanCounterparty", "", { shouldValidate: true });
-                                        setValue("maxOccurrences", "", { shouldValidate: true });
-                                        setValue("frequency", value === "ADVANCE_LOAN" ? "MONTHLY" : "ONCE", { shouldValidate: true });
-                                        if (value === "GIVE_LOAN") {
-                                            setValue("type", "EXPENSE", { shouldValidate: true });
-                                            assignLoanCategory("GIVE_LOAN", "EXPENSE");
-                                        }
-                                        if (value === "RECEIVE_LOAN") {
-                                            setValue("type", "INCOME", { shouldValidate: true });
-                                            assignLoanCategory("RECEIVE_LOAN", "INCOME");
-                                        }
-                                        if (value === "PAY_LOAN") {
-                                            assignLoanCategory("PAY_LOAN", type);
-                                        }
-                                        if (value === "ADVANCE_LOAN") {
-                                            assignLoanCategory("ADVANCE_LOAN", type);
-                                        }
-                                    }}
-                                    options={LOAN_ACTIONS}
-                                    error={fieldState.error?.message}
-                                    disabled={isPending}
-                                />
-                            )}
-                        />
+                {isLoanAction && (
+                    <>
+                        <div className="loan-future-banner loan-order-banner">
+                            <span className="loan-future-banner__icon"><HandCoins size={16} /></span>
+                            <div>
+                                <strong>
+                                    {loanAction === "PAY_LOAN"
+                                        ? type === "INCOME" ? "Cobro de un préstamo" : "Pago de un préstamo"
+                                        : loanAction === "GIVE_LOAN"
+                                            ? "Préstamo que otorgas"
+                                            : loanAction === "RECEIVE_LOAN"
+                                                ? "Préstamo que recibes"
+                                                : "Aumento de deuda"}
+                                </strong>
+                                <small>Se registrará en Préstamos; no cuenta como gasto ni ingreso en tus reportes.</small>
+                            </div>
+                        </div>
 
                         {loanAction === "PAY_LOAN" && (
                             <>
                                 <Controller
                                     control={control}
-                                    name="loanCounterparty"
+                                    name="loanContactId"
                                     render={({ field, fieldState }) => (
                                         <SelectInput
                                             label={type === "INCOME" ? "Persona que te debe" : "Persona a la que debes"}
                                             icon="Users"
-                                            value={typeof field.value === "string" ? field.value : ""}
+                                            className="loan-order-contact"
+                                            value={selectedDebtValue || (typeof field.value === "string" ? field.value : "")}
                                             onChange={(value) => {
-                                                field.onChange(value);
                                                 const debt = debts.find((item) => item.contactId === value);
+                                                setValue("loanContactId", debt && isUuid(debt.contactId) ? debt.contactId : "", { shouldValidate: true });
+                                                setValue("loanCounterparty", debt?.lender ?? "", { shouldValidate: true });
                                                 setValue("loanId", "", { shouldValidate: true });
                                                 setValue("maxOccurrences", "", { shouldValidate: true });
                                                 setValue("frequency", "ONCE", { shouldValidate: true });
                                                 if (debt) {
-                                                    setValue("loanCounterparty", debt.lender, { shouldValidate: true });
                                                     setValue("amount", String(debt.total), { shouldValidate: true });
                                                     setValue(
                                                         "name",
@@ -502,12 +532,9 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                                             <SelectInput
                                                 label="Forma de pago"
                                                 icon="CalendarClock"
-                                                value={field.value === "FIFTEEN_DAYS" ? "SCHEDULE" : "ONCE"}
-                                                onChange={(value) => changeLoanSchedule(value as "ONCE" | "SCHEDULE")}
-                                                options={[
-                                                    { value: "ONCE", label: "Un solo pago" },
-                                                    { value: "SCHEDULE", label: "Cronograma cada 15 días" },
-                                                ]}
+                                                value={field.value}
+                                                onChange={changeLoanFrequency}
+                                                options={FREQUENCIES}
                                                 error={fieldState.error?.message}
                                                 disabled={isPending}
                                             />
@@ -561,6 +588,12 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                                         </div>
                                     </>
                                 )}
+
+                                {!loansLoading && debts.length === 0 && (
+                                    <p className="recurring-form-hint">
+                                        No tienes deudas pendientes de ese tipo. Usa Prestar o Recibir si quieres crear un préstamo nuevo.
+                                    </p>
+                                )}
                             </>
                         )}
 
@@ -602,28 +635,36 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                         )}
 
                         {(loanAction === "GIVE_LOAN" || loanAction === "RECEIVE_LOAN") && (
-                            <Controller
-                                control={control}
-                                name="loanCounterparty"
-                                render={({ field, fieldState }) => (
-                                    <TextInput
-                                        label={loanAction === "GIVE_LOAN" ? "Persona a la que prestas" : "Persona que te presta"}
-                                        icon="User"
-                                        placeholder="Nombre de la persona"
-                                        value={typeof field.value === "string" ? field.value : ""}
-                                        onChange={field.onChange}
-                                        error={fieldState.error?.message}
-                                        disabled={isPending}
-                                        required
-                                    />
-                                )}
-                            />
-                        )}
-
-                        {loanAction === "PAY_LOAN" && !loansLoading && debts.length === 0 && (
-                            <p className="recurring-form-hint">
-                                No tienes deudas pendientes de ese tipo. Cambia Gasto/Ingreso o registra el préstamo primero.
-                            </p>
+                            <>
+                                <Controller
+                                    control={control}
+                                    name="loanContactId"
+                                    render={({ field, fieldState }) => (
+                                        <SelectInput
+                                            label={loanAction === "GIVE_LOAN" ? "Persona a la que prestas" : "Persona que te presta"}
+                                            icon="Users"
+                                            className="loan-order-contact"
+                                            value={typeof field.value === "string" ? field.value : ""}
+                                            onChange={(value) => {
+                                                applyLoanContact(contacts.find((contact) => contact.id === value));
+                                            }}
+                                            options={contactOptions}
+                                            placeholder={contactsLoading ? "Cargando contactos..." : "Selecciona una persona"}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || contactsLoading}
+                                            required
+                                        />
+                                    )}
+                                />
+                                <button
+                                    type="button"
+                                    className="btn-ghost loan-create-contact"
+                                    onClick={() => setShowCreateContact(true)}
+                                    disabled={isPending}
+                                >
+                                    <Plus size={13} /> Crear contacto nuevo
+                                </button>
+                            </>
                         )}
                     </>
                 )}
@@ -670,7 +711,15 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                     name="startDate"
                     render={({ field, fieldState }) => (
                         <DatePicker
-                            label={isOneTime ? "Fecha del pago o cobro" : isLoanSchedule ? "Primera cuota" : "Inicio"}
+                            label={
+                                loanAction === "GIVE_LOAN" || loanAction === "RECEIVE_LOAN"
+                                    ? isOneTime ? "Fecha del préstamo" : "Primera fecha"
+                                    : isOneTime
+                                        ? "Fecha del pago o cobro"
+                                        : isLoanSchedule
+                                            ? "Primera cuota"
+                                            : "Inicio"
+                            }
                             value={field.value}
                             onChange={field.onChange}
                             error={fieldState.error?.message}
@@ -757,7 +806,7 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                     )}
                 />
 
-                {type === "EXPENSE" && !isOneTime && (
+                {!isLoanAction && type === "EXPENSE" && !isOneTime && (
                     <Controller
                         control={control}
                         name="autoDebit"
@@ -782,10 +831,27 @@ export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, o
                 <div className="form-actions-container">
                     <button type="submit" className="btn-submit" disabled={isPending}>
                         <CheckCircle2 size={15} />
-                        {isPending ? "Guardando…" : payment ? "Actualizar pago" : "Crear pago futuro"}
+                        {isPending
+                            ? "Guardando…"
+                            : payment
+                                ? "Actualizar programación"
+                                : isLoanAction
+                                    ? "Programar movimiento"
+                                    : "Crear movimiento futuro"}
                     </button>
                 </div>
             </form>
+
+            {showCreateContact && (
+                <CreateContactModal
+                    isOpen
+                    onCreated={(contact) => {
+                        applyLoanContact(contact);
+                        setShowCreateContact(false);
+                    }}
+                    onClose={() => setShowCreateContact(false)}
+                />
+            )}
         </FormContainer>
     );
 }
