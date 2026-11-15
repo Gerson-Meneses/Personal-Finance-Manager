@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import { LoanSchema } from "../schemas/loan.schema";
+import { LoanSchema, type CancelLoanOutput, type ForgiveLoanOutput, type ReverseLoanMovementOutput, type UpdateLoanMovementOutput, type UpdateLoanOutput } from "../schemas/loan.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
 import { LoansService } from "../services/loansService";
 import { ApiPaginated } from "../typesResponseHttp/apiResponses";
@@ -46,3 +46,53 @@ export const quickPayLender = async (c: Context, userId: UuidSchema, data: Quick
         ...result,
     }, 201);
 }
+export const updateLoan = async (
+    c: Context,
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    data: UpdateLoanOutput
+) => {
+    return c.json({ loan: await loanService.updateLoan(userId, loanId, data) }, 200);
+};
+
+export const cancelLoan = async (
+    c: Context,
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    data: CancelLoanOutput
+) => {
+    return c.json({ loan: await loanService.cancelLoan(userId, loanId, data.reason) }, 200);
+};
+
+export const getLoanAudit = async (c: Context, userId: UuidSchema, loanId: UuidSchema) => {
+    return c.json(await loanService.getLoanAudit(userId, loanId), 200);
+};
+
+export const forgiveLoan = async (
+    c: Context,
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    data: ForgiveLoanOutput
+) => {
+    return c.json({ loan: await loanService.forgiveLoan(userId, loanId, data) }, 200);
+};
+
+export const updateLoanMovement = async (
+    c: Context,
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    movementId: UuidSchema,
+    data: UpdateLoanMovementOutput
+) => {
+    return c.json(await loanService.updateMovement(userId, loanId, movementId, data), 200);
+};
+
+export const reverseLoanMovement = async (
+    c: Context,
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    movementId: UuidSchema,
+    data: ReverseLoanMovementOutput
+) => {
+    return c.json(await loanService.reverseMovement(userId, loanId, movementId, data), 200);
+};

@@ -7,6 +7,7 @@ import { errorHandler } from './helpers/errorHandler'
 import { AppDataSourceProd } from './database/dataBaseDev'
 import { AppEnv } from './types'
 import { RecurringPaymentService } from './services/recurringPaymentService'
+import { LoanPlanService } from './services/loanPlanService'
 import { securityHeaders } from './middlewares/security'
 import 'dotenv/config'
 
@@ -44,13 +45,20 @@ async function bootstrap() {
 
     // Procesa vencimientos y débitos automáticos al arrancar y cada 10 minutos.
     const recurringService = new RecurringPaymentService()
+    const loanPlanService = new LoanPlanService()
     const runRecurring = () =>
       recurringService.processAllDuePayments().catch((error) => {
         console.error('Error procesando pagos recurrentes:', error)
       })
+    const runLoanPlans = () =>
+      loanPlanService.refreshAllOverdue().catch((error) => {
+        console.error('Error actualizando cuotas vencidas:', error)
+      })
 
     void runRecurring()
+    void runLoanPlans()
     setInterval(runRecurring, 10 * 60 * 1000)
+    setInterval(runLoanPlans, 10 * 60 * 1000)
 
     Bun.serve({
       fetch: app.fetch,

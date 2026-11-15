@@ -17,7 +17,6 @@ export interface TransactionResponse {
     relatedAccount?: AccountResponse;
     category?: CategoryResponse
     loan?: LoanResponse
-    loanPayment?: LoanPaymentResponse
 }
 
 export interface TransactionStatsResponse {

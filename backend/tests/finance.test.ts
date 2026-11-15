@@ -4,7 +4,7 @@ import { getMaxBalance } from "../src/utils/getBalanceToCreditCard";
 import { calculateLoanPaymentStatus } from "../src/mappers/LoansMapper";
 import { daysInRange } from "../src/services/recurringPaymentService";
 import { roundBudgetSuggestion } from "../src/services/budgetService";
-import { RecurrenceFrequency, TypeTransaction } from "../src/utils/Enums";
+import { LoanMovementType, RecurrenceFrequency, TypeTransaction } from "../src/utils/Enums";
 import type { RecurringPayment } from "../src/entities/RecurringPayment.entity";
 import type { Loan } from "../src/entities/Loan.entity";
 
@@ -81,7 +81,11 @@ describe("calculateLoanPaymentStatus", () => {
         const status = calculateLoanPaymentStatus(
             loan({
                 principalAmount: 100_000,
-                payments: [{ amount: 25_000 }, { amount: 25_000 }] as any,
+                movements: [
+                    { type: LoanMovementType.ADVANCE, amount: 100_000 },
+                    { type: LoanMovementType.REPAYMENT, amount: 25_000 },
+                    { type: LoanMovementType.REPAYMENT, amount: 25_000 },
+                ] as any,
             })
         );
 
@@ -94,11 +98,65 @@ describe("calculateLoanPaymentStatus", () => {
         const status = calculateLoanPaymentStatus(
             loan({
                 principalAmount: 100,
-                payments: [{ amount: 200 }] as any,
+                movements: [
+                    { type: LoanMovementType.ADVANCE, amount: 100 },
+                    { type: LoanMovementType.REPAYMENT, amount: 200 },
+                ] as any,
             })
         );
 
         expect(status.totalRemaining).toBe(0);
+    });
+});
+
+describe("ledger de préstamos", () => {
+    test("calcula saldo desde avances, pagos y condonaciones", () => {
+        const status = calculateLoanPaymentStatus(
+            loan({
+                principalAmount: 10_000,
+                movements: [
+                    { type: LoanMovementType.ADVANCE, amount: 10_000 },
+                    { type: LoanMovementType.REPAYMENT, amount: 2_500 },
+                    { type: LoanMovementType.FORGIVENESS, amount: 1_000 },
+                ] as any,
+            })
+        );
+
+        expect(status.totalAdvanced).toBe(100);
+        expect(status.totalPaid).toBe(25);
+        expect(status.totalForgiven).toBe(10);
+        expect(status.totalDebt).toBe(90);
+        expect(status.totalRemaining).toBe(65);
+    });
+
+    test("los ajustes positivos y negativos modifican la deuda", () => {
+        const status = calculateLoanPaymentStatus(
+            loan({
+                principalAmount: 10_000,
+                movements: [
+                    { type: LoanMovementType.ADVANCE, amount: 10_000 },
+                    { type: LoanMovementType.ADJUSTMENT, amount: 2_000 },
+                    { type: LoanMovementType.ADJUSTMENT, amount: -1_000 },
+                ] as any,
+            })
+        );
+
+        expect(status.totalRemaining).toBe(110);
+    });
+
+    test("un avance adicional incrementa la deuda pendiente", () => {
+        const status = calculateLoanPaymentStatus(
+            loan({
+                principalAmount: 10_000,
+                movements: [
+                    { type: LoanMovementType.ADVANCE, amount: 10_000 },
+                    { type: LoanMovementType.ADVANCE, amount: 2_500 },
+                ] as any,
+            })
+        );
+
+        expect(status.totalAdvanced).toBe(125);
+        expect(status.totalRemaining).toBe(125);
     });
 });
 

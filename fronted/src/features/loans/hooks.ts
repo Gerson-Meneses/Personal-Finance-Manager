@@ -29,6 +29,7 @@ export const useLoansQuery = (filters?: LoanQueryFilters) => {
     queryClient.invalidateQueries({ queryKey: ["accounts"] })
     queryClient.invalidateQueries({ queryKey: ["dashboard"] })
     queryClient.invalidateQueries({ queryKey: ["summary"] })
+    queryClient.invalidateQueries({ queryKey: ["loanSummary"] })
   }
 
   // ============ MUTATIONS PARA PRÉSTAMOS ============
@@ -41,8 +42,30 @@ export const useLoansQuery = (filters?: LoanQueryFilters) => {
     onSuccess: invalidateAll,
   })
 
-  const deleteLoanMutation = useMutation<void, DataError<string>, string>({
-    mutationFn: (id: string) => service.deleteLoan(id),
+  const updateLoanMutation = useMutation<
+    Loan,
+    DataError<Record<string, unknown>>,
+    { id: string; data: Parameters<typeof service.updateLoan>[1] }
+  >({
+    mutationFn: ({ id, data }) => service.updateLoan(id, data),
+    onSuccess: invalidateAll,
+  })
+
+  const forgiveLoanMutation = useMutation<
+    Loan,
+    DataError<Record<string, unknown>>,
+    { id: string; data: { amount?: number; date?: string; reason?: string } }
+  >({
+    mutationFn: ({ id, data }) => service.forgiveLoan(id, data),
+    onSuccess: invalidateAll,
+  })
+
+  const cancelLoanMutation = useMutation<
+    Loan,
+    DataError<Record<string, unknown>>,
+    { id: string; reason?: string }
+  >({
+    mutationFn: ({ id, reason }) => service.cancelLoan(id, reason),
     onSuccess: invalidateAll,
   })
 
@@ -62,7 +85,9 @@ export const useLoansQuery = (filters?: LoanQueryFilters) => {
 
     // Mutations
     createLoan: createLoanMutation,
-    deleteLoan: deleteLoanMutation,
+    updateLoan: updateLoanMutation,
+    cancelLoan: cancelLoanMutation,
+    forgiveLoan: forgiveLoanMutation,
 
     // Utilidades
     refetch: loansQuery.refetch,
@@ -79,6 +104,7 @@ export const useLoanPayments = () => {
     queryClient.invalidateQueries({ queryKey: ["accounts"] })
     queryClient.invalidateQueries({ queryKey: ["dashboard"] })
     queryClient.invalidateQueries({ queryKey: ["summary"] })
+    queryClient.invalidateQueries({ queryKey: ["loanSummary"] })
   }
 
   // ============ MUTATIONS PARA PAGOS ============
@@ -91,6 +117,24 @@ export const useLoanPayments = () => {
     onSuccess: invalidateAll,
   })
 
+  const updateMovementMutation = useMutation<
+    LoanPayment,
+    DataError<Record<string, unknown>>,
+    { loanId: string; movementId: string; data: { date?: string; note?: string | null; reason?: string } }
+  >({
+    mutationFn: ({ loanId, movementId, data }) => service.updateLoanMovement(loanId, movementId, data),
+    onSuccess: invalidateAll,
+  })
+
+  const reverseMovementMutation = useMutation<
+    LoanPayment,
+    DataError<Record<string, unknown>>,
+    { loanId: string; movementId: string; data: { date?: string; reason?: string } }
+  >({
+    mutationFn: ({ loanId, movementId, data }) => service.reverseLoanMovement(loanId, movementId, data),
+    onSuccess: invalidateAll,
+  })
+
   const quickPayMutation = useMutation<void, DataError<QuickpayOutput>, QuickpayOutput>({
     mutationFn: (data: QuickpayOutput) => service.quickPay(data),
     onSuccess: invalidateAll,
@@ -99,6 +143,8 @@ export const useLoanPayments = () => {
   return {
     // Mutations
     createPayment: createPaymentMutation,
+    updateMovement: updateMovementMutation,
+    reverseMovement: reverseMovementMutation,
     quickPay: quickPayMutation,
   }
 }

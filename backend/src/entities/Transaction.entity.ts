@@ -1,11 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, OneToMany, OneToOne, JoinColumn, Index } from "typeorm";
 import type { Account } from "./Account.entity";
 import type { Category } from "./Category.entity";
-import { TypeTransaction } from "../utils/Enums";
+import { TransactionReportingImpact, TypeTransaction } from "../utils/Enums";
 import type { User } from "./User.entity";
 import type { ReccurentTransaction } from "./ReccurentTransaction.entity";
 import type { Loan } from "./Loan.entity";
-import { LoanPayment } from "./LoanPayment.entity";
 
 @Entity({
     name: 'transactions'
@@ -60,6 +59,14 @@ export class Transaction {
     })
     isRecurrent: boolean;
 
+    @Column({
+        type: "enum",
+        enum: TransactionReportingImpact,
+        enumName: "transaction_reporting_impact_enum",
+        default: TransactionReportingImpact.REPORTABLE,
+    })
+    reportingImpact: TransactionReportingImpact;
+
     @ManyToOne("Account", "transactions", { nullable: false })
     account: Account;
 
@@ -79,7 +86,4 @@ export class Transaction {
     @JoinColumn()
     loan: Loan;
 
-    @OneToOne(() => LoanPayment, { nullable: true })
-    @JoinColumn()
-    loanPayment: LoanPayment;
 }

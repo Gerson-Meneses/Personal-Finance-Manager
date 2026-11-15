@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import type { RecurringPaymentOccurrence } from "./RecurringPaymentOccurrence.entity";
 import type { User } from "./User.entity";
+import type { DebtInstallment } from "./DebtInstallment.entity";
 
 @Entity({ name: "payment_notifications" })
 @Index("IDX_payment_notifications_user_read", ["userId", "readAt"])
@@ -23,12 +24,19 @@ export class PaymentNotification {
     @Column({ type: "uuid" })
     userId: string;
 
-    @ManyToOne("RecurringPaymentOccurrence", { nullable: false, onDelete: "CASCADE" })
+    @ManyToOne("RecurringPaymentOccurrence", { nullable: true, onDelete: "CASCADE" })
     @JoinColumn({ name: "occurrenceId" })
-    occurrence: RecurringPaymentOccurrence;
+    occurrence?: RecurringPaymentOccurrence | null;
 
-    @Column({ type: "uuid", unique: true })
-    occurrenceId: string;
+    @Column({ type: "uuid", unique: true, nullable: true })
+    occurrenceId?: string | null;
+
+    @ManyToOne("DebtInstallment", { nullable: true, onDelete: "CASCADE" })
+    @JoinColumn({ name: "installmentId" })
+    installment?: DebtInstallment | null;
+
+    @Column({ type: "uuid", unique: true, nullable: true })
+    installmentId?: string | null;
 
     @Column({ type: "varchar", length: 160 })
     title: string;

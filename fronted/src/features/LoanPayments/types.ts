@@ -68,7 +68,7 @@ export const initialQuickPay: QuickpayInput = {
 export const LoanQueryFiltersSchema = z.object({
     // Filtros por tipo y estado
     type: z.enum(["RECEIVED", "GIVEN"]).optional(),
-    status: z.enum(["PAID", "PENDING"]).optional(),
+    status: z.enum(["PAID", "PENDING", "PARTIALLY_PAID", "OVERDUE", "CANCELLED"]).optional(),
 
     // Búsqueda por acreedor
     lender: nameSchema().optional(),
@@ -106,7 +106,7 @@ export type LoanQueryFiltersFormInput = z.infer<typeof LoanQueryFiltersSchema>
 // ============ LOAN SUMMARY FILTERS SCHEMA ============
 export const LoanSummaryFiltersSchema = z.object({
     type: z.enum(["RECEIVED", "GIVEN"]).optional(),
-    status: z.enum(["PAID", "PENDING"]).optional(),
+    status: z.enum(["PAID", "PENDING", "PARTIALLY_PAID", "OVERDUE", "CANCELLED"]).optional(),
     excludeCompleted: z.boolean().optional(),
     excludePaidOff: z.boolean().optional(),
     lender: nameSchema().optional(),

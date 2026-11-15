@@ -30,15 +30,6 @@ export const getSummary = async (query?: LoanSummaryQuerySchema) => {
     return data
 }
 
-export const getByLender = async (lender: string, type?: string) => {
-    const encodedLender = encodeURIComponent(lender);
-    const data = await apiFetch<Loan[]>(`/loan/lender/${encodedLender}`);
-    if (type) {
-        return data.filter(loan => loan.type === type);
-    }
-    return data
-}
-
 export const createLoan = async (
     body: CreateLoanOutput
 ): Promise<Loan> => {
@@ -57,8 +48,72 @@ export const quickPay = async (body: QuickpayOutput): Promise<void> => {
     await apiFetch(`/loan/quick-pay`, { method: "POST", body: JSON.stringify(body) })
 }
 
-export const deleteLoan = async (id: string) => {
-    await apiFetch<void>(`/loan/${id}`, {
-        method: "DELETE",
-    })
-}
+export const updateLoan = async (
+    id: string,
+    body: {
+        contactId?: string;
+        notes?: string | null;
+        startDate?: string;
+        principalAmount?: number;
+        reason?: string;
+    }
+): Promise<Loan> => {
+    const data = await apiFetch<{ loan: Loan }>(`/loan/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+    });
+    return data.loan;
+};
+
+export const cancelLoan = async (id: string, reason?: string): Promise<Loan> => {
+    const data = await apiFetch<{ loan: Loan }>(`/loan/${id}/cancel`, {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+    });
+    return data.loan;
+};
+
+export const getLoanAudit = async (id: string) => {
+    return apiFetch<Array<{
+        id: string;
+        action: string;
+        entityType: string;
+        entityId: string;
+        reason?: string | null;
+        createdAt: string;
+        before?: Record<string, unknown> | null;
+        after?: Record<string, unknown> | null;
+    }>>(`/loan/${id}/audit`);
+};
+export const forgiveLoan = async (
+    id: string,
+    body: { amount?: number; date?: string; reason?: string }
+): Promise<Loan> => {
+    const data = await apiFetch<{ loan: Loan }>(`/loan/${id}/forgiveness`, {
+        method: "POST",
+        body: JSON.stringify(body),
+    });
+    return data.loan;
+};
+
+export const updateLoanMovement = async (
+    loanId: string,
+    movementId: string,
+    body: { date?: string; note?: string | null; reason?: string }
+) => {
+    return apiFetch<LoanPayment>(`/loan/${loanId}/movements/${movementId}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+    });
+};
+
+export const reverseLoanMovement = async (
+    loanId: string,
+    movementId: string,
+    body: { date?: string; reason?: string }
+) => {
+    return apiFetch<LoanPayment>(`/loan/${loanId}/movements/${movementId}/reverse`, {
+        method: "POST",
+        body: JSON.stringify(body),
+    });
+};

@@ -15,6 +15,7 @@ import type { User } from "./User.entity";
 import { RecurrenceFrequency, RecurringEntryType, RecurringLoanAction } from "../utils/Enums";
 import type { RecurringPaymentOccurrence } from "./RecurringPaymentOccurrence.entity";
 import type { Loan } from "./Loan.entity";
+import type { Contact } from "./Contact.entity";
 
 @Entity({ name: "recurring_payments" })
 @Index("IDX_recurring_payments_user", ["user"])
@@ -82,6 +83,13 @@ export class RecurringPayment {
 
     @Column({ type: "uuid", nullable: true })
     loanId?: string | null;
+
+    @ManyToOne("Contact", { nullable: true, onDelete: "SET NULL" })
+    @JoinColumn({ name: "loanContactId" })
+    loanContact?: Contact | null;
+
+    @Column({ type: "uuid", nullable: true })
+    loanContactId?: string | null;
 
     /** Persona del préstamo cuando la ocurrencia crea uno nuevo */
     @Column({ type: "varchar", length: 100, nullable: true })

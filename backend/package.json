@@ -9,7 +9,8 @@
         "db:revert": "bun node_modules/typeorm/cli.js migration:revert -d src/database/dataBaseDev.ts",
         "db:show": "bun node_modules/typeorm/cli.js migration:show -d src/database/dataBaseDev.ts",
         "db:baseline": "bun src/database/baseline.ts",
-        "test": "bun test"
+        "test": "bun test tests/finance.test.ts",
+    "test:integration": "bun test tests/loanIntegration.test.ts"
     },
     "dependencies": {
         "@hono/zod-validator": "^0.7.6",

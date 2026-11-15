@@ -1,61 +1,79 @@
 import dayjs, { Dayjs } from "dayjs";
 import minMax from 'dayjs/plugin/minMax'
 import { Loan } from "../entities/Loan.entity"
-import { LoanPayment } from "../entities/LoanPayment.entity"
+import { LoanMovement } from "../entities/LoanMovement.entity"
 import { LoanPaymentResponse, LoanResponse, PaymentCalculation } from "../ResponseInterfaces/LoansResponse"
 import { money, round } from "../utils/normalizarMoney"
 import { toTransactionResponse } from "./TransactionMapper"
-import { StatusLoan } from "../utils/Enums"
+import { LoanMovementType, StatusLoan } from "../utils/Enums"
 dayjs.extend(minMax)
 
-export interface ToLoanPaymentResponseProps {
-    moneyAmount?: boolean
-    transactionAmount?: boolean
-}
-
-export const toLoanPaymentResponse = (loanPayment: LoanPayment, { moneyAmount = true, transactionAmount = true }: ToLoanPaymentResponseProps = {}): LoanPaymentResponse => {
-
-    const { id, amount, date } = loanPayment
-
-    let loanPaymentResponse: LoanPaymentResponse = {
-        id,
-        amount: moneyAmount ? money(amount) : amount,
-        date
-    }
-
-    if (loanPayment.strategy) loanPaymentResponse = { ...loanPaymentResponse, strategy: loanPayment.strategy }
-    if (loanPayment.transaction) {
-        loanPaymentResponse = { ...loanPaymentResponse, transaction: toTransactionResponse(loanPayment.transaction, { moneyAmount: transactionAmount }) }
-        if (loanPayment.transaction.description) loanPaymentResponse.description = loanPayment.transaction.description
-    }
-
-    return loanPaymentResponse
-}
+export const toLoanMovementPaymentResponse = (movement: LoanMovement): LoanPaymentResponse => ({
+    id: movement.id,
+    amount: money(movement.amount),
+    date: movement.date,
+    description: movement.note ?? undefined,
+    transaction: movement.transaction
+        ? toTransactionResponse(movement.transaction, { moneyAmount: true })
+        : undefined,
+});
 
 export const calculateLoanPaymentStatus = (loan: Loan): PaymentCalculation => {
-    const totalPaidInCents = loan.payments?.reduce((sum, payment) => sum + payment.amount, 0) ?? 0;
-    const principalInCents = loan.principalAmount;
+    if (loan.movements?.length) {
+        let advancesInCents = 0;
+        let debtIncreaseInCents = 0;
+        let repaidInCents = 0;
+        let forgivenInCents = 0;
 
-    const totalPaid = totalPaidInCents / 100;
-    const principal = principalInCents / 100;
+        for (const movement of loan.movements) {
+            if (movement.type === LoanMovementType.ADVANCE) {
+                advancesInCents += movement.amount;
+                debtIncreaseInCents += movement.amount;
+            } else if (movement.type === LoanMovementType.INTEREST) {
+                debtIncreaseInCents += movement.amount;
+            } else if (movement.type === LoanMovementType.REPAYMENT) {
+                repaidInCents += movement.amount;
+            } else if (movement.type === LoanMovementType.FORGIVENESS) {
+                forgivenInCents += Math.abs(movement.amount);
+            } else if (movement.type === LoanMovementType.ADJUSTMENT) {
+                if (movement.amount >= 0) debtIncreaseInCents += movement.amount;
+                else forgivenInCents += Math.abs(movement.amount);
+            }
+        }
 
-    const totalRemaining = principal - totalPaid;
-    const percentagePaid = principal > 0 ? Math.round((totalPaid / principal) * 100) : 0;
+        const totalDebtInCents = Math.max(0, debtIncreaseInCents - forgivenInCents);
+        const remainingInCents = Math.max(0, totalDebtInCents - repaidInCents);
+
+        return {
+            totalPaidInCents: repaidInCents,
+            totalPaid: round(repaidInCents / 100),
+            totalRemaining: round(remainingInCents / 100),
+            totalRemainingInCents: remainingInCents,
+            percentagePaid: totalDebtInCents > 0 ? Math.round((repaidInCents / totalDebtInCents) * 100) : 0,
+            totalAdvanced: round(advancesInCents / 100),
+            totalAdvancedInCents: advancesInCents,
+            totalForgiven: round(forgivenInCents / 100),
+            totalForgivenInCents: forgivenInCents,
+            totalDebt: round(totalDebtInCents / 100),
+            totalDebtInCents,
+        };
+    }
 
     return {
-        totalPaidInCents,
-        totalPaid: round(totalPaid),
-        totalRemaining: round(Math.max(0, totalRemaining)),
-        percentagePaid,
+        totalPaidInCents: 0,
+        totalPaid: 0,
+        totalRemaining: round(Math.max(0, loan.principalAmount / 100)),
+        totalRemainingInCents: loan.principalAmount,
+        percentagePaid: 0,
+        totalAdvanced: round(loan.principalAmount / 100),
+        totalAdvancedInCents: loan.principalAmount,
+        totalForgiven: 0,
+        totalForgivenInCents: 0,
+        totalDebt: round(loan.principalAmount / 100),
+        totalDebtInCents: loan.principalAmount,
     };
 }
 
-export const getLastPaymentDate = (loan: Loan): Date | undefined => {
-    if (!loan.payments || loan.payments.length === 0) return undefined;
-    const maxDate = dayjs.max(loan.payments.map(p => dayjs(p.date)));
-    if (!maxDate) return undefined;
-    return maxDate.toDate();
-}
 
 export const calculateEndPaymentDue = (loan: Loan): Dayjs | undefined => {
     if (loan.status === StatusLoan.PAID) return undefined;
@@ -70,20 +88,30 @@ export interface LoansMapperProps {
 }
 
 export const toLoanResponse = (loan: Loan, { moneyAmount = true, moneyTransaction = true }: LoansMapperProps = {}): LoanResponse => {
-    const { id, lender, type, principalAmount, startDate, status, termInMonths, installmentAmount, payments, transactionReference, disbursementAmount, extraCost, tea } = loan
-    const { totalPaid, totalRemaining, percentagePaid } = calculateLoanPaymentStatus(loan)
+    const { id, lender, type, startDate, status, termInMonths, installmentAmount, movements, transactionReference, disbursementAmount, extraCost, tea, contact, notes, cancelledAt, cancelReason } = loan
+    const calculation = calculateLoanPaymentStatus(loan)
+    const { totalPaid, totalRemaining, percentagePaid, totalAdvanced, totalForgiven, totalDebt } = calculation
 
     let loanResponse: LoanResponse = {
         id,
         lender,
         type,
-        principalAmount: moneyAmount ? money(principalAmount) : principalAmount,
+        principalAmount: moneyAmount ? Math.round(totalDebt * 100) : Math.round(totalDebt * 100),
         status,
         startDate,
         amountPaid: totalPaid,
         amountRemaining: totalRemaining,
-        percentagePaid: percentagePaid,
-        paymentCount: payments ? payments.length : 0
+        percentagePaid,
+        paymentCount: movements
+            ? movements.filter((movement) => movement.type === LoanMovementType.REPAYMENT).length
+            : 0,
+        totalAdvanced,
+        totalForgiven,
+        totalDebt,
+        contact: contact ? { id: contact.id, name: contact.name } : undefined,
+        notes: notes ?? null,
+        cancelledAt: cancelledAt ?? null,
+        cancelReason: cancelReason ?? null,
     }
 
     if (termInMonths) {
@@ -100,10 +128,21 @@ export const toLoanResponse = (loan: Loan, { moneyAmount = true, moneyTransactio
         if (transactionReference.description) loanResponse.description = transactionReference.description
     }
 
-    if (payments) {
-        loanResponse.lastPaymentDate = getLastPaymentDate(loan)
-        loanResponse.payments = payments.map(payment => toLoanPaymentResponse(payment, { moneyAmount: moneyTransaction }))
+    if (movements) {
+        const repayments = movements.filter((movement) => movement.type === LoanMovementType.REPAYMENT)
+        if (repayments.length > 0) {
+            loanResponse.lastPaymentDate = dayjs.max(repayments.map((movement) => dayjs(movement.date)))?.toDate()
+        }
+        loanResponse.payments = repayments.map((movement) => ({
+            id: movement.id,
+            amount: moneyTransaction ? money(movement.amount) : movement.amount,
+            date: movement.date,
+            description: movement.note ?? undefined,
+            transaction: movement.transaction
+                ? toTransactionResponse(movement.transaction, { moneyAmount: moneyTransaction })
+                : undefined,
+        }))
     }
 
     return loanResponse
-} 
+}

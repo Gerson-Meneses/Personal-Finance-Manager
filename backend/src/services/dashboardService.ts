@@ -1,4 +1,4 @@
-import { Between, IsNull } from "typeorm"
+import { Between, In, IsNull } from "typeorm"
 import { AppDataSourceProd } from "../database/dataBaseDev"
 import { Account } from "../entities/Account.entity"
 import { Category } from "../entities/Category.entity"
@@ -91,12 +91,12 @@ export class DashboardService {
 
         const incomeExpensePromise = this.transactionRepo
             .createQueryBuilder("t")
-            .select("COALESCE(SUM(t.amount) FILTER (WHERE t.type = :incomeType AND t.loanId IS NULL), 0)", "income")
-            .addSelect("COALESCE(SUM(t.amount) FILTER (WHERE t.type = :expenseType AND t.loanPaymentId IS NULL), 0)", "expense")
+            .select("COALESCE(SUM(t.amount) FILTER (WHERE t.type = :incomeType AND t.reportingImpact = :reportingImpact), 0)", "income")
+            .addSelect("COALESCE(SUM(t.amount) FILTER (WHERE t.type = :expenseType AND t.reportingImpact = :reportingImpact), 0)", "expense")
             .where("t.userId = :userId", { userId })
             .andWhere("t.date >= :start", { start: startOfMonth })
             .andWhere("t.date <= :end", { end: endOfMonth })
-            .setParameters({ incomeType: TypeTransaction.INCOME, expenseType: TypeTransaction.EXPENSE })
+            .setParameters({ incomeType: TypeTransaction.INCOME, expenseType: TypeTransaction.EXPENSE, reportingImpact: "REPORTABLE" })
             .getRawOne()
 
         const categoriesPromise = this.transactionRepo
@@ -110,6 +110,7 @@ export class DashboardService {
             .addSelect("COUNT(t.id)", "transactionCount")
             .where("t.userId = :userId", { userId })
             .andWhere("t.type = 'EXPENSE'")
+            .andWhere("t.reportingImpact = :reportingImpact", { reportingImpact: "REPORTABLE" })
             .andWhere("t.date >= :start", { start: startOfMonth })
             .andWhere("t.date <= :end", { end: endOfMonth })
             .groupBy("category.id")
@@ -122,7 +123,7 @@ export class DashboardService {
             where: {
                 user: { id: userId }
             },
-            relations: ["category", "account", "relatedAccount", "loan", "loanPayment"],
+            relations: ["category", "account", "relatedAccount", "loan"],
             order: {
                 createdAt: "DESC"
             },
@@ -134,7 +135,10 @@ export class DashboardService {
                 where: { user: { id: userId } }
             }),
             this.loanRepo.find({
-                where: { user: { id: userId }, status: StatusLoan.PENDING },
+                where: {
+                    user: { id: userId },
+                    status: In([StatusLoan.PENDING, StatusLoan.PARTIALLY_PAID, StatusLoan.OVERDUE]),
+                },
                 relations: ["payments"],
                 order: { createdAt: "DESC" }
             }),

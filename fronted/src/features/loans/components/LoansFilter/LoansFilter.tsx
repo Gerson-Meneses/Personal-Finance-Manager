@@ -59,7 +59,15 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
             let label = String(value);
 
             if (key === "type") label = value === "GIVEN" ? "Otorgué" : "Recibí";
-            else if (key === "status") label = value === "PAID" ? "Pagados" : "Pendientes";
+            else if (key === "status") {
+                label = ({
+                    PAID: "Pagados",
+                    PENDING: "Activos",
+                    PARTIALLY_PAID: "Parciales",
+                    OVERDUE: "Vencidos",
+                    CANCELLED: "Cancelados",
+                } as Record<string, string>)[String(value)] ?? String(value);
+            }
             else if (key === "hasPayments") label = value ? "Con pagos" : "Sin pagos";
             else if (["minAmount", "maxAmount", "minPaymentAmount", "maxPaymentAmount"].includes(key)) {
                 label = `S/ ${Number(value).toLocaleString("es-PE", { minimumFractionDigits: 2 })}`;
@@ -139,10 +147,13 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                     <SelectInput
                         label="Estado del préstamo"
                         value={query.status ?? ""}
-                        onChange={(value) => set("status", value as "PAID" | "PENDING")}
+                        onChange={(value) => set("status", value as LoanQueryFilters["status"])}
                         options={[
+                            { value: "PENDING", label: "Activos / pendientes" },
+                            { value: "PARTIALLY_PAID", label: "Parciales" },
                             { value: "PAID", label: "Pagados" },
-                            { value: "PENDING", label: "Pendientes" },
+                            { value: "OVERDUE", label: "Vencidos" },
+                            { value: "CANCELLED", label: "Cancelados" },
                         ]}
                         placeholder="Todos"
                     />

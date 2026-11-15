@@ -6,7 +6,7 @@ import type { LoanPayment } from "../LoanPayments/types";
 export const LoanTypeValues = ["RECEIVED", "GIVEN"] as const
 export type LoanType = typeof LoanTypeValues[number]
 
-export const StatusLoanValues = ["PAID", "PENDING"] as const
+export const StatusLoanValues = ["PAID", "PENDING", "PARTIALLY_PAID", "OVERDUE", "CANCELLED"] as const
 export type StatusLoan = typeof StatusLoanValues[number]
 
 export type ExtraPaymentStrategy = 'REDUCE_TERM' | 'REDUCE_INSTALLMENT'
@@ -31,6 +31,13 @@ export interface Loan {
     amountPaid: number;
     amountRemaining: number;
     percentagePaid: number;
+    totalAdvanced?: number;
+    totalForgiven?: number;
+    totalDebt?: number;
+    contact?: { id: string; name: string };
+    notes?: string | null;
+    cancelledAt?: string | null;
+    cancelReason?: string | null;
     lastPaymentDate?: Date;
     paymentCount: number;
     endPaymentDue?: string;
@@ -138,6 +145,7 @@ export interface LoanSummaryDetail {
 
 export interface LoanSummaryGrouped {
     lender: string;
+    contactId?: string;
     byType: {
         [key in LoanType]?: LoanSummaryDetail;
     };

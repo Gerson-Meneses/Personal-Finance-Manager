@@ -24,6 +24,7 @@ import {
 } from "../utils/Enums";
 import { money } from "../utils/normalizarMoney";
 import { TransactionService } from "./transactionService";
+import { Contact } from "../entities/Contact.entity";
 import { LoansService } from "./loansService";
 import type { TransactionSchema } from "../schemas/transaction.schema";
 
@@ -44,6 +45,7 @@ export interface RecurringPaymentResponse {
     autoDebit: boolean;
     loanAction: RecurringLoanAction;
     loanId?: string | null;
+    loanContactId?: string | null;
     loanCounterparty?: string | null;
     loan?: { id: string; lender: string; type: TypeLoan } | null;
     nextDueDate?: string | null;
@@ -63,6 +65,9 @@ export interface RecurringOccurrenceResponse {
     dueDate: string;
     status: RecurringOccurrenceStatus;
     autoDebit: boolean;
+    plannedAmount: number;
+    executedAmount?: number | null;
+    executionNote?: string | null;
     loanAction: RecurringLoanAction;
     loanCounterparty?: string | null;
     account?: { id: string; name: string; color?: string; icon?: string } | null;
@@ -233,6 +238,7 @@ export class RecurringPaymentService {
             autoDebit: payment.autoDebit,
             loanAction: payment.loanAction ?? RecurringLoanAction.NONE,
             loanId: payment.loanId ?? null,
+            loanContactId: payment.loanContactId ?? null,
             loanCounterparty: payment.loanCounterparty ?? null,
             loan: payment.loan
                 ? { id: payment.loan.id, lender: payment.loan.lender, type: payment.loan.type }
@@ -267,6 +273,9 @@ export class RecurringPaymentService {
             description: occurrence.payment?.description ?? null,
             type: occurrence.type,
             amount: money(occurrence.amount),
+            plannedAmount: money(occurrence.amount),
+            executedAmount: occurrence.executedAmount != null ? money(occurrence.executedAmount) : null,
+            executionNote: occurrence.executionNote ?? null,
             dueDate: occurrence.dueDate,
             status: occurrence.status,
             autoDebit: occurrence.autoDebit,
@@ -345,6 +354,7 @@ export class RecurringPaymentService {
             autoDebit: data.autoDebit,
             loanAction: data.loanAction,
             loanId: data.loanId ?? null,
+            loanContactId: data.loanContactId ?? null,
             loanCounterparty: data.loanCounterparty ?? null,
             accountId: data.accountId,
             categoryId: data.categoryId,
@@ -459,7 +469,7 @@ export class RecurringPaymentService {
                 .createQueryBuilder()
                 .insert()
                 .into(RecurringPaymentOccurrence)
-                .values(rows)
+                .values(rows as any)
                 .orIgnore()
                 .execute();
         }
@@ -560,21 +570,32 @@ export class RecurringPaymentService {
             if (!account) throw new NotFoundError("Cuenta de ejecución no encontrada");
 
             const action = payment.loanAction ?? RecurringLoanAction.NONE;
+            const actualAmount = data.amount ?? occurrence.amount;
+            const movementNote = data.note ?? data.description ?? payment.description ?? undefined;
             let transactionId: string | null = null;
 
             if (action === RecurringLoanAction.PAY_LOAN) {
-                if (payment.loanCounterparty) {
+                if (payment.loanContactId || payment.loanCounterparty) {
+                    const contact = payment.loanContactId
+                        ? await manager.findOne(Contact, {
+                              where: { id: payment.loanContactId, userId },
+                          })
+                        : null;
+                    const lender = contact?.name ?? payment.loanCounterparty;
+                    if (!lender) {
+                        throw new ConflictError("El pago no tiene un contacto válido");
+                    }
                     const result = await this.loansService.payLenderDebt(
                         userId,
                         {
-                            lender: payment.loanCounterparty,
+                            lender,
                             type: payment.type === RecurringEntryType.INCOME
                                 ? TypeLoan.GIVEN
                                 : TypeLoan.RECEIVED,
-                            amount: occurrence.amount,
+                            amount: actualAmount,
                             date: data.date ?? occurrence.dueDate,
                             time: data.time,
-                            description: data.description ?? payment.description ?? undefined,
+                            description: movementNote,
                             accountId,
                         },
                         manager
@@ -585,10 +606,10 @@ export class RecurringPaymentService {
                         userId,
                         payment.loanId as UuidSchema,
                         {
-                            amount: occurrence.amount,
+                            amount: actualAmount,
                             date: data.date ?? occurrence.dueDate,
                             time: data.time,
-                            description: data.description ?? payment.description ?? undefined,
+                            description: movementNote,
                             accountId,
                         },
                         manager
@@ -597,6 +618,24 @@ export class RecurringPaymentService {
                 } else {
                     throw new ConflictError("El pago no tiene una persona o préstamo vinculado");
                 }
+            } else if (action === RecurringLoanAction.ADVANCE_LOAN) {
+                if (!payment.loanId) {
+                    throw new ConflictError("El cargo no tiene un préstamo vinculado");
+                }
+
+                const result = await this.loansService.addAdvanceToLoan(
+                    userId,
+                    payment.loanId as UuidSchema,
+                    {
+                        amount: actualAmount,
+                        date: data.date ?? occurrence.dueDate,
+                        time: data.time,
+                        description: movementNote,
+                        accountId,
+                    },
+                    manager
+                );
+                transactionId = result.transactionId;
             } else if (
                 action === RecurringLoanAction.GIVE_LOAN ||
                 action === RecurringLoanAction.RECEIVE_LOAN
@@ -613,11 +652,11 @@ export class RecurringPaymentService {
                                 ? TypeLoan.GIVEN
                                 : TypeLoan.RECEIVED,
                         lender: payment.loanCounterparty,
-                        amount: occurrence.amount,
+                        amount: actualAmount,
                         startDate: data.date ?? occurrence.dueDate,
                         date: dayjs(data.date ?? occurrence.dueDate).toDate(),
                         time: data.time,
-                        description: data.description ?? payment.description ?? undefined,
+                        description: movementNote,
                         accountId,
                     },
                     manager
@@ -629,10 +668,10 @@ export class RecurringPaymentService {
                     type: payment.type === RecurringEntryType.INCOME
                         ? TypeTransaction.INCOME
                         : TypeTransaction.EXPENSE,
-                    amount: occurrence.amount,
+                    amount: actualAmount,
                     date: data.date ?? occurrence.dueDate,
                     time: data.time,
-                    description: data.description ?? payment.description ?? undefined,
+                    description: movementNote,
                     categoryId: payment.categoryId,
                     accountId,
                     isRecurrent: false,
@@ -654,6 +693,8 @@ export class RecurringPaymentService {
             occurrence.status = RecurringOccurrenceStatus.PAID;
             occurrence.transactionId = transactionId;
             occurrence.executedAt = new Date();
+            occurrence.executedAmount = actualAmount;
+            occurrence.executionNote = data.note ?? null;
             occurrence.accountId = accountId;
             occurrence.failureReason = null;
             await manager.save(occurrence);
@@ -754,7 +795,14 @@ export class RecurringPaymentService {
         );
 
         const sumCents = (list: RecurringPaymentOccurrence[]) =>
-            list.reduce((total, occ) => total + occ.amount, 0);
+            list.reduce(
+                (total, occ) =>
+                    total +
+                    (occ.status === RecurringOccurrenceStatus.PAID
+                        ? occ.executedAmount ?? occ.amount
+                        : occ.amount),
+                0
+            );
 
         const income = active.filter((occ) => occ.type === RecurringEntryType.INCOME);
         const expense = active.filter((occ) => occ.type === RecurringEntryType.EXPENSE);

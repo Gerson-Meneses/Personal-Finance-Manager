@@ -2,16 +2,22 @@ import { Hono } from "hono";
 import { AppEnv } from "../types";
 import { zValidator } from "@hono/zod-validator";
 import { uuidParamSchema } from "../schemas/uuid.schema";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import { zodErrorResponse } from "../helpers/zodErrorResponse";
-import { loanSchema } from "../schemas/loan.schema";
+import { loanSchema, updateLoanSchema, cancelLoanSchema, forgiveLoanSchema, updateLoanMovementSchema, reverseLoanMovementSchema, type UpdateLoanOutput, type CancelLoanOutput, type ForgiveLoanOutput, type UpdateLoanMovementOutput, type ReverseLoanMovementOutput } from "../schemas/loan.schema";
 import {
     createLoan,
     getAllLoans,
     payLoan,
     getAllLoanSummary,
     getLoanById,
-    quickPayLender
+    quickPayLender,
+    updateLoan,
+    cancelLoan,
+    getLoanAudit,
+    forgiveLoan,
+    updateLoanMovement,
+    reverseLoanMovement,
 } from "../controllers/loansController";
 import { quickPaymentSchema } from "../schemas/quickPayment.schema";
 import { loanPaymentSchema } from "../schemas/loanPayment.schema";
@@ -91,5 +97,104 @@ loanRouter.post('/:id/pay',
         const user = c.get('user');
         const paymentData = c.req.valid('json');
         return await payLoan(c, user.sub, id, paymentData);
+    }
+)
+loanRouter.patch(
+    '/:id',
+    zValidator('param', uuidParamSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    zValidator('json', updateLoanSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    async (c) => {
+        const user = c.get('user');
+        return await updateLoan(c, user.sub, c.req.valid('param').id, c.req.valid('json') as UpdateLoanOutput);
+    }
+)
+
+loanRouter.post(
+    '/:id/cancel',
+    zValidator('param', uuidParamSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    zValidator('json', cancelLoanSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    async (c) => {
+        const user = c.get('user');
+        return await cancelLoan(c, user.sub, c.req.valid('param').id, c.req.valid('json') as CancelLoanOutput);
+    }
+)
+
+loanRouter.get(
+    '/:id/audit',
+    zValidator('param', uuidParamSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    async (c) => {
+        const user = c.get('user');
+        return await getLoanAudit(c, user.sub, c.req.valid('param').id);
+    }
+)
+
+loanRouter.post(
+    '/:id/forgiveness',
+    zValidator('param', uuidParamSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    zValidator('json', forgiveLoanSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    async (c) => {
+        const user = c.get('user');
+        return await forgiveLoan(c, user.sub, c.req.valid('param').id, c.req.valid('json') as ForgiveLoanOutput);
+    }
+)
+
+const movementParamsSchema = z.object({
+    id: z.uuid({ message: "Loan ID inválido" }),
+    movementId: z.uuid({ message: "Movement ID inválido" }),
+});
+
+loanRouter.patch(
+    '/:id/movements/:movementId',
+    zValidator('param', movementParamsSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    zValidator('json', updateLoanMovementSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    async (c) => {
+        const user = c.get('user');
+        const params = c.req.valid('param');
+        return await updateLoanMovement(
+            c,
+            user.sub,
+            params.id,
+            params.movementId,
+            c.req.valid('json') as UpdateLoanMovementOutput
+        );
+    }
+)
+
+loanRouter.post(
+    '/:id/movements/:movementId/reverse',
+    zValidator('param', movementParamsSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    zValidator('json', reverseLoanMovementSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) return zodErrorResponse(result.error, c)
+    }),
+    async (c) => {
+        const user = c.get('user');
+        const params = c.req.valid('param');
+        return await reverseLoanMovement(
+            c,
+            user.sub,
+            params.id,
+            params.movementId,
+            c.req.valid('json') as ReverseLoanMovementOutput
+        );
     }
 )

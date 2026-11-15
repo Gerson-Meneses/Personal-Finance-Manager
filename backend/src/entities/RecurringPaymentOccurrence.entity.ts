@@ -44,6 +44,14 @@ export class RecurringPaymentOccurrence {
     @Column({ type: "integer" })
     amount: number;
 
+    /** Monto real confirmado por el usuario, si difiere del planificado */
+    @Column({ type: "integer", nullable: true })
+    executedAmount?: number | null;
+
+    /** Comentario opcional del movimiento ejecutado */
+    @Column({ type: "text", nullable: true })
+    executionNote?: string | null;
+
     @Column({ type: "enum", enum: RecurringEntryType })
     type: RecurringEntryType;
 

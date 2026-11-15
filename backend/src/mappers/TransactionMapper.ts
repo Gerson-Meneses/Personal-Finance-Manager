@@ -4,14 +4,14 @@ import { TransactionResponse } from "../ResponseInterfaces/TransactionInterface"
 import { toAccountResponse } from "./AccountMapper";
 import { money } from "../utils/normalizarMoney";
 import { toCategoryResponse } from "./CategoryMapper";
-import { toLoanPaymentResponse, toLoanResponse } from "./LoansMapper";
+import { toLoanResponse } from "./LoansMapper";
 
 export interface TransactionMapperProp {
     moneyAmount?: boolean
 }
 
 export const toTransactionResponse = (transaction: Transaction, { moneyAmount = true }: TransactionMapperProp = {}): TransactionResponse => {
-    const { id, name, type, amount, date, account, time, description, postedAt, isRecurrent, relatedAccount, category, loanPayment, loan } = transaction
+    const { id, name, type, amount, date, account, time, description, postedAt, isRecurrent, relatedAccount, category, loan } = transaction
 
     let transactionResponse: TransactionResponse = {
         id,
@@ -32,7 +32,6 @@ export const toTransactionResponse = (transaction: Transaction, { moneyAmount = 
 
     if (category) transactionResponse.category = toCategoryResponse(category)
 
-    if (loanPayment) transactionResponse.loanPayment = toLoanPaymentResponse(loanPayment)
 
     if (loan) transactionResponse.loan = toLoanResponse(loan)
 

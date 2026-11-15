@@ -19,6 +19,7 @@ import ProfilePage from "./pages/private/profile/profilePage";
 import AdminPanelPage from "./pages/private/admin/adminPanelPage";
 import RecurringPaymentsPage from "./pages/private/recurring/RecurringPaymentsPage";
 import BudgetsPage from "./pages/private/budgets/BudgetsPage";
+import ContactsPage from "./pages/private/contacts/ContactsPage";
 
 
 export default function App() {
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/loans/:lender" element={< LoansByLender />} ></Route>
         <Route path="/recurring" element={< RecurringPaymentsPage />} ></Route>
         <Route path="/budgets" element={< BudgetsPage />} ></Route>
+        <Route path="/contacts" element={< ContactsPage />} ></Route>
         <Route path="/transactions" element={< TransactionsPage />} ></Route>
         <Route path="/perfil" element={< ProfilePage />} ></Route>
         <Route path="/admin" element={< AdminPanelPage />} ></Route>

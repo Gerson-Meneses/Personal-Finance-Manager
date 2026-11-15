@@ -72,7 +72,6 @@ export class TransactionService {
             .leftJoinAndSelect('t.relatedAccount', 'relatedAccount')
             .leftJoinAndSelect('t.category', 'category')
             .leftJoinAndSelect('t.loan', 'loan')
-            .leftJoinAndSelect('t.loanPayment', 'loanPayment')
             .where('t.userId = :userId', { userId });
 
         if (filters.type) {
@@ -172,6 +171,7 @@ export class TransactionService {
         filters: TransactionQuerySchema
     ): Promise<TransactionStatsResponse> {
         const raw = await this.buildTransactionQuery(userId, filters)
+            .andWhere("t.reportingImpact = :reportingImpact", { reportingImpact: "REPORTABLE" })
             .select('COUNT(t.id)', 'count')
             .addSelect(
                 `COALESCE(SUM(CASE WHEN t.type = '${TypeTransaction.INCOME}' THEN t.amount ELSE 0 END), 0)`,

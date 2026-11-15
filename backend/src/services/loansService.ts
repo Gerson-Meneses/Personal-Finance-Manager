@@ -1,6 +1,12 @@
 import { AppDataSourceProd } from "../database/dataBaseDev";
 import { Loan } from "../entities/Loan.entity";
-import { LoanPayment } from "../entities/LoanPayment.entity";
+import { LoanMovement } from "../entities/LoanMovement.entity";
+import { LoanPlan } from "../entities/LoanPlan.entity";
+import { DebtInstallment } from "../entities/DebtInstallment.entity";
+import { LoanPaymentAllocation } from "../entities/LoanPaymentAllocation.entity";
+import { Contact } from "../entities/Contact.entity";
+import { RecurringPayment } from "../entities/RecurringPayment.entity";
+import dayjs from "dayjs";
 import { Transaction } from "../entities/Transaction.entity";
 import { Account } from "../entities/Account.entity";
 import { BadRequestError, ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
@@ -10,18 +16,33 @@ import { PaginationQuerySchema } from "../schemas/queryPagination.schema";
 import { QuickPaymentSchema } from "../schemas/quickPayment.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
 import { PaginatedResult } from "../types";
-import { StatusLoan, TypeAccount, TypeLoan, TypeTransaction } from "../utils/Enums";
+import {
+  DebtInstallmentStatus,
+  LoanMovementType,
+  LoanPlanStatus,
+  StatusLoan,
+  TransactionReportingImpact,
+  TypeAccount,
+  TypeLoan,
+  TypeTransaction,
+} from "../utils/Enums";
 import { money, round } from "../utils/normalizarMoney";
 import { TransactionService } from "./transactionService";
 import { UserService } from "./userService";
-import { EntityManager, In, QueryRunner, Repository } from "typeorm";
+import { EntityManager, In, IsNull, QueryRunner, Repository } from "typeorm";
 import { Category } from "../entities/Category.entity";
 import { User } from "../entities/User.entity";
 import { TransactionSchema } from "../schemas/transaction.schema";
 import { AccountResponse } from "../ResponseInterfaces/AccountResponse";
-import { LoanPaymentResponse, LoanResponse, LoanSummary, LoanSummaryFlat, LoanSummaryGrouped, PaymentCalculation } from "../ResponseInterfaces/LoansResponse";
+import { LoanPaymentResponse, LoanResponse, LoanSummaryGrouped, PaymentCalculation } from "../ResponseInterfaces/LoansResponse";
 import { AccountService } from "./accountService";
-import { calculateLoanPaymentStatus, toLoanPaymentResponse, toLoanResponse } from "../mappers/LoansMapper";
+import {
+  calculateLoanPaymentStatus,
+  toLoanMovementPaymentResponse,
+  toLoanResponse,
+} from "../mappers/LoansMapper";
+import { ContactService, normalizeContactName } from "./contactService";
+import { AuditService } from "./auditService";
 import { LoanQuerySchema } from "../schemas/Loanquery,schema";
 import { LoanSummaryQuerySchema } from "../schemas/LoanSummaryQuery.schema";
 
@@ -37,6 +58,261 @@ export class LoansService {
   private accountService = new AccountService();
   private userService = new UserService();
   private transactionService = new TransactionService()
+  private contactService = new ContactService()
+  private auditService = new AuditService()
+
+  private async loadContactLoans(
+    manager: EntityManager,
+    userId: UuidSchema,
+    contactId: UuidSchema,
+    type: TypeLoan,
+    preferredLoanId?: string
+  ): Promise<Loan[]> {
+    const loans = await manager
+      .createQueryBuilder(Loan, "loan")
+      .setLock("pessimistic_write")
+      .where("loan.userId = :userId", { userId })
+      .andWhere("loan.contactId = :contactId", { contactId })
+      .andWhere("loan.type = :type", { type })
+      .andWhere("loan.status != :cancelled", { cancelled: StatusLoan.CANCELLED })
+      .orderBy("loan.startDate", "ASC")
+      .getMany();
+
+    if (loans.length === 0) return [];
+
+    const movements = await manager.find(LoanMovement, {
+      where: { loan: { id: In(loans.map((loan) => loan.id)) } },
+      relations: ["transaction", "transaction.account", "transaction.category"],
+    });
+    const byLoan = new Map<string, LoanMovement[]>();
+    for (const movement of movements) {
+      const list = byLoan.get(movement.loanId) ?? [];
+      list.push(movement);
+      byLoan.set(movement.loanId, list);
+    }
+    for (const loan of loans) {
+      loan.movements = byLoan.get(loan.id) ?? [];
+    }
+
+    return loans.sort((a, b) => {
+      if (preferredLoanId) {
+        if (a.id === preferredLoanId) return -1;
+        if (b.id === preferredLoanId) return 1;
+      }
+      return a.startDate.toString().localeCompare(b.startDate.toString());
+    });
+  }
+
+  private async refreshPlans(
+    manager: EntityManager,
+    planIds: string[]
+  ): Promise<void> {
+    const uniquePlanIds = [...new Set(planIds.filter(Boolean))];
+    for (const planId of uniquePlanIds) {
+      const plan = await manager.findOne(LoanPlan, { where: { id: planId } });
+      if (!plan || plan.status === LoanPlanStatus.CANCELLED) continue;
+
+      const pending = await manager
+        .createQueryBuilder(DebtInstallment, "installment")
+        .where("installment.planId = :planId", { planId })
+        .andWhere("installment.status NOT IN (:...statuses)", {
+          statuses: [DebtInstallmentStatus.PAID, DebtInstallmentStatus.CANCELLED],
+        })
+        .getCount();
+
+      if (pending === 0) {
+        plan.status = LoanPlanStatus.COMPLETED;
+      } else if (plan.status === LoanPlanStatus.COMPLETED) {
+        plan.status = LoanPlanStatus.ACTIVE;
+      }
+      await manager.save(plan);
+    }
+  }
+
+  private async allocateRepayment(
+    manager: EntityManager,
+    movement: LoanMovement,
+    loan: Loan,
+    amount: number,
+    preferredInstallmentId?: string
+  ): Promise<void> {
+    const statuses = [
+      DebtInstallmentStatus.PENDING,
+      DebtInstallmentStatus.PARTIAL,
+      DebtInstallmentStatus.OVERDUE,
+    ];
+    const where = [{ loanId: loan.id, status: In(statuses) }] as any[];
+    if (loan.contactId) {
+      where.push({ loanId: IsNull(), contactId: loan.contactId, status: In(statuses) });
+    }
+
+    const installments = await manager.find(DebtInstallment, {
+      where,
+      order: { dueDate: "ASC", sequence: "ASC" },
+    });
+
+    if (preferredInstallmentId) {
+      installments.sort((a, b) => {
+        if (a.id === preferredInstallmentId) return -1;
+        if (b.id === preferredInstallmentId) return 1;
+        return 0;
+      });
+    }
+
+    let pending = amount;
+    const planIds: string[] = [];
+    for (const installment of installments) {
+      if (pending <= 0) break;
+      const installmentPending = installment.amountDue - installment.paidAmount;
+      if (installmentPending <= 0) continue;
+
+      const applied = Math.min(pending, installmentPending);
+      installment.paidAmount += applied;
+      installment.status =
+        installment.paidAmount >= installment.amountDue
+          ? DebtInstallmentStatus.PAID
+          : DebtInstallmentStatus.PARTIAL;
+      await manager.save(installment);
+
+      await manager.save(
+        manager.create(LoanPaymentAllocation, {
+          movementId: movement.id,
+          installmentId: installment.id,
+          amount: applied,
+          principalAmount: applied,
+        })
+      );
+
+      pending -= applied;
+      if (installment.planId) planIds.push(installment.planId);
+    }
+
+    await this.refreshPlans(manager, planIds);
+  }
+
+  private refreshLoanStatus(loan: Loan): void {
+    const status = calculateLoanPaymentStatus(loan);
+    if (loan.status === StatusLoan.CANCELLED) return;
+    if (status.totalRemainingInCents <= 0) {
+      loan.status = StatusLoan.PAID;
+    } else if (status.totalPaidInCents > 0) {
+      loan.status = StatusLoan.PARTIALLY_PAID;
+    } else {
+      loan.status = StatusLoan.PENDING;
+    }
+  }
+
+  private async recordRepayment(
+    manager: EntityManager,
+    userId: UuidSchema,
+    loan: Loan,
+    amount: number,
+    data: LoanPaymentSchema,
+    note?: string,
+    preferredInstallmentId?: string
+  ): Promise<LoanPaymentResponse> {
+    const transactionType =
+      loan.type === TypeLoan.GIVEN ? TypeTransaction.INCOME : TypeTransaction.EXPENSE;
+
+    const category = await manager.findOne(Category, {
+      where: {
+        name: "DEVOLUCIÓN DE PRÉSTAMO",
+        type: transactionType,
+        user: { id: userId },
+      },
+    });
+    if (!category) {
+      throw new NotFoundError("Categoría de devolución de préstamo no encontrada");
+    }
+
+    const transactionResponse = await this.transactionService.createTransaction(
+      {
+        name: `Pago ${loan.type === TypeLoan.GIVEN ? "de" : "a"} ${loan.lender}.`,
+        type: transactionType,
+        amount,
+        date: data.date,
+        time: data.time,
+        description: note ?? data.description,
+        categoryId: category.id,
+        accountId: data.accountId,
+        reportingImpact: TransactionReportingImpact.CASHFLOW_ONLY,
+      } as TransactionSchema,
+      userId,
+      false,
+      manager
+    );
+
+    const transaction = await manager.findOneOrFail(Transaction, {
+      where: { id: transactionResponse.id },
+      relations: ["account", "category"],
+    });
+
+    const movement = await manager.save(
+      manager.create(LoanMovement, {
+        loanId: loan.id,
+        type: LoanMovementType.REPAYMENT,
+        amount,
+        date: data.date,
+        time: data.time ?? null,
+        note: note ?? data.description ?? null,
+        transactionId: transaction.id,
+        transaction,
+      })
+    );
+
+    loan.movements = [...(loan.movements ?? []), movement];
+    await this.allocateRepayment(manager, movement, loan, amount, preferredInstallmentId);
+    this.refreshLoanStatus(loan);
+    await manager.save(loan);
+
+    return toLoanMovementPaymentResponse(movement);
+  }
+
+  private async distributeContactPayment(
+    manager: EntityManager,
+    userId: UuidSchema,
+    loans: Loan[],
+    amount: number,
+    data: LoanPaymentSchema,
+    note?: string,
+    preferredInstallmentId?: string
+  ): Promise<{ payments: { loanId: string; payment: LoanPaymentResponse }[]; totalAppliedInCents: number }> {
+    const debtInCents = loans.reduce(
+      (sum, loan) => sum + calculateLoanPaymentStatus(loan).totalRemainingInCents,
+      0
+    );
+
+    if (amount > debtInCents) {
+      throw new ConflictError(
+        `El pago excede la deuda pendiente con esta persona. Máximo permitido: ${round(debtInCents / 100)}`,
+        { amount: [`Máximo permitido: ${round(debtInCents / 100)}`] }
+      );
+    }
+
+    let pending = amount;
+    const payments: { loanId: string; payment: LoanPaymentResponse }[] = [];
+
+    for (const loan of loans) {
+      if (pending <= 0) break;
+      const remaining = calculateLoanPaymentStatus(loan).totalRemainingInCents;
+      if (remaining <= 0) continue;
+
+      const applied = Math.min(pending, remaining);
+      const payment = await this.recordRepayment(
+        manager,
+        userId,
+        loan,
+        applied,
+        data,
+        note,
+        preferredInstallmentId
+      );
+      payments.push({ loanId: loan.id, payment });
+      pending -= applied;
+    }
+
+    return { payments, totalAppliedInCents: amount - pending };
+  }
 
   async getLoans(
     userId: UuidSchema,
@@ -52,9 +328,11 @@ export class LoansService {
       // Crear query builder con los joins necesarios
       const qb = this.loanRepo
         .createQueryBuilder("loan")
-        .leftJoinAndSelect("loan.payments", "payments")
-        .leftJoinAndSelect("payments.transaction", "paymentTransaction")
-        .leftJoinAndSelect("paymentTransaction.account", "paymentAccount")
+        .leftJoinAndSelect("loan.contact", "contact")
+        .leftJoinAndSelect("loan.movements", "movement")
+        .leftJoinAndSelect("movement.transaction", "movementTransaction")
+        .leftJoinAndSelect("movementTransaction.account", "movementAccount")
+        .leftJoinAndSelect("movementTransaction.category", "movementCategory")
         .leftJoinAndSelect("loan.transactionReference", "transaction")
         .leftJoinAndSelect("transaction.account", "account")
         .leftJoinAndSelect("transaction.category", "category")
@@ -69,7 +347,13 @@ export class LoansService {
 
       // Filtro por estado
       if (filters.status) {
-        qb.andWhere("loan.status = :status", { status: filters.status });
+        if (filters.status === StatusLoan.PENDING) {
+          qb.andWhere("loan.status IN (:...statuses)", {
+            statuses: [StatusLoan.PENDING, StatusLoan.PARTIALLY_PAID, StatusLoan.OVERDUE],
+          });
+        } else {
+          qb.andWhere("loan.status = :status", { status: filters.status });
+        }
       }
 
       // Filtro por acreedor (búsqueda exacta)
@@ -122,43 +406,39 @@ export class LoansService {
         });
       }
 
-      // ============ FILTROS DE PAGOS ============
+      // ============ FILTROS DE PAGOS (LEDGER) ============
 
-      // Filtro: tiene/no tiene pagos
       if (filters.hasPayments !== null && filters.hasPayments !== undefined) {
-        if (filters.hasPayments) {
-          qb.andWhere("payments.id IS NOT NULL");
-        } else {
-          qb.andWhere("payments.id IS NULL");
-        }
+        const exists = `EXISTS (SELECT 1 FROM loan_movements m WHERE m."loanId" = loan.id AND m.type = 'REPAYMENT')`;
+        qb.andWhere(filters.hasPayments ? exists : `NOT ${exists}`);
       }
 
-      // Rango de monto de pagos
       if (filters.minPaymentAmount) {
-        qb.andWhere("payments.amount >= :minPaymentAmount", {
-          minPaymentAmount: filters.minPaymentAmount,
-        });
+        qb.andWhere(
+          `EXISTS (SELECT 1 FROM loan_movements m WHERE m."loanId" = loan.id AND m.type = 'REPAYMENT' AND m.amount >= :minPaymentAmount)`,
+          { minPaymentAmount: filters.minPaymentAmount }
+        );
       }
 
       if (filters.maxPaymentAmount) {
-        qb.andWhere("payments.amount <= :maxPaymentAmount", {
-          maxPaymentAmount: filters.maxPaymentAmount,
-        });
+        qb.andWhere(
+          `EXISTS (SELECT 1 FROM loan_movements m WHERE m."loanId" = loan.id AND m.type = 'REPAYMENT' AND m.amount <= :maxPaymentAmount)`,
+          { maxPaymentAmount: filters.maxPaymentAmount }
+        );
       }
 
-      // Rango de fechas de pagos
       if (filters.paymentDateFrom) {
-        const paymentFromDate = new Date(filters.paymentDateFrom);
-        qb.andWhere("DATE(payments.date) >= DATE(:paymentFromDate)", {
-          paymentFromDate,
-        });
+        qb.andWhere(
+          `EXISTS (SELECT 1 FROM loan_movements m WHERE m."loanId" = loan.id AND m.type = 'REPAYMENT' AND m.date >= :paymentFromDate)`,
+          { paymentFromDate: filters.paymentDateFrom }
+        );
       }
 
       if (filters.paymentDateTo) {
-        const paymentToDate = new Date(filters.paymentDateTo);
-        qb.andWhere("DATE(payments.date) <= DATE(:paymentToDate)", {
-          paymentToDate,
-        });
+        qb.andWhere(
+          `EXISTS (SELECT 1 FROM loan_movements m WHERE m."loanId" = loan.id AND m.type = 'REPAYMENT' AND m.date <= :paymentToDate)`,
+          { paymentToDate: filters.paymentDateTo }
+        );
       }
 
       // ============ ORDENAMIENTO Y PAGINACIÓN ============
@@ -198,9 +478,11 @@ export class LoansService {
     try {
       const loan = await this.loanRepo.findOne({
         relations: [
-          "payments",
-          "payments.transaction",
-          "payments.transaction.account",
+          "contact",
+          "movements",
+          "movements.transaction",
+          "movements.transaction.account",
+          "movements.transaction.category",
           "transactionReference",
           "transactionReference.account",
           "transactionReference.category",
@@ -230,7 +512,7 @@ export class LoansService {
     try {
       // Obtener préstamos con relaciones
       const loans = await this.loanRepo.find({
-        relations: ["payments"],
+        relations: ["movements", "contact"],
         where: { userId },
       });
 
@@ -251,7 +533,11 @@ export class LoansService {
 
       // Filtro por estado
       if (filters?.status) {
-        filtered = filtered.filter(item => item.loan.status === filters.status);
+        filtered = filters.status === StatusLoan.PENDING
+          ? filtered.filter(item =>
+              [StatusLoan.PENDING, StatusLoan.PARTIALLY_PAID, StatusLoan.OVERDUE].includes(item.loan.status)
+            )
+          : filtered.filter(item => item.loan.status === filters.status);
       }
 
       // Excluir completados
@@ -281,11 +567,12 @@ export class LoansService {
       const summaryMap = new Map<string, LoanSummaryGrouped>();
 
       filtered.forEach(({ loan, payment }) => {
-        const lenderKey = loan.lender;
+        const lenderKey = loan.contactId ?? loan.lender;
 
         if (!summaryMap.has(lenderKey)) {
           summaryMap.set(lenderKey, {
             lender: loan.lender,
+            contactId: loan.contactId ?? undefined,
             byType: {},
             total: {
               totalAmount: 0,
@@ -310,13 +597,13 @@ export class LoansService {
 
         // Actualizar detalles por tipo
         const typeDetail = summary.byType[loan.type]!;
-        typeDetail.totalAmount += loan.principalAmount / 100;
+        typeDetail.totalAmount += payment.totalDebt;
         typeDetail.totalPaid += payment.totalPaid;
         typeDetail.totalRemaining = round(typeDetail.totalAmount - typeDetail.totalPaid);
         typeDetail.loanCount += 1;
 
         // Actualizar total
-        summary.total.totalAmount += loan.principalAmount / 100;
+        summary.total.totalAmount += payment.totalDebt;
         summary.total.totalPaid += payment.totalPaid;
         summary.total.totalRemaining = round(summary.total.totalAmount - summary.total.totalPaid);
         summary.total.loanCount += 1;
@@ -330,6 +617,9 @@ export class LoansService {
           if (detail) {
             acc[type as TypeLoan] = {
               ...detail,
+              totalAmount: round(detail.totalAmount),
+              totalPaid: round(detail.totalPaid),
+              totalRemaining: round(detail.totalRemaining),
               averageRemaining: round(detail.totalRemaining / detail.loanCount),
               progress: round((detail.totalPaid / detail.totalAmount) * 100),
             };
@@ -338,6 +628,9 @@ export class LoansService {
         }, {} as any),
         total: {
           ...item.total,
+          totalAmount: round(item.total.totalAmount),
+          totalPaid: round(item.total.totalPaid),
+          totalRemaining: round(item.total.totalRemaining),
           averageRemaining: round(item.total.totalRemaining / item.total.loanCount),
           progress: round((item.total.totalPaid / item.total.totalAmount) * 100),
         },
@@ -386,130 +679,6 @@ export class LoansService {
     }
   }
 
-  // ============ VERSIÓN PLANA (SIN AGRUPAR POR TIPO) ============
-  async getLoansSummaryFlat(
-    userId: string,
-    filters?: LoanSummaryQuerySchema
-  ): Promise<LoanSummaryFlat[]> {
-    try {
-      const loans = await this.loanRepo.find({
-        relations: ["payments"],
-        where: { userId },
-      });
-
-      const loanDetails = loans.map(loan => ({
-        loan,
-        payment: calculateLoanPaymentStatus(loan),
-      }));
-
-      // Aplicar filtros
-      let filtered = loanDetails;
-
-      if (filters?.type) {
-        filtered = filtered.filter(item => item.loan.type === filters.type);
-      }
-
-      if (filters?.status) {
-        filtered = filtered.filter(item => item.loan.status === filters.status);
-      }
-
-      if (filters?.excludeCompleted) {
-        filtered = filtered.filter(item => item.loan.status !== StatusLoan.PAID);
-      }
-
-      if (filters?.excludePaidOff) {
-        filtered = filtered.filter(item => item.payment.totalRemaining > 0);
-      }
-
-      if (filters?.lender) {
-        filtered = filtered.filter(item =>
-          item.loan.lender.toLowerCase().includes(filters.lender!.toLowerCase())
-        );
-      }
-
-      if (filters?.minRemaining) {
-        filtered = filtered.filter(item => item.payment.totalRemaining >= filters.minRemaining!);
-      }
-
-      // Agrupar por lender + tipo
-      const summaryMap = new Map<string, LoanSummaryFlat>();
-
-      filtered.forEach(({ loan, payment }) => {
-        const key = `${loan.lender}_${loan.type}`;
-
-        if (!summaryMap.has(key)) {
-          summaryMap.set(key, {
-            lender: loan.lender,
-            type: loan.type,
-            detail: {
-              totalAmount: 0,
-              totalPaid: 0,
-              totalRemaining: 0,
-              loanCount: 0,
-            },
-          });
-        }
-
-        const item = summaryMap.get(key)!;
-        item.detail.totalAmount += loan.principalAmount / 100;
-        item.detail.totalPaid += payment.totalPaid;
-        item.detail.totalRemaining = round(item.detail.totalAmount - item.detail.totalPaid);
-        item.detail.loanCount += 1;
-      });
-
-      // Calcular promedios y progreso
-      const result = Array.from(summaryMap.values()).map(item => ({
-        ...item,
-        detail: {
-          ...item.detail,
-          averageRemaining: round(item.detail.totalRemaining / item.detail.loanCount),
-          progress: round((item.detail.totalPaid / item.detail.totalAmount) * 100),
-        },
-      }));
-
-      // Ordenar
-      const orderBy = filters?.orderBy || 'totalRemaining';
-      const order = filters?.order || 'DESC';
-
-      result.sort((a, b) => {
-        let aValue: number;
-        let bValue: number;
-
-        switch (orderBy) {
-          case 'totalRemaining':
-            aValue = a.detail.totalRemaining;
-            bValue = b.detail.totalRemaining;
-            break;
-          case 'totalAmount':
-            aValue = a.detail.totalAmount;
-            bValue = b.detail.totalAmount;
-            break;
-          case 'loanCount':
-            aValue = a.detail.loanCount;
-            bValue = b.detail.loanCount;
-            break;
-          case 'lender':
-            return order === 'ASC'
-              ? a.lender.localeCompare(b.lender)
-              : b.lender.localeCompare(a.lender);
-          default:
-            aValue = a.detail.totalRemaining;
-            bValue = b.detail.totalRemaining;
-        }
-
-        return order === 'ASC' ? aValue - bValue : bValue - aValue;
-      });
-
-      return result;
-    } catch (error) {
-      throw new Error(
-        "Error al obtener resumen de préstamos: " +
-        (error instanceof Error ? error.message : "Error desconocido")
-      );
-    }
-  }
-
-
   async createLoan(
     userId: UuidSchema,
     loanData: LoanSchema,
@@ -534,10 +703,7 @@ export class LoansService {
         where: { id: userId },
         relations: ["categories"],
       });
-
-      if (!user) {
-        throw new NotFoundError("Usuario no encontrado");
-      }
+      if (!user) throw new NotFoundError("Usuario no encontrado");
 
       if (loanData.tea) {
         throw new ConflictError(
@@ -546,25 +712,30 @@ export class LoansService {
         );
       }
 
+      const contact = loanData.contactId
+        ? await manager.findOne(Contact, { where: { id: loanData.contactId, userId } })
+        : await this.contactService.findOrCreate(userId, loanData.lender, manager);
+
+      if (!contact) throw new NotFoundError("Contacto no encontrado");
+
       const transactionType =
         loanData.type === TypeLoan.GIVEN ? TypeTransaction.EXPENSE : TypeTransaction.INCOME;
 
       const category = user.categories.find(
         (cat) => cat.name === "PRÉSTAMOS" && cat.type === transactionType
       );
-
       if (!category) {
         throw new NotFoundError(
           `Categoría de préstamos no encontrada. Asegúrese de que existe una categoría "PRÉSTAMOS" de tipo ${transactionType}`
         );
       }
 
-      const transactionReferenceData = await this.transactionService.createTransaction(
+      const transactionResponse = await this.transactionService.createTransaction(
         {
           name:
             loanData.type === TypeLoan.GIVEN
-              ? `Préstamo a ${loanData.lender}`
-              : `Préstamo de ${loanData.lender}`,
+              ? `Préstamo a ${contact.name}`
+              : `Préstamo de ${contact.name}`,
           type: transactionType,
           amount: loanData.amount,
           date: loanData.startDate,
@@ -572,18 +743,27 @@ export class LoansService {
           categoryId: category.id,
           description: loanData.description,
           accountId: loanData.accountId,
-        },
+          reportingImpact: TransactionReportingImpact.CASHFLOW_ONLY,
+        } as TransactionSchema,
         userId,
         false,
         manager
       );
 
-      const transactionReference = manager.create(Transaction, transactionReferenceData);
+      const transactionReference = await manager.findOneOrFail(Transaction, {
+        where: { id: transactionResponse.id },
+        relations: ["account", "category"],
+      });
 
       const loan = manager.create(Loan, {
         user,
-        ...loanData,
+        contact,
+        contactId: contact.id,
+        type: loanData.type,
+        lender: contact.name,
         principalAmount: loanData.amount,
+        startDate: loanData.startDate,
+        notes: loanData.notes ?? null,
         transactionReference,
       });
 
@@ -591,6 +771,39 @@ export class LoansService {
 
       transactionReference.loan = savedLoan;
       await manager.save(Transaction, transactionReference);
+
+      const movement = await manager.save(
+        manager.create(LoanMovement, {
+          loanId: savedLoan.id,
+          type: LoanMovementType.ADVANCE,
+          amount: loanData.amount,
+          date: loanData.startDate,
+          time: loanData.time ?? null,
+          note: loanData.description ?? null,
+          transactionId: transactionReference.id,
+          transaction: transactionReference,
+        })
+      );
+
+      savedLoan.movements = [movement];
+      savedLoan.contact = contact;
+
+      await this.auditService.log(
+        userId,
+        "LOAN",
+        savedLoan.id,
+        "CREATE",
+        {
+          after: {
+            contactId: contact.id,
+            type: savedLoan.type,
+            principalAmount: savedLoan.principalAmount,
+            status: savedLoan.status,
+          },
+          reason: loanData.description,
+        },
+        manager
+      );
 
       if (isOwnTransaction && queryRunner) {
         await queryRunner.commitTransaction();
@@ -617,12 +830,446 @@ export class LoansService {
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  async payLoan(
+  async forgiveLoan(
     userId: UuidSchema,
     loanId: UuidSchema,
-    data: LoanPaymentSchema,
-    entityManager?: EntityManager): Promise<LoanPaymentResponse> {
+    data: { amount?: number; date?: string; reason?: string }
+  ): Promise<LoanResponse> {
+    const queryRunner = AppDataSourceProd.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
+    try {
+      const manager = queryRunner.manager;
+      const loan = await manager.findOne(Loan, {
+        where: { id: loanId, userId },
+        relations: ["movements", "contact"],
+      });
+      if (!loan) throw new NotFoundError("Préstamo no encontrado");
+      if (loan.status === StatusLoan.CANCELLED) {
+        throw new ConflictError("No se puede condonar un préstamo cancelado");
+      }
+
+      const status = calculateLoanPaymentStatus(loan);
+      const remaining = status.totalRemainingInCents;
+      if (remaining <= 0) throw new ConflictError("El préstamo no tiene saldo pendiente");
+
+      const amount = data.amount ?? remaining;
+      if (amount <= 0) throw new ConflictError("El monto a condonar debe ser mayor a 0");
+      if (amount > remaining) {
+        throw new ConflictError(
+          `El monto excede el saldo pendiente. Máximo condonable: ${round(remaining / 100)}`
+        );
+      }
+
+      const movement = await manager.save(
+        manager.create(LoanMovement, {
+          loanId: loan.id,
+          type: LoanMovementType.FORGIVENESS,
+          amount,
+          date: data.date ?? dayjs().format("YYYY-MM-DD"),
+          note: data.reason ?? "Saldo condonado",
+        })
+      );
+
+      loan.movements = [...(loan.movements ?? []), movement];
+      this.refreshLoanStatus(loan);
+      await manager.save(loan);
+
+      await this.auditService.log(
+        userId,
+        "LOAN",
+        loan.id,
+        "FORGIVENESS",
+        { after: { amount, movementId: movement.id }, reason: data.reason },
+        manager
+      );
+
+      await queryRunner.commitTransaction();
+      return toLoanResponse(loan, { moneyTransaction: false });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateMovement(
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    movementId: UuidSchema,
+    data: { date?: string; note?: string | null; reason?: string }
+  ): Promise<LoanPaymentResponse> {
+    const queryRunner = AppDataSourceProd.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const manager = queryRunner.manager;
+      const loan = await manager.findOne(Loan, { where: { id: loanId, userId } });
+      if (!loan) throw new NotFoundError("Préstamo no encontrado");
+
+      const movement = await manager.findOne(LoanMovement, {
+        where: { id: movementId, loanId },
+        relations: ["transaction"],
+      });
+      if (!movement) throw new NotFoundError("Movimiento no encontrado");
+
+      const before = { date: movement.date, note: movement.note };
+      if (data.date) movement.date = data.date;
+      if (data.note !== undefined) movement.note = data.note;
+      await manager.save(movement);
+
+      if (movement.transaction) {
+        if (data.date) movement.transaction.date = data.date;
+        if (data.note !== undefined) movement.transaction.description = data.note ?? undefined;
+        await manager.save(movement.transaction);
+      }
+
+      await this.auditService.log(
+        userId,
+        "LOAN_MOVEMENT",
+        movement.id,
+        "UPDATE",
+        {
+          before,
+          after: { date: movement.date, note: movement.note },
+          reason: data.reason,
+        },
+        manager
+      );
+
+      await queryRunner.commitTransaction();
+      return toLoanMovementPaymentResponse(movement);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async reverseMovement(
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    movementId: UuidSchema,
+    data: { date?: string; reason?: string }
+  ): Promise<LoanPaymentResponse> {
+    const queryRunner = AppDataSourceProd.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const manager = queryRunner.manager;
+      const loan = await manager.findOne(Loan, {
+        where: { id: loanId, userId },
+        relations: ["movements"],
+      });
+      if (!loan) throw new NotFoundError("Préstamo no encontrado");
+
+      const movement = await manager.findOne(LoanMovement, {
+        where: { id: movementId, loanId },
+        relations: ["transaction", "transaction.account", "transaction.category"],
+      });
+      if (!movement) throw new NotFoundError("Movimiento no encontrado");
+      if (movement.type !== LoanMovementType.REPAYMENT) {
+        throw new ConflictError("Solo se pueden reversar pagos de préstamo");
+      }
+      if (!movement.transaction || !movement.transaction.account) {
+        throw new ConflictError("El pago no tiene una transacción asociada para reversar");
+      }
+
+      const existing = await manager.findOne(LoanMovement, {
+        where: { reversalOfMovementId: movement.id },
+      });
+      if (existing) throw new ConflictError("Este pago ya fue reversado");
+
+      const reversalType =
+        movement.transaction.type === TypeTransaction.INCOME
+          ? TypeTransaction.EXPENSE
+          : TypeTransaction.INCOME;
+
+      const category = await manager.findOne(Category, {
+        where: {
+          name: "DEVOLUCIÓN DE PRÉSTAMO",
+          type: reversalType,
+          user: { id: userId },
+        },
+      });
+      if (!category) throw new NotFoundError("Categoría de devolución no encontrada");
+
+      const date = data.date ?? dayjs().format("YYYY-MM-DD");
+      const transactionResponse = await this.transactionService.createTransaction(
+        {
+          name: `Reversión de pago ${loan.type === TypeLoan.GIVEN ? "de" : "a"} ${loan.lender}`,
+          type: reversalType,
+          amount: movement.amount,
+          date,
+          description: data.reason ?? "Pago reversado",
+          categoryId: category.id,
+          accountId: movement.transaction.account.id,
+          reportingImpact: TransactionReportingImpact.CASHFLOW_ONLY,
+        } as TransactionSchema,
+        userId,
+        false,
+        manager
+      );
+
+      const transaction = await manager.findOneOrFail(Transaction, {
+        where: { id: transactionResponse.id },
+        relations: ["account", "category"],
+      });
+
+      const reversal = await manager.save(
+        manager.create(LoanMovement, {
+          loanId,
+          type: LoanMovementType.ADJUSTMENT,
+          amount: movement.amount,
+          date,
+          note: data.reason ?? `Reversión del pago ${movement.id}`,
+          transactionId: transaction.id,
+          transaction,
+          reversalOfMovementId: movement.id,
+        })
+      );
+
+      const allocations = await manager.find(LoanPaymentAllocation, {
+        where: { movementId: movement.id },
+        relations: ["installment"],
+      });
+      const planIds: string[] = [];
+      for (const allocation of allocations) {
+        const installment = allocation.installment;
+        if (!installment) continue;
+        installment.paidAmount = Math.max(0, installment.paidAmount - allocation.amount);
+        if (installment.paidAmount >= installment.amountDue) {
+          installment.status = DebtInstallmentStatus.PAID;
+        } else if (installment.paidAmount > 0) {
+          installment.status = DebtInstallmentStatus.PARTIAL;
+        } else if (installment.dueDate && installment.dueDate < dayjs().format("YYYY-MM-DD")) {
+          installment.status = DebtInstallmentStatus.OVERDUE;
+        } else {
+          installment.status = DebtInstallmentStatus.PENDING;
+        }
+        if (installment.planId) planIds.push(installment.planId);
+        await manager.save(installment);
+      }
+
+      loan.movements = [...(loan.movements ?? []), reversal];
+      this.refreshLoanStatus(loan);
+      await manager.save(loan);
+      await this.refreshPlans(manager, planIds);
+
+      await this.auditService.log(
+        userId,
+        "LOAN_MOVEMENT",
+        movement.id,
+        "REVERSE",
+        { after: { reversalId: reversal.id, amount: movement.amount }, reason: data.reason },
+        manager
+      );
+
+      await queryRunner.commitTransaction();
+      return toLoanMovementPaymentResponse(reversal);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateLoan(
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    data: {
+      contactId?: string;
+      notes?: string | null;
+      startDate?: string;
+      principalAmount?: number;
+      reason?: string;
+    }
+  ): Promise<LoanResponse> {
+    const queryRunner = AppDataSourceProd.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const manager = queryRunner.manager;
+      const loan = await manager.findOne(Loan, {
+        where: { id: loanId, userId },
+        relations: ["contact", "movements", "movements.transaction", "transactionReference"],
+      });
+      if (!loan) throw new NotFoundError("Préstamo no encontrado");
+      if (loan.status === StatusLoan.CANCELLED) {
+        throw new ConflictError("No se puede editar un préstamo cancelado");
+      }
+
+      const before = {
+        contactId: loan.contactId,
+        lender: loan.lender,
+        notes: loan.notes,
+        startDate: loan.startDate,
+        principalAmount: loan.principalAmount,
+      };
+
+      if (data.contactId) {
+        const contact = await manager.findOne(Contact, {
+          where: { id: data.contactId, userId },
+        });
+        if (!contact) throw new NotFoundError("Contacto no encontrado");
+        loan.contact = contact;
+        loan.contactId = contact.id;
+        loan.lender = contact.name;
+      }
+
+      if (data.notes !== undefined) loan.notes = data.notes;
+      if (data.startDate) {
+        loan.startDate = data.startDate;
+        const initialAdvance = (loan.movements ?? []).find(
+          (movement) => movement.type === LoanMovementType.ADVANCE
+        );
+        if (initialAdvance) {
+          initialAdvance.date = data.startDate;
+          await manager.save(initialAdvance);
+          if (initialAdvance.transactionId) {
+            await manager.update(Transaction, { id: initialAdvance.transactionId }, { date: data.startDate });
+          }
+        }
+      }
+
+      if (data.principalAmount !== undefined && data.principalAmount !== loan.principalAmount) {
+        const delta = data.principalAmount - loan.principalAmount;
+        const movement = await manager.save(
+          manager.create(LoanMovement, {
+            loanId: loan.id,
+            type: LoanMovementType.ADJUSTMENT,
+            amount: delta,
+            date: dayjs().format("YYYY-MM-DD"),
+            note: data.reason ?? "Ajuste de monto del préstamo",
+          })
+        );
+        loan.movements = [...(loan.movements ?? []), movement];
+        loan.principalAmount = data.principalAmount;
+        this.refreshLoanStatus(loan);
+      }
+
+      await manager.save(loan);
+
+      await this.auditService.log(
+        userId,
+        "LOAN",
+        loan.id,
+        "UPDATE",
+        {
+          before,
+          after: {
+            contactId: loan.contactId,
+            lender: loan.lender,
+            notes: loan.notes,
+            startDate: loan.startDate,
+            principalAmount: loan.principalAmount,
+          },
+          reason: data.reason,
+        },
+        manager
+      );
+
+      await queryRunner.commitTransaction();
+      return toLoanResponse(loan, { moneyTransaction: false });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async cancelLoan(userId: UuidSchema, loanId: UuidSchema, reason?: string): Promise<LoanResponse> {
+    const queryRunner = AppDataSourceProd.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const manager = queryRunner.manager;
+      const loan = await manager.findOne(Loan, {
+        where: { id: loanId, userId },
+        relations: ["movements", "contact"],
+      });
+      if (!loan) throw new NotFoundError("Préstamo no encontrado");
+      if (loan.status === StatusLoan.CANCELLED) return toLoanResponse(loan, { moneyTransaction: false });
+
+      const before = { status: loan.status, cancelledAt: loan.cancelledAt };
+      loan.status = StatusLoan.CANCELLED;
+      loan.cancelledAt = new Date();
+      loan.cancelReason = reason ?? "Cancelado por el usuario";
+      await manager.save(loan);
+
+      const today = dayjs().format("YYYY-MM-DD");
+      await manager
+        .createQueryBuilder()
+        .update(DebtInstallment)
+        .set({ status: DebtInstallmentStatus.CANCELLED })
+        .where("loanId = :loanId", { loanId })
+        .andWhere("dueDate >= :today", { today })
+        .andWhere("status != :paid", { paid: DebtInstallmentStatus.PAID })
+        .execute();
+
+      await manager
+        .createQueryBuilder()
+        .update(LoanPlan)
+        .set({ status: LoanPlanStatus.CANCELLED })
+        .where("loanId = :loanId", { loanId })
+        .andWhere("status IN (:...statuses)", {
+          statuses: [LoanPlanStatus.ACTIVE, LoanPlanStatus.PAUSED],
+        })
+        .execute();
+
+      await manager
+        .createQueryBuilder()
+        .update(RecurringPayment)
+        .set({ isActive: false })
+        .where("loanId = :loanId", { loanId })
+        .execute();
+
+      await this.auditService.log(
+        userId,
+        "LOAN",
+        loan.id,
+        "CANCEL",
+        { before, after: { status: loan.status }, reason },
+        manager
+      );
+
+      await queryRunner.commitTransaction();
+      return toLoanResponse(loan, { moneyTransaction: false });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getLoanAudit(userId: UuidSchema, loanId: UuidSchema) {
+    const loan = await this.loanRepo.findOne({ where: { id: loanId, userId } });
+    if (!loan) throw new NotFoundError("Préstamo no encontrado");
+    return this.auditService.list(userId, "LOAN", loanId);
+  }
+
+  async addAdvanceToLoan(
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    data: {
+      amount: number;
+      date: string;
+      time?: string;
+      accountId: string;
+      description?: string;
+    },
+    entityManager?: EntityManager
+  ): Promise<{ movementId: string; transactionId: string; amount: number }> {
     let queryRunner: QueryRunner | undefined;
     let manager: EntityManager;
     let isOwnTransaction = false;
@@ -638,130 +1285,100 @@ export class LoansService {
         manager = entityManager;
       }
 
+      const loan = await manager.findOne(Loan, {
+        where: { id: loanId, userId },
+        relations: ["movements", "contact"],
+      });
+      if (!loan) throw new NotFoundError("Préstamo no encontrado");
+      if (loan.status === StatusLoan.CANCELLED) {
+        throw new ConflictError("No se puede aumentar un préstamo cancelado");
+      }
+
       const user = await manager.findOne(User, {
         where: { id: userId },
         relations: ["categories"],
       });
-
-      if (!user) {
-        throw new NotFoundError("Usuario no encontrado");
-      }
-
-      const loan = await manager.findOne(Loan, {
-        relations: ["payments"],
-        where: { userId, id: loanId },
-      });
-
-      if (!loan) {
-        throw new NotFoundError(
-          `Préstamo con ID ${loanId} no encontrado para este usuario`
-        );
-      }
-
-      if (loan.status === StatusLoan.PAID) {
-        throw new ConflictError(
-          `No se puede realizar un pago a un préstamo pagado`,
-          {
-            loan: ["Este préstamo ya fue pagado."],
-          }
-        );
-      }
-
-      const payment = calculateLoanPaymentStatus(loan);
-      const remainingInCents = loan.principalAmount - payment.totalPaidInCents;
-
-      if (remainingInCents <= 0) {
-        throw new ConflictError("El préstamo ya está completamente pagado", {
-          loan: ["No hay saldo pendiente para pagar"],
-        });
-      }
-
-      if (data.amount > remainingInCents) {
-        const remainingInDollars = remainingInCents / 100;
-        throw new ConflictError(
-          `El monto del pago excede la deuda restante. Monto máximo: ${round(remainingInDollars)}`,
-          {
-            amount: [
-              `No puede pagar más de ${round(remainingInDollars)}. Deuda actual: ${round(remainingInDollars)}`,
-            ],
-          }
-        );
-      }
+      if (!user) throw new NotFoundError("Usuario no encontrado");
 
       const transactionType =
-        loan.type === TypeLoan.GIVEN
-          ? TypeTransaction.INCOME
-          : TypeTransaction.EXPENSE;
+        loan.type === TypeLoan.GIVEN ? TypeTransaction.EXPENSE : TypeTransaction.INCOME;
+      const category = user.categories.find(
+        (cat) => cat.name === "PRÉSTAMOS" && cat.type === transactionType
+      );
+      if (!category) throw new NotFoundError("Categoría de préstamos no encontrada");
 
-      const category = await manager.findOne(Category, {
-        where: { name: "DEVOLUCIÓN DE PRÉSTAMO", type: transactionType, user: { id: userId } },
+      const transactionResponse = await this.transactionService.createTransaction(
+        {
+          name: `Préstamo ${loan.type === TypeLoan.GIVEN ? "a" : "de"} ${loan.lender}`,
+          type: transactionType,
+          amount: data.amount,
+          date: data.date,
+          time: data.time,
+          description: data.description,
+          categoryId: category.id,
+          accountId: data.accountId,
+          reportingImpact: TransactionReportingImpact.CASHFLOW_ONLY,
+        } as TransactionSchema,
+        userId,
+        false,
+        manager
+      );
+
+      const transaction = await manager.findOneOrFail(Transaction, {
+        where: { id: transactionResponse.id },
+        relations: ["account", "category"],
       });
 
-      if (!category) {
-        throw new NotFoundError(
-          `Categoría de devolución no encontrada. Asegúrese de que existe una categoría "DEVOLUCIÓN DE PRÉSTAMO" de tipo ${transactionType}`
-        );
-      }
+      const movement = await manager.save(
+        manager.create(LoanMovement, {
+          loanId: loan.id,
+          type: LoanMovementType.ADVANCE,
+          amount: data.amount,
+          date: data.date,
+          time: data.time ?? null,
+          note: data.description ?? null,
+          transactionId: transaction.id,
+          transaction,
+        })
+      );
 
-      const createTransaction: TransactionSchema = {
-        ...data,
-        name: `Pago ${loan.type == TypeLoan.GIVEN ? "de" : "a"} ${loan.lender}.`,
-        type: transactionType,
-        categoryId: category.id
-      }
+      loan.movements = [...(loan.movements ?? []), movement];
+      this.refreshLoanStatus(loan);
+      await manager.save(loan);
 
-      const referenceTransaction = await this.transactionService.createTransaction(createTransaction, userId, false, manager)
+      await this.auditService.log(
+        userId,
+        "LOAN",
+        loan.id,
+        "ADVANCE",
+        {
+          after: { amount: data.amount, movementId: movement.id },
+          reason: data.description,
+        },
+        manager
+      );
 
-      const savedTransaction = manager.create(Transaction, referenceTransaction)
-
-      // Crear registro de pago del préstamo
-      const loanPayment = manager.create(LoanPayment, {
-        amount: data.amount,
-        date: data.date,
-        time: data.time,
-        description: data.description,
-        loan,
-        transaction: savedTransaction,
-      });
-
-      const savedPayment = await manager.save(loanPayment);
-
-      // Recalcular total pagado para este préstamo
-      const updatedTotalPaidInCents =
-        (await manager.sum(LoanPayment, "amount", {
-          loan: { id: loanId },
-        })) || 0;
-
-      // Actualizar estado del préstamo si está completamente pagado
-      if (updatedTotalPaidInCents >= loan.principalAmount) {
-        loan.status = StatusLoan.PAID;
-        loan.payments.push(savedPayment)
-        await manager.save(loan);
-      }
-
-      // Confirmar transacción si es propia
       if (isOwnTransaction && queryRunner) {
         await queryRunner.commitTransaction();
       }
 
-      return toLoanPaymentResponse(savedPayment, { transactionAmount: false });
-
+      return {
+        movementId: movement.id,
+        transactionId: transaction.id,
+        amount: data.amount,
+      };
     } catch (error) {
-      // Revertir transacción si es propia
       if (isOwnTransaction && queryRunner) {
         await queryRunner.rollbackTransaction();
       }
 
-      if (error instanceof NotFoundError || error instanceof ConflictError) {
+      if (error instanceof NotFoundError || error instanceof ConflictError || error instanceof BadRequestError) {
         throw error;
       }
 
-      if (error instanceof BadRequestError) {
-        throw error;
-      }
-      const errorMessage =
-        error instanceof Error ? error.message : "Error desconocido";
-      throw new Error(`Error al registrar pago: ${errorMessage}`);
+      throw new Error(
+        "Error al aumentar la deuda: " + (error instanceof Error ? error.message : "Error desconocido")
+      );
     } finally {
       if (isOwnTransaction && queryRunner) {
         await queryRunner.release();
@@ -769,7 +1386,192 @@ export class LoansService {
     }
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  async payLoan(
+    userId: UuidSchema,
+    loanId: UuidSchema,
+    data: LoanPaymentSchema,
+    entityManager?: EntityManager
+  ): Promise<LoanPaymentResponse> {
+    let queryRunner: QueryRunner | undefined;
+    let manager: EntityManager;
+    let isOwnTransaction = false;
+
+    try {
+      if (!entityManager) {
+        queryRunner = AppDataSourceProd.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        manager = queryRunner.manager;
+        isOwnTransaction = true;
+      } else {
+        manager = entityManager;
+      }
+
+      const loan = await manager.findOne(Loan, {
+        where: { id: loanId, userId },
+        relations: ["contact"],
+      });
+      if (!loan) throw new NotFoundError("Préstamo no encontrado");
+      if (loan.status === StatusLoan.CANCELLED) {
+        throw new ConflictError("No se puede pagar un préstamo cancelado");
+      }
+
+      let contactId = loan.contactId;
+      if (!contactId) {
+        const contact = await this.contactService.findOrCreate(userId, loan.lender, manager);
+        contactId = contact.id;
+        loan.contactId = contact.id;
+        await manager.save(loan);
+      }
+
+      const loans = await this.loadContactLoans(
+        manager,
+        userId,
+        contactId as UuidSchema,
+        loan.type,
+        loanId
+      );
+
+      const result = await this.distributeContactPayment(
+        manager,
+        userId,
+        loans,
+        data.amount,
+        data,
+        data.description
+      );
+
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.commitTransaction();
+      }
+
+      const selected =
+        result.payments.find((item) => item.loanId === loanId)?.payment ??
+        result.payments[0]?.payment;
+      if (!selected) throw new ConflictError("No se pudo aplicar el pago");
+      return selected;
+    } catch (error) {
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      if (error instanceof NotFoundError || error instanceof ConflictError || error instanceof BadRequestError) {
+        throw error;
+      }
+
+      throw new Error(
+        "Error al registrar pago: " + (error instanceof Error ? error.message : "Error desconocido")
+      );
+    } finally {
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.release();
+      }
+    }
+  }
+
+  async payInstallment(
+    userId: UuidSchema,
+    installmentId: UuidSchema,
+    data: {
+      amount?: number;
+      date: string;
+      time?: string;
+      accountId: string;
+      description?: string;
+    },
+    entityManager?: EntityManager
+  ): Promise<LoanPaymentResponse> {
+    let queryRunner: QueryRunner | undefined;
+    let manager: EntityManager;
+    let isOwnTransaction = false;
+
+    try {
+      if (!entityManager) {
+        queryRunner = AppDataSourceProd.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        manager = queryRunner.manager;
+        isOwnTransaction = true;
+      } else {
+        manager = entityManager;
+      }
+
+      const installment = await manager.findOne(DebtInstallment, {
+        where: { id: installmentId },
+        relations: ["loan", "loan.contact", "contact", "plan"],
+      });
+      if (!installment) throw new NotFoundError("Cuota no encontrada");
+      if (installment.status === DebtInstallmentStatus.CANCELLED) {
+        throw new ConflictError("Esta cuota está cancelada");
+      }
+      if (installment.status === DebtInstallmentStatus.PAID) {
+        throw new ConflictError("Esta cuota ya fue pagada");
+      }
+
+      const direction = installment.loan?.type ?? installment.plan?.direction;
+      const contactId = installment.contactId ?? installment.loan?.contactId;
+      if (!direction || !contactId) {
+        throw new ConflictError("La cuota no tiene contacto o dirección");
+      }
+
+      const preferredLoanId = installment.loanId ?? undefined;
+      const loans = await this.loadContactLoans(
+        manager,
+        userId,
+        contactId as UuidSchema,
+        direction,
+        preferredLoanId
+      );
+      if (loans.length === 0) throw new ConflictError("No hay préstamos pendientes para esta cuota");
+
+      const pendingInstallment = Math.max(0, installment.amountDue - installment.paidAmount);
+      const amount = data.amount ?? pendingInstallment;
+      if (amount <= 0) throw new ConflictError("La cuota no tiene saldo pendiente");
+
+      const result = await this.distributeContactPayment(
+        manager,
+        userId,
+        loans,
+        amount,
+        {
+          amount,
+          date: data.date,
+          time: data.time,
+          accountId: data.accountId,
+          description: data.description,
+        },
+        data.description,
+        installmentId
+      );
+
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.commitTransaction();
+      }
+
+      const selected =
+        (preferredLoanId
+          ? result.payments.find((item) => item.loanId === preferredLoanId)?.payment
+          : undefined) ?? result.payments[0]?.payment;
+      if (!selected) throw new ConflictError("No se pudo aplicar el pago");
+      return selected;
+    } catch (error) {
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      if (error instanceof NotFoundError || error instanceof ConflictError || error instanceof BadRequestError) {
+        throw error;
+      }
+
+      throw new Error(
+        "Error al pagar la cuota: " + (error instanceof Error ? error.message : "Error desconocido")
+      );
+    } finally {
+      if (isOwnTransaction && queryRunner) {
+        await queryRunner.release();
+      }
+    }
+  }
 
   async payLenderDebt(
     userId: UuidSchema,
@@ -797,70 +1599,26 @@ export class LoansService {
         manager = entityManager;
       }
 
-      const loans = await manager
-        .createQueryBuilder(Loan, "loan")
-        .setLock("pessimistic_write")
-        .where("loan.userId = :userId", { userId })
-        .andWhere("LOWER(loan.lender) = LOWER(:lender)", { lender: data.lender })
-        .andWhere("loan.type = :type", { type: data.type })
-        .andWhere("loan.status = :status", { status: StatusLoan.PENDING })
-        .orderBy("loan.startDate", "ASC")
-        .getMany();
-
-      if (loans.length === 0) {
-        throw new NotFoundError(
-          `No hay préstamos pendientes con ${data.lender} de tipo ${data.type}`
-        );
-      }
-
-      const loanPayments = await manager.find(LoanPayment, {
-        where: { loan: { id: In(loans.map((loan) => loan.id)) } },
-        relations: ["loan"],
+      const contact = await manager.findOne(Contact, {
+        where: { userId, normalizedName: normalizeContactName(data.lender) },
       });
-      const paymentsByLoan = new Map<string, LoanPayment[]>();
-      for (const payment of loanPayments) {
-        const loanId = (payment.loan as unknown as { id?: string })?.id;
-        if (!loanId) continue;
-        const list = paymentsByLoan.get(loanId) ?? [];
-        list.push(payment);
-        paymentsByLoan.set(loanId, list);
+      if (!contact) {
+        throw new NotFoundError(`No se encontró un contacto llamado ${data.lender}`);
       }
 
-      let remainingAmount = data.amount;
-      const appliedPayments: LoanPaymentResponse[] = [];
-
-      for (const loan of loans) {
-        if (remainingAmount <= 0) break;
-
-        loan.payments = paymentsByLoan.get(loan.id) ?? [];
-        const status = calculateLoanPaymentStatus(loan);
-        const loanRemaining = loan.principalAmount - status.totalPaidInCents;
-        if (loanRemaining <= 0) continue;
-
-        const paymentAmount = Math.min(remainingAmount, loanRemaining);
-        if (paymentAmount <= 0) break;
-
-        const payment = await this.payLoan(
-          userId,
-          loan.id as UuidSchema,
-          {
-            amount: paymentAmount,
-            date: data.date,
-            time: data.time,
-            description: data.description,
-            accountId: data.accountId,
-            strategy: data.strategy,
-          },
-          manager
-        );
-
-        appliedPayments.push(payment);
-        remainingAmount -= paymentAmount;
+      const loans = await this.loadContactLoans(manager, userId, contact.id, data.type);
+      if (loans.length === 0) {
+        throw new NotFoundError("No hay préstamos pendientes con esa persona");
       }
 
-      if (appliedPayments.length === 0) {
-        throw new ConflictError("No se pudo aplicar el pago a ningún préstamo pendiente");
-      }
+      const result = await this.distributeContactPayment(
+        manager,
+        userId,
+        loans,
+        data.amount,
+        data,
+        data.description
+      );
 
       if (isOwnTransaction && queryRunner) {
         await queryRunner.commitTransaction();
@@ -868,10 +1626,10 @@ export class LoansService {
 
       return {
         success: true,
-        totalPayments: appliedPayments.length,
-        totalAmount: money(data.amount - remainingAmount),
-        payments: appliedPayments,
-        remainingAmount: money(remainingAmount),
+        totalPayments: result.payments.length,
+        totalAmount: money(result.totalAppliedInCents),
+        payments: result.payments.map((item) => item.payment),
+        remainingAmount: money(data.amount - result.totalAppliedInCents),
       };
     } catch (error) {
       if (isOwnTransaction && queryRunner) {
@@ -906,67 +1664,5 @@ export class LoansService {
     return this.payLenderDebt(userId, data);
   }
 
-  async getLoanStatistics(userId: UuidSchema): Promise<{
-    totalLoansGiven: number;
-    totalLoansReceived: number;
-    totalAmountGiven: number;
-    totalAmountReceived: number;
-    totalPaidGiven: number;
-    totalPaidReceived: number;
-    completedLoans: number;
-    pendingLoans: number;
-    averageLoanAmount: number;
-  }> {
-    try {
-      const loans = await this.loanRepo.find({
-        relations: ["payments"],
-        where: { userId },
-      });
 
-      let stats = {
-        totalLoansGiven: 0,
-        totalLoansReceived: 0,
-        totalAmountGiven: 0,
-        totalAmountReceived: 0,
-        totalPaidGiven: 0,
-        totalPaidReceived: 0,
-        completedLoans: 0,
-        pendingLoans: 0,
-        averageLoanAmount: 0,
-      };
-
-      loans.forEach((loan) => {
-        const payment = calculateLoanPaymentStatus(loan);
-        const isGiven = loan.type === TypeLoan.GIVEN;
-
-        if (isGiven) {
-          stats.totalLoansGiven++;
-          stats.totalAmountGiven += loan.principalAmount / 100;
-          stats.totalPaidGiven += payment.totalPaid;
-        } else {
-          stats.totalLoansReceived++;
-          stats.totalAmountReceived += loan.principalAmount / 100;
-          stats.totalPaidReceived += payment.totalPaid;
-        }
-
-        if (loan.status === StatusLoan.PAID) {
-          stats.completedLoans++;
-        } else {
-          stats.pendingLoans++;
-        }
-      });
-
-      stats.totalAmountGiven = round(stats.totalAmountGiven);
-      stats.totalAmountReceived = round(stats.totalAmountReceived);
-      stats.totalPaidGiven = round(stats.totalPaidGiven);
-      stats.totalPaidReceived = round(stats.totalPaidReceived);
-      stats.averageLoanAmount = loans.length > 0 ? round((stats.totalAmountGiven + stats.totalAmountReceived) / loans.length) : 0;
-
-      return stats;
-    } catch (error) {
-      throw new Error(
-        "Error al obtener estadísticas: " + (error instanceof Error ? error.message : "Error desconocido")
-      );
-    }
-  }
 }

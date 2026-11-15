@@ -9,7 +9,7 @@ export type RecurringEntryType = typeof RecurringEntryTypeValues[number];
 export const RecurringOccurrenceStatusValues = ["PENDING", "DUE", "PAID", "SKIPPED", "FAILED"] as const;
 export type RecurringOccurrenceStatus = typeof RecurringOccurrenceStatusValues[number];
 
-export const RecurringLoanActionValues = ["NONE", "PAY_LOAN", "GIVE_LOAN", "RECEIVE_LOAN"] as const;
+export const RecurringLoanActionValues = ["NONE", "PAY_LOAN", "GIVE_LOAN", "RECEIVE_LOAN", "ADVANCE_LOAN"] as const;
 export type RecurringLoanAction = typeof RecurringLoanActionValues[number];
 
 export interface RecurringAccountInfo {
@@ -43,6 +43,7 @@ export interface RecurringPayment {
     autoDebit: boolean;
     loanAction: RecurringLoanAction;
     loanId?: string | null;
+    loanContactId?: string | null;
     loanCounterparty?: string | null;
     loan?: { id: string; lender: string; type: "GIVEN" | "RECEIVED" } | null;
     nextDueDate?: string | null;
@@ -62,6 +63,9 @@ export interface RecurringOccurrence {
     dueDate: string;
     status: RecurringOccurrenceStatus;
     autoDebit: boolean;
+    plannedAmount?: number;
+    executedAmount?: number | null;
+    executionNote?: string | null;
     loanAction: RecurringLoanAction;
     loanCounterparty?: string | null;
     account?: RecurringAccountInfo | null;
@@ -133,6 +137,10 @@ export const RecurringPaymentFormSchema = z
         accountId: z.string().uuid("Selecciona una cuenta"),
         categoryId: z.string().uuid("Selecciona una categoría"),
         loanAction: z.enum(RecurringLoanActionValues).default("NONE"),
+        loanContactId: z.preprocess(
+            (value) => (value === "" || value === null ? undefined : value),
+            z.string().uuid("Selecciona un contacto válido").optional()
+        ),
         loanId: z.preprocess(
             (value) => (value === "" || value === null ? undefined : value),
             z.string().uuid("Selecciona un préstamo válido").optional()
@@ -156,8 +164,11 @@ export const RecurringPaymentFormSchema = z
             if (data.loanAction === "PAY_LOAN" && !data.loanId && !data.loanCounterparty) {
                 ctx.addIssue({ code: "custom", path: ["loanCounterparty"], message: "Selecciona la persona o el préstamo que se va a pagar" });
             }
-            if (data.loanAction !== "PAY_LOAN" && data.frequency !== "ONCE") {
-                ctx.addIssue({ code: "custom", path: ["frequency"], message: "Solo los pagos de préstamo pueden tener cronograma" });
+            if (data.loanAction !== "PAY_LOAN" && data.loanAction !== "ADVANCE_LOAN" && data.frequency !== "ONCE") {
+                ctx.addIssue({ code: "custom", path: ["frequency"], message: "Solo los pagos y avances de préstamo pueden tener cronograma" });
+            }
+            if (data.loanAction === "ADVANCE_LOAN" && !data.loanId) {
+                ctx.addIssue({ code: "custom", path: ["loanId"], message: "Selecciona el préstamo que se va a aumentar" });
             }
             if ((data.loanAction === "GIVE_LOAN" || data.loanAction === "RECEIVE_LOAN") && !data.loanCounterparty) {
                 ctx.addIssue({ code: "custom", path: ["loanCounterparty"], message: "Indica la persona del préstamo" });

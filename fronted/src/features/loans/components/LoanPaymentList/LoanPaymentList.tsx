@@ -3,10 +3,15 @@ import { formatCurrency } from "../../../../shared/utils/formatCurrency";
 import { getIcon } from "../../../../shared/utils/GetIcon";
 import dayjs from "dayjs";
 import { useState } from "react";
+import { Pencil, RotateCcw } from "lucide-react";
 import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal";
 import { CreateLoanPaymentForm } from "../../../LoanPayments/PayLoanForm/PayLoanForm";
 import type { LoanPayment } from "../../../LoanPayments/types";
 import { TruncateText } from "../../../../shared/components/TruncateText/TruncateText";
+import InfoModal from "../../../../shared/components/InfoModal/InfoModal";
+import { useLoanPayments } from "../../hooks";
+import { EditMovementModal } from "../EditMovementModal/EditMovementModal";
+import { useToast } from "../../../../shared/Hooks/useToast";
 
 interface LoanPaymentsListProps {
     loan?: Loan;
@@ -16,6 +21,10 @@ interface LoanPaymentsListProps {
 
 export const LoanPaymentsList = ({ loan, payments, isGiven }: LoanPaymentsListProps) => {
     const [showModal, setShowModal] = useState(false);
+    const [editingPayment, setEditingPayment] = useState<LoanPayment | null>(null);
+    const [reversingPayment, setReversingPayment] = useState<LoanPayment | null>(null);
+    const { updateMovement, reverseMovement } = useLoanPayments();
+    const toast = useToast();
     return (
         <div className="loan-payments-section">
 
@@ -67,6 +76,16 @@ export const LoanPaymentsList = ({ loan, payments, isGiven }: LoanPaymentsListPr
                                 <span className={`payment-row-item__amount ${isPositivePayment ? "text-success" : "text-danger"}`}>
                                     {isPositivePayment ? "+" : "-"} {formatCurrency(payment.amount)}
                                 </span>
+                                {loan && (
+                                    <div className="payment-row-item__actions">
+                                        <button type="button" className="btn-ghost" title="Editar pago" onClick={() => setEditingPayment(payment)}>
+                                            <Pencil size={13} />
+                                        </button>
+                                        <button type="button" className="btn-ghost danger" title="Reversar pago" onClick={() => setReversingPayment(payment)}>
+                                            <RotateCcw size={13} />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
@@ -77,6 +96,57 @@ export const LoanPaymentsList = ({ loan, payments, isGiven }: LoanPaymentsListPr
                     <CreateLoanPaymentForm loanId={loan.id} loan={loan} onClose={() => setShowModal(false)} />
                 </ModalPortal>
             )}
+
+            <ModalPortal isOpen={!!editingPayment} onClose={() => setEditingPayment(null)}>
+                {editingPayment && loan && (
+                    <EditMovementModal
+                        payment={editingPayment}
+                        isPending={updateMovement.isPending}
+                        onSubmit={async ({ date, note }) => {
+                            try {
+                                await updateMovement.mutateAsync({
+                                    loanId: loan.id,
+                                    movementId: editingPayment.id,
+                                    data: { date, note },
+                                });
+                                toast.success("Pago actualizado");
+                                setEditingPayment(null);
+                            } catch (error) {
+                                toast.error(error instanceof Error ? error.message : "No se pudo actualizar el pago");
+                            }
+                        }}
+                        onClose={() => setEditingPayment(null)}
+                    />
+                )}
+            </ModalPortal>
+
+            <InfoModal
+                isOpen={!!reversingPayment}
+                onClose={() => setReversingPayment(null)}
+                onConfirm={() => {
+                    if (!reversingPayment || !loan) return;
+                    reverseMovement.mutate(
+                        {
+                            loanId: loan.id,
+                            movementId: reversingPayment.id,
+                            data: { reason: "Pago reversado por el usuario" },
+                        },
+                        {
+                            onSuccess: () => {
+                                toast.success("Pago reversado");
+                                setReversingPayment(null);
+                            },
+                            onError: (error) => toast.error(error.message || "No se pudo reversar el pago"),
+                        }
+                    );
+                }}
+                type="error"
+                title="Reversar pago"
+                message="Se creará un movimiento de ajuste y se restaurará la deuda. El pago original no se borrará."
+                confirmText={reverseMovement.isPending ? "Reversando..." : "Reversar pago"}
+                cancelText="Cancelar"
+                confirmDisabled={reverseMovement.isPending}
+            />
         </div>
     );
 };

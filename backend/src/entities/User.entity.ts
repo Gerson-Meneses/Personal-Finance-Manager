@@ -6,6 +6,7 @@ import { Transaction } from './Transaction.entity';
 import { Loan } from './Loan.entity';
 import { ReccurentTransaction } from './ReccurentTransaction.entity';
 import { Codes } from './Codes.entity';
+import type { Contact } from './Contact.entity';
 
 
 @Entity('users')
@@ -65,6 +66,9 @@ export class User {
 
     @OneToMany(() => Loan, loan => loan.user)
     loans: Loan[];
+
+    @OneToMany("Contact", "user")
+    contacts: Contact[];
 
     @OneToMany(() => ReccurentTransaction, reccurentTransaction => reccurentTransaction.user)
     reccurentTransactions: ReccurentTransaction[];

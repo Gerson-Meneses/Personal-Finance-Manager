@@ -38,8 +38,21 @@ export const useRecurringPayments = () => {
     });
 
     const executeMutation = useMutation({
-        mutationFn: ({ id, accountId }: { id: string; accountId?: string }) =>
-            service.executeRecurringOccurrence(id, { accountId }),
+        mutationFn: ({
+            id,
+            accountId,
+            amount,
+            note,
+            date,
+            time,
+        }: {
+            id: string;
+            accountId?: string;
+            amount?: number;
+            note?: string;
+            date?: string;
+            time?: string;
+        }) => service.executeRecurringOccurrence(id, { accountId, amount, note, date, time }),
         onSuccess: invalidate,
     });
 

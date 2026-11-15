@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TypeTransaction } from "../utils/Enums";
+import { TransactionReportingImpact, TypeTransaction } from "../utils/Enums";
 
 const amountSchema = z
     .number({ message: "Amount es requerido" })
@@ -37,6 +37,8 @@ export const baseTransaction = {
     categoryId: z.uuid({ message: "Category ID es requerido" }),
 
     accountId: z.uuid({ message: "Account ID es requerido" }),
+
+    reportingImpact: z.enum(TransactionReportingImpact).optional(),
 };
 
 export const nonRecurrentTransaction = z.object({

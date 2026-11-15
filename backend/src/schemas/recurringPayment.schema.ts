@@ -63,6 +63,10 @@ const baseRecurringPayment = z.object({
         (value) => (value === "" || value === null ? undefined : value),
         z.uuid({ message: "El préstamo seleccionado no es válido" }).optional()
     ),
+    loanContactId: z.preprocess(
+        (value) => (value === "" || value === null ? undefined : value),
+        z.uuid({ message: "El contacto seleccionado no es válido" }).optional()
+    ),
     loanCounterparty: z.preprocess(
         (value) => (value === "" || value === null ? undefined : value),
         z.string().trim().min(3, { message: "La persona debe tener al menos 3 caracteres" }).max(99).optional()
@@ -110,8 +114,16 @@ export const createRecurringPaymentSchema = baseRecurringPayment.superRefine((da
                 message: "Selecciona la persona o el préstamo que se va a pagar",
             });
         }
+        if (data.loanAction === RecurringLoanAction.ADVANCE_LOAN && !data.loanId) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["loanId"],
+                message: "Selecciona el préstamo que se va a aumentar",
+            });
+        }
         if (
             data.loanAction !== RecurringLoanAction.PAY_LOAN &&
+            data.loanAction !== RecurringLoanAction.ADVANCE_LOAN &&
             data.frequency !== RecurrenceFrequency.ONCE
         ) {
             ctx.addIssue({
@@ -178,6 +190,10 @@ export const updateRecurringPaymentSchema = z
             (value) => (value === "" ? null : value),
             z.uuid().nullable().optional()
         ),
+        loanContactId: z.preprocess(
+            (value) => (value === "" ? null : value),
+            z.uuid().nullable().optional()
+        ),
         loanCounterparty: z.preprocess(
             (value) => (value === "" ? null : value),
             z.string().trim().min(3).max(99).nullable().optional()
@@ -200,6 +216,12 @@ export const recurringMonthQuerySchema = z.object({
 export type RecurringMonthQuery = z.infer<typeof recurringMonthQuerySchema>;
 
 export const executeOccurrenceSchema = z.object({
+    amount: z
+        .number({ message: "El monto debe ser numérico" })
+        .positive({ message: "El monto debe ser mayor a 0" })
+        .transform((value) => Math.round(value * 100))
+        .optional(),
+    note: z.string().trim().max(300).optional(),
     accountId: z.uuid().optional(),
     date: dateString("La fecha").optional(),
     time: z

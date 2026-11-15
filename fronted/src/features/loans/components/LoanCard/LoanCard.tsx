@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { CalendarClock, ChevronDown } from "lucide-react";
 import type { Loan } from "../../types";
 import { getIcon } from "../../../../shared/utils/GetIcon";
 import dayjs from "dayjs";
@@ -12,12 +12,24 @@ import { HighlightText } from "../../../../shared/components/Highlighttext/Highl
 
 dayjs.locale("es");
 
+const STATUS_LABELS: Record<string, string> = {
+    PENDING: "PENDIENTE",
+    PARTIALLY_PAID: "PARCIAL",
+    PAID: "PAGADO",
+    OVERDUE: "VENCIDO",
+    CANCELLED: "CANCELADO",
+};
+
 export interface LoanCardProps {
     loan: Loan;
     search?: string;
+    onEdit?: (loan: Loan) => void;
+    onCancel?: (loan: Loan) => void;
+    onPlan?: (loan: Loan) => void;
+    onForgive?: (loan: Loan) => void;
 }
 
-export const LoanCard = ({ loan, search = "" }: LoanCardProps) => {
+export const LoanCard = ({ loan, search = "", onEdit, onCancel, onPlan, onForgive }: LoanCardProps) => {
     const {
         lender,
         type,
@@ -41,6 +53,7 @@ export const LoanCard = ({ loan, search = "" }: LoanCardProps) => {
     const { color } = category ?? {};
 
     const isPaid = status === "PAID";
+    const isCancelled = status === "CANCELLED";
     const isGiven = type === "GIVEN";
     const pct = Math.min(100, Math.round(percentagePaid));
     const [expanded, setExpanded] = useState(false);
@@ -110,7 +123,7 @@ export const LoanCard = ({ loan, search = "" }: LoanCardProps) => {
                                     className="loan-card__meta-badge"
                                     style={{ borderColor: color || "#3b82f6", color }}
                                 >
-                                    {isPaid ? "PAGADO" : "PENDIENTE"} - {formatCurrency(amountRemaining)} restante
+                                    {STATUS_LABELS[status] ?? status} - {formatCurrency(amountRemaining)} restante
                                 </span>
                                 {accountName && (
                                     <>
@@ -185,6 +198,31 @@ export const LoanCard = ({ loan, search = "" }: LoanCardProps) => {
                     )}
 
                     <LoanPaymentsList loan={loan} payments={payments || []} isGiven={isGiven} />
+
+                    {!isPaid && !isCancelled && (onEdit || onCancel || onPlan || onForgive) && (
+                        <div className="loan-card__actions">
+                            {onPlan && (
+                                <button type="button" className="btn-secondary" onClick={() => onPlan(loan)}>
+                                    <CalendarClock size={14} /> Planificar cuotas
+                                </button>
+                            )}
+                            {onEdit && (
+                                <button type="button" className="btn-secondary" onClick={() => onEdit(loan)}>
+                                    Editar préstamo
+                                </button>
+                            )}
+                            {onForgive && (
+                                <button type="button" className="btn-ghost" onClick={() => onForgive(loan)}>
+                                    Condonar saldo
+                                </button>
+                            )}
+                            {onCancel && (
+                                <button type="button" className="btn-ghost" onClick={() => onCancel(loan)}>
+                                    Cancelar préstamo
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

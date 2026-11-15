@@ -24,7 +24,10 @@ export const updateRecurringPayment = (id: string, data: RecurringPaymentUpdate)
 export const deleteRecurringPayment = (id: string) =>
     apiFetch<void>(`${BASE}/${id}`, { method: "DELETE" });
 
-export const executeRecurringOccurrence = (id: string, data: { accountId?: string; date?: string; time?: string } = {}) =>
+export const executeRecurringOccurrence = (
+    id: string,
+    data: { accountId?: string; date?: string; time?: string; amount?: number; note?: string } = {}
+) =>
     apiFetch<RecurringOccurrence>(`${BASE}/occurrences/${id}/execute`, { method: "POST", body: data });
 
 export const skipRecurringOccurrence = (id: string, reason?: string) =>

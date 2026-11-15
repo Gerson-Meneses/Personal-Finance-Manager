@@ -1,7 +1,41 @@
 export enum TypeTransaction { INCOME = "INCOME", EXPENSE = "EXPENSE", CREDIT_PAYMENT = "CREDIT_PAYMENT", TRANSFER = "TRANSFER" }
 export enum TypeAccount { DEBIT = "DEBIT", CREDIT = "CREDIT", CASH = "CASH" }
 export enum TypeLoan { RECEIVED = "RECEIVED", GIVEN = "GIVEN" }
-export enum StatusLoan { PENDING = "PENDING", PAID = "PAID" }
+export enum StatusLoan {
+    PENDING = "PENDING",
+    PARTIALLY_PAID = "PARTIALLY_PAID",
+    PAID = "PAID",
+    OVERDUE = "OVERDUE",
+    CANCELLED = "CANCELLED"
+}
+
+export enum LoanMovementType {
+    ADVANCE = "ADVANCE",
+    REPAYMENT = "REPAYMENT",
+    FORGIVENESS = "FORGIVENESS",
+    ADJUSTMENT = "ADJUSTMENT",
+    INTEREST = "INTEREST"
+}
+
+export enum LoanPlanStatus {
+    ACTIVE = "ACTIVE",
+    PAUSED = "PAUSED",
+    COMPLETED = "COMPLETED",
+    CANCELLED = "CANCELLED"
+}
+
+export enum DebtInstallmentStatus {
+    PENDING = "PENDING",
+    PARTIAL = "PARTIAL",
+    PAID = "PAID",
+    OVERDUE = "OVERDUE",
+    CANCELLED = "CANCELLED"
+}
+
+export enum TransactionReportingImpact {
+    REPORTABLE = "REPORTABLE",
+    CASHFLOW_ONLY = "CASHFLOW_ONLY"
+}
 export enum ExtraPaymentStrategy { REDUCE_TERM = 'REDUCE_TERM', REDUCE_INSTALLMENT = 'REDUCE_INSTALLMENT' }
 
 export enum TypeCode {
@@ -39,5 +73,6 @@ export enum RecurringLoanAction {
     NONE = "NONE",
     PAY_LOAN = "PAY_LOAN",
     GIVE_LOAN = "GIVE_LOAN",
-    RECEIVE_LOAN = "RECEIVE_LOAN"
+    RECEIVE_LOAN = "RECEIVE_LOAN",
+    ADVANCE_LOAN = "ADVANCE_LOAN"
 }

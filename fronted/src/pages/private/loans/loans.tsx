@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowDownLeft, ArrowUpRight, HandCoins, Plus, Users } from "lucide-react";
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
@@ -17,6 +18,7 @@ const normalize = (value: string) =>
 export const LoansPage = () => {
     const { summary = [], isLoading } = useLoanSummary({ status: "PENDING" });
     const { createLoan } = useLoansQuery()
+    const navigate = useNavigate()
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState<LenderFilter>("all");
@@ -72,10 +74,15 @@ export const LoansPage = () => {
                         Controla lo que te deben y lo que debes, persona por persona.
                     </p>
                 </div>
-                <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-                    <Plus size={18} />
-                    Nuevo préstamo
-                </button>
+                <div className="loans-header__actions">
+                    <button className="btn-secondary" onClick={() => navigate("/contacts")}>
+                        <Users size={17} /> Contactos
+                    </button>
+                    <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
+                        <Plus size={18} />
+                        Nuevo préstamo
+                    </button>
+                </div>
             </header>
 
             <section className="loans-stats">

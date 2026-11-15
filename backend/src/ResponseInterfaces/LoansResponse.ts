@@ -6,37 +6,22 @@ import { TransactionResponse } from "./TransactionInterface";
 export interface LoanPaymentResponse {
     id: string;
     amount: number;
-    date: Date;
+    date: string | Date;
     description?: string;
     strategy?: ExtraPaymentStrategy;
     transaction?: TransactionResponse;
     account?: AccountResponse
 }
 
-export interface LoanSummary {
-    lender: string;
-    GIVEN: {
-        totalAmount: number;
-        totalPaid: number;
-        totalRemaining: number;
-        loanCount: number
-    }
-    RECEIVED: {
-        totalAmount: number;
-        totalPaid: number;
-        totalRemaining: number;
-        loanCount: number
-    }
-}
-
 export interface LoanResponse {
     // Desde la Entidad
     id: string;
     lender: string;
+    contact?: { id: string; name: string };
     type: TypeLoan;
     principalAmount: number;
     status: StatusLoan;
-    startDate: Date;
+    startDate: string | Date;
     termInMonths?: number;
     installmentAmount?: number;
     disbursementAmount?: number;
@@ -50,8 +35,14 @@ export interface LoanResponse {
     percentagePaid: number;
     lastPaymentDate?: Date;
     paymentCount: number;
+    totalAdvanced?: number;
+    totalForgiven?: number;
+    totalDebt?: number;
     endPaymentDue?: Dayjs;
     description?: string;
+    notes?: string | null;
+    cancelledAt?: Date | string | null;
+    cancelReason?: string | null;
 
     // Relaciones
     transaction?: TransactionResponse
@@ -63,7 +54,14 @@ export interface PaymentCalculation {
     totalPaidInCents: number;
     totalPaid: number;
     totalRemaining: number;
+    totalRemainingInCents: number;
     percentagePaid: number;
+    totalAdvanced: number;
+    totalAdvancedInCents: number;
+    totalForgiven: number;
+    totalForgivenInCents: number;
+    totalDebt: number;
+    totalDebtInCents: number;
 }
 
 export interface LoanSummaryDetail {
@@ -77,14 +75,9 @@ export interface LoanSummaryDetail {
  
 export interface LoanSummaryGrouped {
   lender: string;
+  contactId?: string;
   byType: {
     [key in TypeLoan]?: LoanSummaryDetail;
   };
   total: LoanSummaryDetail;
-}
- 
-export interface LoanSummaryFlat {
-  lender: string;
-  type: TypeLoan;
-  detail: LoanSummaryDetail;
 }

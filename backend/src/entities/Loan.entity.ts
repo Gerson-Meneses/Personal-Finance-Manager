@@ -1,9 +1,10 @@
 import { PrimaryGeneratedColumn, Column, Entity, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, OneToOne, JoinColumn, Index } from "typeorm";
 import type { User } from "./User.entity";
 import { StatusLoan, TypeLoan } from "../utils/Enums";
-import { LoanInstallment } from "./LoanInstallment.entity";
-import { LoanPayment } from "./LoanPayment.entity";
 import { Transaction } from "./Transaction.entity";
+import type { Contact } from "./Contact.entity";
+import type { LoanMovement } from "./LoanMovement.entity";
+import type { LoanPlan } from "./LoanPlan.entity";
 
 @Entity({
     name: "loans"
@@ -65,7 +66,7 @@ export class Loan {
     status: StatusLoan;
 
     @Column({ type: 'date' })
-    startDate: Date;
+    startDate: string;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
@@ -73,19 +74,34 @@ export class Loan {
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt: Date;
 
+    @Column({ type: "varchar", length: 150, nullable: true })
+    notes?: string | null;
+
+    @Column({ type: "timestamp", nullable: true })
+    cancelledAt?: Date | null;
+
+    @Column({ type: "text", nullable: true })
+    cancelReason?: string | null;
+
+    @ManyToOne("Contact", "loans", { nullable: true, onDelete: "SET NULL" })
+    @JoinColumn({ name: "contactId" })
+    contact?: Contact | null;
+
+    @Column({ type: "uuid", nullable: true })
+    contactId?: string | null;
+
     @Column()
-    userId: string; // Agrega esto
+    userId: string;
 
     @ManyToOne("User", "loans")
     @JoinColumn({ name: "userId" })
     user: User;
 
-    @OneToMany(() => LoanInstallment, loanInstallment => loanInstallment.loan)
-    installments: LoanInstallment[];
+    @OneToMany("LoanMovement", "loan")
+    movements: LoanMovement[];
 
-    @OneToMany(() => LoanPayment, loanPayment => loanPayment.loan)
-    @JoinColumn()
-    payments: LoanPayment[];
+    @OneToMany("LoanPlan", "loan")
+    plans: LoanPlan[];
 
     @OneToOne(() => Transaction, transaction => transaction.loan)
     @JoinColumn()

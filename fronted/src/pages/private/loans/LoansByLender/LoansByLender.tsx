@@ -7,7 +7,7 @@ import { useLoansQuery, useLoanSummary } from "../../../../features/loans/hooks"
 import LoadingScreen from "../../../../shared/components/LoadingScreen/LoadingScreen";
 import ModalPortal from "../../../../shared/components/ModalPortal/ModalPortal";
 
-import { initialQuery } from "../../../../features/loans/types";
+import { initialQuery, type Loan } from "../../../../features/loans/types";
 import "./LoansByLender.css"
 import { LoanCard } from "../../../../features/loans/components/LoanCard/LoanCard";
 import LoanForm from "../../../../features/loans/components/CreateLoanForm/loanForm";
@@ -19,6 +19,13 @@ import { normalizeLoan } from "../../../../features/loans/utils/NormalizeLoan";
 import type { LoanQueryFiltersFormInput } from "../../../../features/LoanPayments/types";
 import { LoansFilter } from "../../../../features/loans/components/LoansFilter/LoansFilter";
 import { formatCurrency } from "../../../../shared/utils/formatCurrency";
+import { EditLoanForm } from "../../../../features/loans/components/EditLoanForm/EditLoanForm";
+import InfoModal from "../../../../shared/components/InfoModal/InfoModal";
+import { useToast } from "../../../../shared/Hooks/useToast";
+import { LoanPlanModal } from "../../../../features/loans/components/LoanPlanModal/LoanPlanModal";
+import { useLoanPlans } from "../../../../features/loans/debtHooks";
+import { ForgiveLoanModal } from "../../../../features/loans/components/ForgiveLoanModal/ForgiveLoanModal";
+import type { CreateLoanPlanInput } from "../../../../features/loans/planTypes";
 
 type Tab = "loans" | "timeline";
 
@@ -39,14 +46,28 @@ export const LoansByLender = () => {
 
     const [showModal, setShowModal] = useState(false);
     const [showModal2, setShowModal2] = useState(false);
+    const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
+    const [pendingCancel, setPendingCancel] = useState<Loan | null>(null);
+    const [planningLoan, setPlanningLoan] = useState<Loan | null>(null);
+    const [forgivingLoan, setForgivingLoan] = useState<Loan | null>(null);
     const [tab, setTab] = useState<Tab>("loans");
+    const toast = useToast();
+    const { createPlan } = useLoanPlans();
 
     const queryForBackend = search
         ? { ...filters, limit: 9999, page: 1 }
         : filters
 
     const { summary = [], isLoading: isLoading2 } = useLoanSummary({ status: "PENDING" });
-    const { loans = [], isLoading: isLoading1, createLoan, meta } = useLoansQuery({ lender, status: "PENDING", ...queryForBackend });
+    const {
+        loans = [],
+        isLoading: isLoading1,
+        createLoan,
+        updateLoan,
+        cancelLoan,
+        forgiveLoan,
+        meta,
+    } = useLoansQuery({ lender, status: "PENDING", ...queryForBackend });
 
     const lenderSummary = useMemo(
         () => summary.find((s) => s.lender === lender),
@@ -75,6 +96,59 @@ export const LoansByLender = () => {
     const handlePageChange = (newPage: number) => {
         saveFiltersToURL({ ...filters, page: newPage })
     }
+
+    const handleEditLoan = async (data: {
+        contactId?: string;
+        notes?: string | null;
+        startDate?: string;
+        principalAmount?: number;
+        reason?: string;
+    }) => {
+        if (!editingLoan) return;
+        try {
+            await updateLoan.mutateAsync({ id: editingLoan.id, data });
+            toast.success("Préstamo actualizado");
+            setEditingLoan(null);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "No se pudo actualizar el préstamo");
+        }
+    };
+
+    const handleForgiveLoan = async (data: { amount: number; reason?: string }) => {
+        if (!forgivingLoan) return;
+        try {
+            await forgiveLoan.mutateAsync({ id: forgivingLoan.id, data });
+            toast.success("Saldo condonado");
+            setForgivingLoan(null);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "No se pudo condonar el saldo");
+        }
+    };
+
+    const handleCreatePlan = async (data: CreateLoanPlanInput) => {
+        if (!planningLoan) return;
+        try {
+            await createPlan.mutateAsync({ loanId: planningLoan.id, data });
+            toast.success("Plan de cuotas creado");
+            setPlanningLoan(null);
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "No se pudo crear el plan");
+        }
+    };
+
+    const handleCancelLoan = () => {
+        if (!pendingCancel) return;
+        cancelLoan.mutate(
+            { id: pendingCancel.id, reason: "Cancelado por el usuario" },
+            {
+                onSuccess: () => {
+                    toast.success("Préstamo cancelado; el historial se conservó");
+                    setPendingCancel(null);
+                },
+                onError: (error) => toast.error(error.message || "No se pudo cancelar el préstamo"),
+            }
+        );
+    };
 
     return (
         <div className="page-container lender-detail animate-fade-in">
@@ -178,7 +252,15 @@ export const LoansByLender = () => {
                         </p>
                     ) : (
                         filteredLoans.map((loan) => (
-                            <LoanCard key={loan.id} loan={loan} search={search} />
+                            <LoanCard
+                                key={loan.id}
+                                loan={loan}
+                                search={search}
+                                onEdit={(item) => setEditingLoan(item)}
+                                onCancel={(item) => setPendingCancel(item)}
+                                onPlan={(item) => setPlanningLoan(item)}
+                                onForgive={(item) => setForgivingLoan(item)}
+                            />
                         ))
                     )}
                 </div>
@@ -211,6 +293,51 @@ export const LoansByLender = () => {
                     </button>
                 </div>
             )}
+
+            <ModalPortal isOpen={!!forgivingLoan} onClose={() => setForgivingLoan(null)}>
+                {forgivingLoan && (
+                    <ForgiveLoanModal
+                        loan={forgivingLoan}
+                        isPending={forgiveLoan.isPending}
+                        onSubmit={handleForgiveLoan}
+                        onClose={() => setForgivingLoan(null)}
+                    />
+                )}
+            </ModalPortal>
+
+            <ModalPortal isOpen={!!planningLoan} onClose={() => setPlanningLoan(null)}>
+                {planningLoan && (
+                    <LoanPlanModal
+                        loan={planningLoan}
+                        isPending={createPlan.isPending}
+                        onSubmit={handleCreatePlan}
+                        onClose={() => setPlanningLoan(null)}
+                    />
+                )}
+            </ModalPortal>
+
+            <ModalPortal isOpen={!!editingLoan} onClose={() => setEditingLoan(null)}>
+                {editingLoan && (
+                    <EditLoanForm
+                        loan={editingLoan}
+                        isPending={updateLoan.isPending}
+                        onSubmit={handleEditLoan}
+                        onClose={() => setEditingLoan(null)}
+                    />
+                )}
+            </ModalPortal>
+
+            <InfoModal
+                isOpen={!!pendingCancel}
+                onClose={() => setPendingCancel(null)}
+                onConfirm={handleCancelLoan}
+                type="error"
+                title="Cancelar préstamo"
+                message={`¿Cancelar el préstamo con ${pendingCancel?.lender ?? "este contacto"}? Se conservarán los movimientos y transacciones históricas.`}
+                confirmText={cancelLoan.isPending ? "Cancelando..." : "Cancelar préstamo"}
+                cancelText="Volver"
+                confirmDisabled={cancelLoan.isPending}
+            />
 
             <ModalPortal isOpen={showModal} onClose={() => setShowModal(false)}>
                 <QuickPayForm lender={lender} onClose={() => setShowModal(false)} />

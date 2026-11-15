@@ -89,6 +89,7 @@ export class BudgetService {
             .addSelect("COALESCE(SUM(t.amount), 0)", "spent")
             .where("t.userId = :userId", { userId })
             .andWhere("t.type = :type", { type: TypeTransaction.EXPENSE })
+            .andWhere("t.reportingImpact = :reportingImpact", { reportingImpact: "REPORTABLE" })
             .andWhere("t.date >= :from", { from })
             .andWhere("t.date <= :to", { to })
             .andWhere("t.categoryId IS NOT NULL")

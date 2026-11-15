@@ -6,24 +6,26 @@ import { Account } from '../entities/Account.entity'
 import { Category } from '../entities/Category.entity'
 import { Credential } from '../entities/Credential.entity'
 import { Loan } from '../entities/Loan.entity'
-import { LoanInstallment } from '../entities/LoanInstallment.entity'
 import { ReccurentTransaction } from '../entities/ReccurentTransaction.entity'
 import { Transaction } from '../entities/Transaction.entity'
 import { User } from '../entities/User.entity'
-import { LoanPayment } from '../entities/LoanPayment.entity'
 import { Codes } from '../entities/Codes.entity'
 import { RecurringPayment } from '../entities/RecurringPayment.entity'
 import { RecurringPaymentOccurrence } from '../entities/RecurringPaymentOccurrence.entity'
 import { PaymentNotification } from '../entities/PaymentNotification.entity'
 import { Budget } from '../entities/Budget.entity'
+import { Contact } from '../entities/Contact.entity'
+import { LoanMovement } from '../entities/LoanMovement.entity'
+import { LoanPlan } from '../entities/LoanPlan.entity'
+import { DebtInstallment } from '../entities/DebtInstallment.entity'
+import { LoanPaymentAllocation } from '../entities/LoanPaymentAllocation.entity'
+import { AuditLog } from '../entities/AuditLog.entity'
 
 const entities = [
     Account,
     Category,
     Credential,
     Loan,
-    LoanInstallment,
-    LoanPayment,
     ReccurentTransaction,
     Transaction,
     User,
@@ -32,6 +34,12 @@ const entities = [
     RecurringPaymentOccurrence,
     PaymentNotification,
     Budget,
+    Contact,
+    LoanMovement,
+    LoanPlan,
+    DebtInstallment,
+    LoanPaymentAllocation,
+    AuditLog,
 ]
 
 // En desarrollo (bun desde src) carga *.ts; en producción (dist) carga *.js

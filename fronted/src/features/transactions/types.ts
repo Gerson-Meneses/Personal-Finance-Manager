@@ -3,7 +3,6 @@ import type { Account } from "../accounts/types";
 import type { Category } from "../categories/types";
 import type { Loan } from "../loans/types";
 import { amountSchema, dateSchema, descriptionSchema, nameSchema, numberSchema, stringSchema, timeSchema, uuidSchema } from "../../shared/Schemas/Base.schema";
-import type { LoanPayment } from "../LoanPayments/types";
 
 export const TransactionTypeValues = ["INCOME", "EXPENSE", "CREDIT_PAYMENT", "TRANSFER"] as const;
 export type TransactionType = typeof TransactionTypeValues[number]
@@ -21,8 +20,7 @@ export interface Transaction {
   account?: Account,
   relatedAccount?: Account,
   category?: Category,
-  loan?: Loan,
-  loanPayment?: LoanPayment
+  loan?: Loan
 }
 
 export interface TransactionStats {

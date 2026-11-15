@@ -267,3 +267,15 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+.loans-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.loans-header__actions button {
+    font-size: 0.8rem;
+    padding: 9px 13px;
+}

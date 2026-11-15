@@ -11,6 +11,8 @@ import { dashboardRouter } from './dashboardRouter'
 import { recurringPaymentRouter } from './recurringPaymentRouter'
 import { notificationRouter } from './recurringNotificationRouter'
 import { budgetRouter } from './budgetRouter'
+import { contactRouter } from './contactRouter'
+import { debtRouter } from './debtRouter'
 import { authRateLimit } from '../middlewares/security'
 
 const router = new Hono()
@@ -29,5 +31,7 @@ router.route('/dashboard', dashboardRouter)
 router.route('/recurring-payments', recurringPaymentRouter)
 router.route('/notifications', notificationRouter)
 router.route('/budgets', budgetRouter)
+router.route('/contacts', contactRouter)
+router.route('/debt', debtRouter)
 
 export default router
