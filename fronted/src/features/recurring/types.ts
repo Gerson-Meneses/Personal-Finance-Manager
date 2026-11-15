@@ -91,6 +91,42 @@ export interface RecurringMonthProjection {
     occurrences: RecurringOccurrence[];
 }
 
+export type RecurringSuggestionKind = "TRANSACTION" | "LOAN";
+
+export interface RecurringSuggestion {
+    id: string;
+    kind: RecurringSuggestionKind;
+    name: string;
+    description?: string | null;
+    type: RecurringEntryType;
+    amount: number;
+    frequency: RecurrenceFrequency;
+    intervalCount: number;
+    dayOfMonth: number | null;
+    dayOfWeek: number | null;
+    startDate: string;
+    maxOccurrences: number | null;
+    accountId: string;
+    categoryId: string;
+    loanAction: RecurringLoanAction;
+    loanId: string | null;
+    loanContactId: string | null;
+    loanCounterparty: string | null;
+    confidence: number;
+    sampleCount: number;
+    lastDate: string | null;
+    reason: string;
+    account?: RecurringAccountInfo;
+    category?: RecurringCategoryInfo;
+    contact?: { id: string; name: string };
+}
+
+export interface RecurringSuggestionsResponse {
+    generatedAt: string;
+    lookbackDays: number;
+    suggestions: RecurringSuggestion[];
+}
+
 export interface PaymentNotification {
     id: string;
     title: string;

@@ -6,11 +6,21 @@ import type {
     RecurringPayment,
     RecurringPaymentFormOutput,
     RecurringPaymentUpdate,
+    RecurringSuggestionsResponse,
 } from "./types";
 
 const BASE = "/recurring-payments";
 
 export const getRecurringPayments = () => apiFetch<RecurringPayment[]>(BASE);
+
+export const getRecurringSuggestions = () =>
+    apiFetch<RecurringSuggestionsResponse>(`${BASE}/suggestions`);
+
+export const dismissRecurringSuggestion = (suggestionId: string) =>
+    apiFetch<{ message: string }>(`${BASE}/suggestions/dismiss`, {
+        method: "POST",
+        body: { suggestionId },
+    });
 
 export const getRecurringProjection = (month?: string) =>
     apiFetch<RecurringMonthProjection>(`${BASE}/projection${month ? `?month=${month}` : ""}`);

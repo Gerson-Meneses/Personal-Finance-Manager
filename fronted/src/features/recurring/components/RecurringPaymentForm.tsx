@@ -87,7 +87,11 @@ const isUuid = (value: string) =>
 export function RecurringPaymentForm({ payment, defaults, isPending, onSubmit, onSuccess, onClose }: Props) {
     const [submitAttempted, setSubmitAttempted] = useState(false);
     const [terminationMode, setTerminationMode] = useState<"NEVER" | "DATE" | "COUNT">(
-        payment?.maxOccurrences ? "COUNT" : payment?.endDate ? "DATE" : "NEVER"
+        payment?.maxOccurrences || defaults?.maxOccurrences
+            ? "COUNT"
+            : payment?.endDate || defaults?.endDate
+                ? "DATE"
+                : "NEVER"
     );
     const [showCreateContact, setShowCreateContact] = useState(false);
 

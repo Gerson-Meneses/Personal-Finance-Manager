@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useLogin } from "../../../features/auth/useLogin";
 import { PasswordInput } from "../../../shared/components/PasswordInput/PasswordInput";
 import { TextInput } from "../../../shared/components/TextInput/TextInput";
@@ -17,7 +17,6 @@ const initialForm: LoginForm = {
 }
 
 export const LoginPage = () => {
-    const navigate = useNavigate()
     const login = useLogin()
 
     const [formData, setFormData] = useState<LoginForm>(initialForm)
@@ -90,12 +89,12 @@ export const LoginPage = () => {
                 {login.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
             </button>
 
-            <p className="button-message" onClick={() => navigate("/register")}>
+            <Link to="/register" className="button-message">
                 ¿No tienes cuenta? <span>Regístrate</span>
-            </p>
-            <p className="button-message" onClick={() => navigate("/reset-password")}>
+            </Link>
+            <Link to="/reset-password" className="button-message">
                 ¿Olvidaste tu contraseña? <span>Recupérala</span>
-            </p>
+            </Link>
         </form>
     )
 }

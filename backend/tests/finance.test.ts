@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
+import dayjs from "dayjs";
 import { computeBalanceEffect } from "../src/utils/balance";
 import { getMaxBalance } from "../src/utils/getBalanceToCreditCard";
 import { calculateLoanPaymentStatus } from "../src/mappers/LoansMapper";
 import { daysInRange } from "../src/services/recurringPaymentService";
+import { detectRecurrence } from "../src/services/recurringSuggestionService";
 import { roundBudgetSuggestion } from "../src/services/budgetService";
 import { LoanMovementType, RecurrenceFrequency, TypeTransaction } from "../src/utils/Enums";
 import type { RecurringPayment } from "../src/entities/RecurringPayment.entity";
@@ -336,5 +338,64 @@ describe("sugerencias de presupuesto", () => {
         expect(roundBudgetSuggestion(1)).toBe(500);
         expect(roundBudgetSuggestion(501)).toBe(1000);
         expect(roundBudgetSuggestion(12_345)).toBe(12_500);
+    });
+});
+
+describe("detección de movimientos recurrentes", () => {
+    test("detecta un patrón mensual y calcula la próxima fecha", () => {
+        const pattern = detectRecurrence(
+            ["2026-08-05", "2026-09-05", "2026-10-05", "2026-11-05"],
+            [150_000, 150_000, 150_000, 150_000],
+            dayjs("2026-11-15")
+        );
+
+        expect(pattern).not.toBeNull();
+        expect(pattern?.frequency).toBe(RecurrenceFrequency.MONTHLY);
+        expect(pattern?.dayOfMonth).toBe(5);
+        expect(pattern?.nextDate).toBe("2026-12-05");
+        expect(pattern?.confidence).toBeGreaterThan(50);
+    });
+
+    test("detecta un patrón cada 15 días", () => {
+        const pattern = detectRecurrence(
+            ["2026-10-01", "2026-10-16", "2026-10-31", "2026-11-15"],
+            [50_000, 50_000, 50_000, 50_000],
+            dayjs("2026-11-20")
+        );
+
+        expect(pattern?.frequency).toBe(RecurrenceFrequency.FIFTEEN_DAYS);
+        expect(pattern?.nextDate).toBe("2026-11-30");
+    });
+
+    test("detecta un patrón semanal", () => {
+        const pattern = detectRecurrence(
+            ["2026-11-02", "2026-11-09", "2026-11-16", "2026-11-23"],
+            [2_000, 2_000, 2_000, 2_000],
+            dayjs("2026-11-25")
+        );
+
+        expect(pattern?.frequency).toBe(RecurrenceFrequency.WEEKLY);
+        expect(pattern?.dayOfWeek).toBe(1);
+        expect(pattern?.nextDate).toBe("2026-11-30");
+    });
+
+    test("descarta movimientos sin intervalos consistentes", () => {
+        const pattern = detectRecurrence(
+            ["2026-08-01", "2026-08-20", "2026-10-25"],
+            [2_000, 2_000, 2_000],
+            dayjs("2026-11-01")
+        );
+
+        expect(pattern).toBeNull();
+    });
+
+    test("descarta patrones que dejaron de repetirse hace tiempo", () => {
+        const pattern = detectRecurrence(
+            ["2026-01-05", "2026-02-05", "2026-03-05"],
+            [2_000, 2_000, 2_000],
+            dayjs("2026-11-15")
+        );
+
+        expect(pattern).toBeNull();
     });
 });

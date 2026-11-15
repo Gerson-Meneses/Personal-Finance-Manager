@@ -12,6 +12,7 @@ import { User } from '../entities/User.entity'
 import { Codes } from '../entities/Codes.entity'
 import { RecurringPayment } from '../entities/RecurringPayment.entity'
 import { RecurringPaymentOccurrence } from '../entities/RecurringPaymentOccurrence.entity'
+import { RecurringSuggestionDismissal } from '../entities/RecurringSuggestionDismissal.entity'
 import { PaymentNotification } from '../entities/PaymentNotification.entity'
 import { Budget } from '../entities/Budget.entity'
 import { Contact } from '../entities/Contact.entity'
@@ -32,6 +33,7 @@ const entities = [
     Codes,
     RecurringPayment,
     RecurringPaymentOccurrence,
+    RecurringSuggestionDismissal,
     PaymentNotification,
     Budget,
     Contact,

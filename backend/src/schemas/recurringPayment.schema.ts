@@ -228,3 +228,9 @@ export const skipOccurrenceSchema = z.object({
 });
 
 export type SkipOccurrenceOutput = z.output<typeof skipOccurrenceSchema>;
+
+export const dismissSuggestionSchema = z.object({
+    suggestionId: z.string().trim().min(1).max(200),
+});
+
+export type DismissSuggestionOutput = z.output<typeof dismissSuggestionSchema>;

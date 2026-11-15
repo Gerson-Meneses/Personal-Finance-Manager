@@ -391,6 +391,20 @@ button.qs-item:focus-visible {
 
     .qs-value { font-size: 1rem; }
 
+    .qs-flow-labels {
+        flex-wrap: wrap;
+        row-gap: 2px;
+    }
+
+    .qs-bottom {
+        gap: 8px;
+    }
+
+    .qs-tag {
+        max-width: 100%;
+        min-width: 0;
+    }
+
     .cat-row {
         padding: 6px 4px;
     }

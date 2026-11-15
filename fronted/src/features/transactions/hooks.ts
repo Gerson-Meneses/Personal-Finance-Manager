@@ -33,6 +33,7 @@ export const useTransactions = (filters?: TransactionQuerySchemaOutput) => {
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
     queryClient.invalidateQueries({ queryKey: ["accounts"] }); // Para actualizar balances en la vista de cuentas
     queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // Crucial para actualizar balances
+    queryClient.invalidateQueries({ queryKey: ["recurringSuggestions"] });
   };
 
   const createMutation = useMutation<Transaction, DataError<TransactionOutput>, TransactionOutput>({
@@ -63,6 +64,7 @@ export const useTransactions = (filters?: TransactionQuerySchemaOutput) => {
       queryClient.invalidateQueries({ queryKey: ["recurringPayments"] });
       queryClient.invalidateQueries({ queryKey: ["paymentNotifications"] });
       queryClient.invalidateQueries({ queryKey: ["debtInstallments"] });
+      queryClient.invalidateQueries({ queryKey: ["recurringSuggestions"] });
     },
   });
 

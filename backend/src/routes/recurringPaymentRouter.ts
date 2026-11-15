@@ -7,20 +7,24 @@ import { uuidParamSchema } from "../schemas/uuid.schema";
 import {
     createRecurringPayment,
     deleteRecurringPayment,
+    dismissRecurringSuggestion,
     executeRecurringOccurrence,
     getRecurringProjection,
     listRecurringPayments,
+    listRecurringSuggestions,
     processDueRecurringPayments,
     skipRecurringOccurrence,
     updateRecurringPayment,
 } from "../controllers/recurringPaymentController";
 import {
     createRecurringPaymentSchema,
+    dismissSuggestionSchema,
     executeOccurrenceSchema,
     recurringMonthQuerySchema,
     skipOccurrenceSchema,
     updateRecurringPaymentSchema,
     type CreateRecurringPaymentOutput,
+    type DismissSuggestionOutput,
     type ExecuteOccurrenceOutput,
     type RecurringMonthQuery,
     type SkipOccurrenceOutput,
@@ -41,6 +45,25 @@ recurringPaymentRouter.get("/projection", async (c) => {
     const query: RecurringMonthQuery = parsed.data;
     return await getRecurringProjection(c, user.sub, query);
 });
+
+recurringPaymentRouter.get("/suggestions", async (c) => {
+    const user = c.get("user");
+    return await listRecurringSuggestions(c, user.sub);
+});
+
+recurringPaymentRouter.post(
+    "/suggestions/dismiss",
+    zValidator("json", dismissSuggestionSchema, (result, c) => {
+        if (!result.success && result.error instanceof ZodError) {
+            return zodErrorResponse(result.error, c);
+        }
+    }),
+    async (c) => {
+        const user = c.get("user");
+        const data = c.req.valid("json") as DismissSuggestionOutput;
+        return await dismissRecurringSuggestion(c, user.sub, data);
+    }
+);
 
 recurringPaymentRouter.post("/process-due", async (c) => {
     const user = c.get("user");

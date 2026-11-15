@@ -2,18 +2,35 @@ import { Context } from "hono";
 import { UuidSchema } from "../schemas/uuid.schema";
 import type {
     CreateRecurringPaymentOutput,
+    DismissSuggestionOutput,
     ExecuteOccurrenceOutput,
     RecurringMonthQuery,
     SkipOccurrenceOutput,
     UpdateRecurringPaymentOutput,
 } from "../schemas/recurringPayment.schema";
 import { RecurringPaymentService } from "../services/recurringPaymentService";
+import { RecurringSuggestionService } from "../services/recurringSuggestionService";
 
 const recurringPaymentService = new RecurringPaymentService();
+const recurringSuggestionService = new RecurringSuggestionService();
 
 export const listRecurringPayments = async (c: Context, userId: UuidSchema) => {
     const data = await recurringPaymentService.listPayments(userId);
     return c.json(data, 200);
+};
+
+export const listRecurringSuggestions = async (c: Context, userId: UuidSchema) => {
+    const data = await recurringSuggestionService.getSuggestions(userId);
+    return c.json(data, 200);
+};
+
+export const dismissRecurringSuggestion = async (
+    c: Context,
+    userId: UuidSchema,
+    data: DismissSuggestionOutput
+) => {
+    await recurringSuggestionService.dismissSuggestion(userId, data.suggestionId);
+    return c.json({ message: "Sugerencia omitida" }, 200);
 };
 
 export const getRecurringProjection = async (

@@ -51,6 +51,27 @@ const STEPS: Step[] = [
         description: "Programa sueldos, alquileres, cuotas de préstamos o dinero que planeas prestar. También puedes confirmar los pagos cuando venzan.",
     },
     {
+        title: "Programa con un clic",
+        description: "Usa las plantillas de Futuros para prestar, recibir, pagar o cobrar un préstamo. Si la persona aún no existe, créala en el mismo formulario y quedará vinculada a sus movimientos.",
+        targets: ['[data-tour="recurring-quick"]'],
+        optional: true,
+        route: "/recurring",
+    },
+    {
+        title: "Movimientos sugeridos",
+        description: "Analizamos tus últimos 180 días y detectamos patrones como el sueldo, el alquiler o los servicios. Programa una sugerencia con un clic, omítela para que no vuelva a aparecer o colapsa la sección para liberar espacio.",
+        targets: ['[data-tour="recurring-suggestions"]'],
+        optional: true,
+        route: "/recurring",
+    },
+    {
+        title: "Deudas por persona",
+        description: "Agrupamos tus préstamos pendientes por contacto. Crea un plan de cuotas o programa el pago/cobro completo. Puedes colapsar esta vista cuando no la necesites.",
+        targets: ['[data-tour="loan-debts"]'],
+        optional: true,
+        route: "/recurring",
+    },
+    {
         title: "Tu presupuesto, con montos sugeridos",
         description: "Calculamos montos sugeridos con tus gastos recientes. Ajusta las categorías y guárdalas sin salir del tutorial.",
         targets: ['[data-tour="budget-suggestions"]'],
@@ -71,7 +92,7 @@ const STEPS: Step[] = [
     },
 ];
 
-const KEY_VERSION = "v1";
+const KEY_VERSION = "v2";
 const TARGET_RETRY_MS = 120;
 const TARGET_TIMEOUT_MS = 4000;
 

@@ -7,12 +7,17 @@ import {
     Bell,
     CalendarClock,
     CheckCircle2,
+    ChevronDown,
+    ChevronUp,
+    EyeOff,
     HandCoins,
     Pause,
     Pencil,
     Play,
     Plus,
+    RefreshCw,
     Repeat,
+    Sparkles,
     Trash2,
     Wallet,
 } from "lucide-react";
@@ -34,12 +39,14 @@ import {
     usePaymentNotifications,
     useRecurringPayments,
     useRecurringProjection,
+    useRecurringSuggestions,
 } from "../../../features/recurring/hooks";
 import type {
     RecurringOccurrence,
     RecurringPayment,
     RecurringPaymentFormInput,
     RecurringPaymentFormOutput,
+    RecurringSuggestion,
 } from "../../../features/recurring/types";
 import "./RecurringPaymentsPage.css";
 
@@ -129,6 +136,78 @@ function scheduleLabel(payment: RecurringPayment) {
     return `${every ? every + "semanas" : payment.frequency === "WEEKLY" ? "Cada semana" : "Cada 2 semanas"}${limit}`;
 }
 
+function suggestionScheduleLabel(suggestion: RecurringSuggestion) {
+    if (suggestion.frequency === "ONCE") {
+        return "Pago único";
+    }
+    if (suggestion.frequency === "FIFTEEN_DAYS") {
+        const base = suggestion.intervalCount > 1
+            ? `Cada ${suggestion.intervalCount * 15} días`
+            : "Cada 15 días";
+        return suggestion.maxOccurrences ? `${base} · ${suggestion.maxOccurrences} cuotas` : base;
+    }
+    if (suggestion.frequency === "MONTHLY") {
+        const every = suggestion.intervalCount > 1 ? `cada ${suggestion.intervalCount} meses` : "Cada mes";
+        const limit = suggestion.maxOccurrences ? ` · ${suggestion.maxOccurrences} pagos` : "";
+        return `${every} · día ${suggestion.dayOfMonth ?? "—"}${limit}`;
+    }
+    if (suggestion.frequency === "YEARLY") {
+        const every = suggestion.intervalCount > 1 ? `cada ${suggestion.intervalCount} años` : "Cada año";
+        const limit = suggestion.maxOccurrences ? ` · ${suggestion.maxOccurrences} pagos` : "";
+        return `${every} · día ${suggestion.dayOfMonth ?? "—"}${limit}`;
+    }
+    const every = suggestion.intervalCount > 1 ? `cada ${suggestion.intervalCount} semanas` : "Cada semana";
+    const limit = suggestion.maxOccurrences ? ` · ${suggestion.maxOccurrences} pagos` : "";
+    return `${suggestion.frequency === "BIWEEKLY" && suggestion.intervalCount === 1 ? "Cada 2 semanas" : every}${limit}`;
+}
+
+function useStoredToggle(storageKey: string, defaultOpen = true) {
+    const [open, setOpen] = useState(() => {
+        try {
+            const stored = window.localStorage.getItem(storageKey);
+            return stored === null ? defaultOpen : stored === "1";
+        } catch {
+            return defaultOpen;
+        }
+    });
+
+    const toggle = () => {
+        setOpen((previous) => {
+            const next = !previous;
+            try {
+                window.localStorage.setItem(storageKey, next ? "1" : "0");
+            } catch {
+                // Sin almacenamiento disponible: el estado vive solo en memoria.
+            }
+            return next;
+        });
+    };
+
+    return [open, toggle] as const;
+}
+
+function suggestionDefaults(suggestion: RecurringSuggestion): Partial<RecurringPaymentFormInput> {
+    return {
+        name: suggestion.name,
+        description: suggestion.description ?? "",
+        type: suggestion.type,
+        amount: String(suggestion.amount),
+        frequency: suggestion.frequency,
+        intervalCount: String(suggestion.intervalCount),
+        dayOfMonth: suggestion.dayOfMonth ? String(suggestion.dayOfMonth) : undefined,
+        dayOfWeek: suggestion.dayOfWeek != null ? String(suggestion.dayOfWeek) : undefined,
+        startDate: suggestion.startDate,
+        maxOccurrences: suggestion.maxOccurrences ? String(suggestion.maxOccurrences) : "",
+        autoDebit: false,
+        accountId: suggestion.accountId,
+        categoryId: suggestion.categoryId,
+        loanAction: suggestion.loanAction,
+        loanId: suggestion.loanId ?? "",
+        loanContactId: suggestion.loanContactId ?? "",
+        loanCounterparty: suggestion.loanCounterparty ?? "",
+    };
+}
+
 export default function RecurringPaymentsPage() {
     const [month, setMonth] = useState(() => dayjs().format("YYYY-MM"));
     const [showForm, setShowForm] = useState(false);
@@ -139,9 +218,18 @@ export default function RecurringPaymentsPage() {
     const [planningContact, setPlanningContact] = useState<{ contactId: string; name: string; direction: "GIVEN" | "RECEIVED"; total: number } | null>(null);
     const [pendingDelete, setPendingDelete] = useState<RecurringPayment | null>(null);
     const [timelineFilter, setTimelineFilter] = useState<TimelineFilter>("ALL");
+    const [suggestionsOpen, toggleSuggestionsOpen] = useStoredToggle("recurring:suggestions:open");
+    const [debtsOpen, toggleDebtsOpen] = useStoredToggle("recurring:debts:open");
     const toast = useToast();
 
     const { projection, loading, refetch: refetchProjection } = useRecurringProjection(month);
+    const {
+        suggestions,
+        lookbackDays,
+        loading: suggestionsLoading,
+        refetch: refetchSuggestions,
+        dismissSuggestion,
+    } = useRecurringSuggestions();
     const {
         payments,
         createPayment,
@@ -278,7 +366,7 @@ export default function RecurringPaymentsPage() {
                 toast.success("Pago futuro creado");
             }
             closeForm();
-            await Promise.all([refetchProjection(), refetchPayments()]);
+            await Promise.all([refetchProjection(), refetchPayments(), refetchSuggestions()]);
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "No se pudo guardar el pago futuro");
         }
@@ -334,6 +422,14 @@ export default function RecurringPaymentsPage() {
         });
     };
 
+    const handleDismissSuggestion = (suggestion: RecurringSuggestion) => {
+        dismissSuggestion.mutate(suggestion.id, {
+            onSuccess: () => toast.success("Sugerencia omitida"),
+            onError: (error) =>
+                toast.error(error instanceof Error ? error.message : "No se pudo omitir la sugerencia"),
+        });
+    };
+
     const handleProcessDue = async () => {
         try {
             const result = await processDue.mutateAsync();
@@ -379,7 +475,7 @@ export default function RecurringPaymentsPage() {
                 </div>
             </header>
 
-            <section className="recurring-quick card" aria-label="Plantillas de pagos futuros">
+            <section className="recurring-quick card" data-tour="recurring-quick" aria-label="Plantillas de pagos futuros">
                 <div className="recurring-quick__intro">
                     <strong>¿Qué quieres programar?</strong>
                     <span>Los préstamos se registran desde una persona, nunca como gasto o ingreso normal.</span>
@@ -460,6 +556,91 @@ export default function RecurringPaymentsPage() {
                 </div>
             </section>
 
+            {suggestions.length > 0 && (
+                <section className="card recurring-suggestions" data-tour="recurring-suggestions">
+                    <div className="recurring-section-head">
+                        <h2><Sparkles size={17} /> Movimientos sugeridos</h2>
+                        <div className="recurring-suggestions__actions">
+                            <span className="recurring-section-count">{suggestions.length}</span>
+                            <button
+                                type="button"
+                                className="btn-ghost"
+                                onClick={() => refetchSuggestions()}
+                                disabled={suggestionsLoading}
+                            >
+                                <RefreshCw size={14} /> Actualizar
+                            </button>
+                            <button
+                                type="button"
+                                className="recurring-collapse-btn"
+                                onClick={toggleSuggestionsOpen}
+                                aria-expanded={suggestionsOpen}
+                                title={suggestionsOpen ? "Ocultar sugerencias" : "Mostrar sugerencias"}
+                            >
+                                {suggestionsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                            </button>
+                        </div>
+                    </div>
+                    {suggestionsOpen && (
+                        <>
+                            <p className="recurring-debts__hint">
+                                Basado en tus últimos {lookbackDays} días de movimientos y en tus deudas pendientes.
+                                Nada se programa hasta que lo confirmes.
+                            </p>
+                            <div className="recurring-suggestion-grid">
+                                {suggestions.map((suggestion) => {
+                                    const isIncome = suggestion.type === "INCOME";
+                                    return (
+                                        <article
+                                            key={suggestion.id}
+                                            className={`recurring-suggestion is-${suggestion.kind === "LOAN" ? "loan" : isIncome ? "income" : "expense"}`}
+                                        >
+                                            <div className="recurring-suggestion__head">
+                                                <span className={`recurring-suggestion__kind is-${suggestion.kind === "LOAN" ? "loan" : "recurring"}`}>
+                                                    {suggestion.kind === "LOAN" ? <HandCoins size={11} /> : <Repeat size={11} />}
+                                                    {suggestion.kind === "LOAN" ? "Préstamo" : "Recurrente"}
+                                                </span>
+                                                <span className="recurring-suggestion__confidence">
+                                                    {suggestion.confidence}% coincidencia
+                                                </span>
+                                            </div>
+                                            <strong>{suggestion.name}</strong>
+                                            <span className={`recurring-suggestion__amount amount-font ${isIncome ? "text-success" : "text-danger"}`}>
+                                                {isIncome ? "+" : "−"} {formatCurrency(suggestion.amount)}
+                                            </span>
+                                            <p>{suggestion.reason}</p>
+                                            <div className="recurring-suggestion__meta">
+                                                <span><Repeat size={12} /> {suggestionScheduleLabel(suggestion)}</span>
+                                                <span><CalendarClock size={12} /> {dayjs(suggestion.startDate).format("D MMM")}</span>
+                                                {suggestion.category && <span>{suggestion.category.name}</span>}
+                                            </div>
+                                            <div className="recurring-suggestion__actions">
+                                                <button
+                                                    type="button"
+                                                    className="btn-primary"
+                                                    onClick={() => openNew(suggestionDefaults(suggestion))}
+                                                >
+                                                    <Plus size={14} /> Programar
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn-ghost recurring-suggestion__omit"
+                                                    onClick={() => handleDismissSuggestion(suggestion)}
+                                                    disabled={dismissSuggestion.isPending}
+                                                    title="Omitir esta sugerencia"
+                                                >
+                                                    <EyeOff size={13} /> Omitir
+                                                </button>
+                                            </div>
+                                        </article>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
+                </section>
+            )}
+
             <section className="recurring-stats">
                 <article className="recurring-stat card recurring-stat--income">
                     <span className="recurring-stat__icon"><ArrowDownLeft size={17} /></span>
@@ -493,12 +674,25 @@ export default function RecurringPaymentsPage() {
                 <section className="card recurring-debts" data-tour="loan-debts">
                     <div className="recurring-section-head">
                         <h2><HandCoins size={17} /> Deudas por persona</h2>
-                        <span className="recurring-section-count">{debtGroups.length}</span>
+                        <div className="recurring-section-tools">
+                            <span className="recurring-section-count">{debtGroups.length}</span>
+                            <button
+                                type="button"
+                                className="recurring-collapse-btn"
+                                onClick={toggleDebtsOpen}
+                                aria-expanded={debtsOpen}
+                                title={debtsOpen ? "Ocultar préstamos" : "Mostrar préstamos"}
+                            >
+                                {debtsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                            </button>
+                        </div>
                     </div>
-                    <p className="recurring-debts__hint">
-                        Sumamos todos los préstamos pendientes de cada persona. Puedes planificar el pago completo o en cuotas cada 15 días.
-                    </p>
-                    <div className="recurring-debts__grid">
+                    {debtsOpen && (
+                        <>
+                            <p className="recurring-debts__hint">
+                                Sumamos todos los préstamos pendientes de cada persona. Puedes planificar el pago completo o en cuotas cada 15 días.
+                            </p>
+                            <div className="recurring-debts__grid">
                         {debtGroups.map((debt) => (
                             <article key={debt.contactId} className="recurring-debt">
                                 <div className="recurring-debt__head">
@@ -573,7 +767,9 @@ export default function RecurringPaymentsPage() {
                                 )}
                             </article>
                         ))}
-                    </div>
+                            </div>
+                        </>
+                    )}
                 </section>
             )}
 

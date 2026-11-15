@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { useRegister } from "../../../features/auth/useRegister"
 import { PasswordInput } from "../../../shared/components/PasswordInput/PasswordInput"
 import { BirthDateInput } from "../../../shared/components/BirthDateInput/BithrDateInput"
@@ -20,7 +20,6 @@ const initialForm: Omit<RegisterOotput, "birthDate"> = {
 }
 
 export const RegisterPage = () => {
-    const navigate = useNavigate()
     const register = useRegister()
 
     const [formData, setFormData] = useState(initialForm)
@@ -233,9 +232,9 @@ export const RegisterPage = () => {
                 {register.isPending ? "Registrando..." : "Registrarse"}
             </button>
 
-            <p className="button-message" onClick={() => navigate("/login")}>
+            <Link to="/login" className="button-message">
                 ¿Ya tienes cuenta? <span>Inicia sesión</span>
-            </p>
+            </Link>
         </form>
     )
 }

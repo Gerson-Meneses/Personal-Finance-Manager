@@ -1,6 +1,6 @@
 ﻿import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as service from "./services";
-import type { RecurringPaymentUpdate } from "./types";
+import type { RecurringPaymentUpdate, RecurringSuggestionsResponse } from "./types";
 
 export const useRecurringPayments = () => {
     const queryClient = useQueryClient();
@@ -13,6 +13,7 @@ export const useRecurringPayments = () => {
     const invalidate = () => {
         queryClient.invalidateQueries({ queryKey: ["recurringPayments"] });
         queryClient.invalidateQueries({ queryKey: ["recurringProjection"] });
+        queryClient.invalidateQueries({ queryKey: ["recurringSuggestions"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
         queryClient.invalidateQueries({ queryKey: ["transactions"] });
         queryClient.invalidateQueries({ queryKey: ["accounts"] });
@@ -78,6 +79,50 @@ export const useRecurringPayments = () => {
         executeOccurrence: executeMutation,
         skipOccurrence: skipMutation,
         processDue: processDueMutation,
+    };
+};
+
+export const useRecurringSuggestions = () => {
+    const queryClient = useQueryClient();
+    const query = useQuery({
+        queryKey: ["recurringSuggestions"],
+        queryFn: service.getRecurringSuggestions,
+        staleTime: 60_000,
+    });
+
+    const dismissMutation = useMutation<
+        { message: string },
+        Error,
+        string,
+        { previous?: RecurringSuggestionsResponse }
+    >({
+        mutationFn: service.dismissRecurringSuggestion,
+        onMutate: async (suggestionId) => {
+            await queryClient.cancelQueries({ queryKey: ["recurringSuggestions"] });
+            const previous = queryClient.getQueryData<RecurringSuggestionsResponse>(["recurringSuggestions"]);
+            if (previous) {
+                queryClient.setQueryData<RecurringSuggestionsResponse>(["recurringSuggestions"], {
+                    ...previous,
+                    suggestions: previous.suggestions.filter((item) => item.id !== suggestionId),
+                });
+            }
+            return { previous };
+        },
+        onError: (_error, _suggestionId, context) => {
+            if (context?.previous) {
+                queryClient.setQueryData(["recurringSuggestions"], context.previous);
+            }
+        },
+        onSettled: () => queryClient.invalidateQueries({ queryKey: ["recurringSuggestions"] }),
+    });
+
+    return {
+        suggestions: query.data?.suggestions ?? [],
+        lookbackDays: query.data?.lookbackDays ?? 180,
+        loading: query.isLoading,
+        error: query.error,
+        refetch: query.refetch,
+        dismissSuggestion: dismissMutation,
     };
 };
 

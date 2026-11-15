@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 import "../publicLayout.css"
 import { useResetPassword } from "../../../features/auth/useResetPassword"
@@ -115,9 +115,9 @@ export const ResetPasswordPage = () => {
                         {request.isPending ? "Enviando..." : "Enviar código"}
                     </button>
 
-                    <p className="button-message" onClick={() => navigate("/login")}>
+                    <Link to="/login" className="button-message">
                         ← Volver al inicio de sesión
-                    </p>
+                    </Link>
                 </form>
             )}
 
