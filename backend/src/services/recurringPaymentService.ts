@@ -108,6 +108,8 @@ export interface PaymentNotificationResponse {
     };
 }
 
+const RECURRING_JOB_LOCK_KEY = 715_000_001;
+
 const toYmd = (date: Date | string) => dayjs(date).format("YYYY-MM-DD");
 const clampDay = (year: number, monthIndex: number, day: number) =>
     Math.min(day, new Date(year, monthIndex + 1, 0).getDate());
@@ -492,6 +494,7 @@ export class RecurringPaymentService {
         const unnotified = await this.occurrenceRepo.find({
             where: {
                 ...(userId ? { userId } : {}),
+                status: In([RecurringOccurrenceStatus.PENDING, RecurringOccurrenceStatus.DUE]),
                 dueDate: LessThanOrEqual(today),
                 notifiedAt: IsNull(),
             },
@@ -745,16 +748,20 @@ export class RecurringPaymentService {
         await this.refreshDueStatusAndNotifications(userId);
 
         const today = toYmd(new Date());
-        const dueAuto = await this.occurrenceRepo.find({
-            where: {
-                ...(userId ? { userId } : {}),
-                autoDebit: true,
-                status: In([RecurringOccurrenceStatus.DUE, RecurringOccurrenceStatus.PENDING]),
-                dueDate: LessThanOrEqual(today),
-            },
-            order: { dueDate: "ASC" },
-            take: 100,
-        });
+        const dueAuto = await this.occurrenceRepo
+            .createQueryBuilder("occurrence")
+            .innerJoin("occurrence.payment", "payment")
+            .where("occurrence.autoDebit = true")
+            .andWhere("payment.autoDebit = true")
+            .andWhere("payment.isActive = true")
+            .andWhere("occurrence.status IN (:...statuses)", {
+                statuses: [RecurringOccurrenceStatus.DUE, RecurringOccurrenceStatus.PENDING],
+            })
+            .andWhere("occurrence.dueDate <= :today", { today })
+            .andWhere(userId ? "occurrence.userId = :userId" : "1=1", userId ? { userId } : {})
+            .orderBy("occurrence.dueDate", "ASC")
+            .take(100)
+            .getMany();
 
         let processed = 0;
         let failed = 0;
@@ -764,10 +771,19 @@ export class RecurringPaymentService {
                 processed += 1;
             } catch (error) {
                 failed += 1;
-                await this.occurrenceRepo.update(occurrence.id, {
-                    status: RecurringOccurrenceStatus.FAILED,
-                    failureReason: error instanceof Error ? error.message : "Error al ejecutar el débito automático",
-                });
+                await this.occurrenceRepo
+                    .createQueryBuilder()
+                    .update(RecurringPaymentOccurrence)
+                    .set({
+                        status: RecurringOccurrenceStatus.FAILED,
+                        failureReason:
+                            error instanceof Error ? error.message : "Error al ejecutar el débito automático",
+                    })
+                    .where("id = :id", { id: occurrence.id })
+                    .andWhere("status IN (:...claimable)", {
+                        claimable: [RecurringOccurrenceStatus.PENDING, RecurringOccurrenceStatus.DUE],
+                    })
+                    .execute();
             }
         }
 
@@ -775,11 +791,28 @@ export class RecurringPaymentService {
     }
 
     async processAllDuePayments(): Promise<{ processed: number; failed: number }> {
-        // Materializa el mes actual y el anterior para no perder vencimientos
-        // si el servidor estuvo detenido.
-        await this.materializeMonth(undefined, dayjs().format("YYYY-MM"));
-        await this.materializeMonth(undefined, dayjs().subtract(1, "month").format("YYYY-MM"));
-        return this.processDuePayments();
+        const lockRunner = AppDataSourceProd.createQueryRunner();
+        await lockRunner.connect();
+
+        try {
+            const lockRows = (await lockRunner.query(
+                "SELECT pg_try_advisory_lock($1) AS locked",
+                [RECURRING_JOB_LOCK_KEY]
+            )) as { locked: boolean }[];
+            if (!lockRows[0]?.locked) return { processed: 0, failed: 0 };
+
+            try {
+                // Materializa el mes actual y el anterior para no perder vencimientos
+                // si el servidor estuvo detenido.
+                await this.materializeMonth(undefined, dayjs().format("YYYY-MM"));
+                await this.materializeMonth(undefined, dayjs().subtract(1, "month").format("YYYY-MM"));
+                return await this.processDuePayments();
+            } finally {
+                await lockRunner.query("SELECT pg_advisory_unlock($1)", [RECURRING_JOB_LOCK_KEY]);
+            }
+        } finally {
+            await lockRunner.release();
+        }
     }
 
     async getMonthProjection(userId: UuidSchema, month?: string): Promise<RecurringMonthProjection> {

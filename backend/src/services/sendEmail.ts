@@ -11,6 +11,11 @@ export interface MailOptions {
 export const sendEmail = async (mailOptions: MailOptions) => {
     const { to, subject, text, html } = mailOptions;
 
+    if (process.env.DISABLE_EMAILS === "true") {
+        console.log(`[email disabled] ${subject} -> ${to}`);
+        return { id: "disabled" };
+    }
+
     const oauth2Client = new google.auth.OAuth2(
         process.env.CLIENT_ID,
         process.env.CLIENT_SECRET,

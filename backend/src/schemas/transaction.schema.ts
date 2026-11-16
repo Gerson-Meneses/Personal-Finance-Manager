@@ -17,7 +17,9 @@ export const baseTransaction = {
         .max(99, { message: "Nombre debe tener como máximo 99 caracteres" }),
 
     type: z
-        .enum(TypeTransaction, { message: "Type debe ser uno de estos valores: 'EXPENSE', 'INCOME'" }),
+        .enum([TypeTransaction.INCOME, TypeTransaction.EXPENSE], {
+            message: "Type debe ser uno de estos valores: 'INCOME', 'EXPENSE'",
+        }),
 
 
     amount: amountSchema,
@@ -98,8 +100,8 @@ export const updateTransactionSchema = z.object({
         .uuid({ message: "Account ID debe ser un UUID válido" })
         .optional(),
 
-    type: z.enum(TypeTransaction, {
-        message: "Type debe ser uno de estos valores: 'EXPENSE', 'INCOME', 'TRANSFER', 'CREDIT_PAYMENT'"
+    type: z.enum([TypeTransaction.INCOME, TypeTransaction.EXPENSE], {
+        message: "Type debe ser uno de estos valores: 'INCOME', 'EXPENSE'"
     }).optional(),
 
     relatedAccountId: z.string({ message: "Related Account ID debe ser una cadena de texto." })

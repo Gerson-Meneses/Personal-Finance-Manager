@@ -20,6 +20,9 @@ export const useRecurringPayments = () => {
         queryClient.invalidateQueries({ queryKey: ["loans"] });
         queryClient.invalidateQueries({ queryKey: ["loanSummary"] });
         queryClient.invalidateQueries({ queryKey: ["summary"] });
+        queryClient.invalidateQueries({ queryKey: ["budgets"] });
+        queryClient.invalidateQueries({ queryKey: ["budgetSuggestions"] });
+        queryClient.invalidateQueries({ queryKey: ["debtInstallments"] });
     };
 
     const createMutation = useMutation({

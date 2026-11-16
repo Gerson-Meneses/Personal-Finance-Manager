@@ -16,7 +16,7 @@ export const useTransfers = () => {
             queryClient.invalidateQueries({ queryKey: ["dashboard"] })
 
             // Si tienes una query específica para el detalle de cuenta
-            queryClient.invalidateQueries({ queryKey: ["account"] });
+            queryClient.invalidateQueries({ queryKey: ["accounts"] });
         }
     });
 

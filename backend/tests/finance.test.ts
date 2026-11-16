@@ -1,11 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import dayjs from "dayjs";
 import { computeBalanceEffect } from "../src/utils/balance";
-import { getMaxBalance } from "../src/utils/getBalanceToCreditCard";
-import { calculateLoanPaymentStatus } from "../src/mappers/LoansMapper";
+import { getCreditCardDebt, getMaxBalance } from "../src/utils/getBalanceToCreditCard";
+import { calculateLoanPaymentStatus, toLoanResponse } from "../src/mappers/LoansMapper";
+import { isTokenVersionValid } from "../src/middlewares/authMiddleware";
+import { userWithCredentialsSchema } from "../src/schemas/user.schema";
+import { transactionSchema, updateTransactionSchema } from "../src/schemas/transaction.schema";
 import { daysInRange } from "../src/services/recurringPaymentService";
 import { detectRecurrence } from "../src/services/recurringSuggestionService";
 import { roundBudgetSuggestion } from "../src/services/budgetService";
+import { buildMonthKeys } from "../src/services/reportsService";
 import { LoanMovementType, RecurrenceFrequency, TypeTransaction } from "../src/utils/Enums";
 import type { RecurringPayment } from "../src/entities/RecurringPayment.entity";
 import type { Loan } from "../src/entities/Loan.entity";
@@ -144,6 +148,29 @@ describe("ledger de pr茅stamos", () => {
         );
 
         expect(status.totalRemaining).toBe(110);
+    });
+
+    test("una reversi贸n descuenta el pago de las m茅tricas", () => {
+        const status = calculateLoanPaymentStatus(
+            loan({
+                principalAmount: 10_000,
+                movements: [
+                    { id: "advance", type: LoanMovementType.ADVANCE, amount: 10_000 },
+                    { id: "repayment", type: LoanMovementType.REPAYMENT, amount: 2_500 },
+                    {
+                        id: "reversal",
+                        type: LoanMovementType.ADJUSTMENT,
+                        amount: 2_500,
+                        reversalOfMovementId: "repayment",
+                    },
+                ] as any,
+            })
+        );
+
+        expect(status.totalPaid).toBe(0);
+        expect(status.totalDebt).toBe(100);
+        expect(status.totalRemaining).toBe(100);
+        expect(status.percentagePaid).toBe(0);
     });
 
     test("un avance adicional incrementa la deuda pendiente", () => {
@@ -332,6 +359,81 @@ describe("recurrencia de pagos", () => {
     });
 });
 
+describe("seguridad de registro y sesi贸n", () => {
+    const validRegistration = {
+        name: "Test User",
+        birthDate: "1990-01-01",
+        phone: "987654321",
+        email: "test@example.com",
+        password: "Abcdef1!",
+    };
+
+    test("el registro ignora isAdmin enviado por el cliente", () => {
+        const parsed = userWithCredentialsSchema.safeParse({
+            ...validRegistration,
+            isAdmin: true,
+        });
+
+        expect(parsed.success).toBe(true);
+        if (parsed.success) {
+            expect("isAdmin" in parsed.data).toBe(false);
+        }
+    });
+
+    test("valida la versi贸n del token contra el usuario", () => {
+        expect(isTokenVersionValid(0, 0)).toBe(true);
+        expect(isTokenVersionValid(undefined, 0)).toBe(true);
+        expect(isTokenVersionValid(1, 0)).toBe(false);
+        expect(isTokenVersionValid(2, 2)).toBe(true);
+    });
+});
+
+describe("tipos permitidos en el endpoint gen茅rico de transacciones", () => {
+    const base = {
+        name: "Movimiento de prueba",
+        amount: 10,
+        date: "2026-01-01",
+        categoryId: "00000000-0000-4000-8000-000000000000",
+        accountId: "00000000-0000-4000-8000-000000000000",
+        isRecurrent: false,
+    };
+
+    test("acepta ingresos y gastos", () => {
+        expect(transactionSchema.safeParse({ ...base, type: TypeTransaction.INCOME }).success).toBe(true);
+        expect(transactionSchema.safeParse({ ...base, type: TypeTransaction.EXPENSE }).success).toBe(true);
+    });
+
+    test("rechaza transferencias y pagos de tarjeta", () => {
+        expect(transactionSchema.safeParse({ ...base, type: TypeTransaction.TRANSFER }).success).toBe(false);
+        expect(transactionSchema.safeParse({ ...base, type: TypeTransaction.CREDIT_PAYMENT }).success).toBe(false);
+    });
+
+    test("el update tampoco permite convertir en transferencia o pago de tarjeta", () => {
+        expect(updateTransactionSchema.safeParse({ type: TypeTransaction.TRANSFER }).success).toBe(false);
+        expect(updateTransactionSchema.safeParse({ type: TypeTransaction.CREDIT_PAYMENT }).success).toBe(false);
+        expect(updateTransactionSchema.safeParse({ type: TypeTransaction.INCOME }).success).toBe(true);
+    });
+});
+
+describe("deuda de tarjeta de cr茅dito", () => {
+    test("calcula la deuda con sobregiro porcentual", () => {
+        expect(getCreditCardDebt(100_000, 20, 120_000)).toBe(0);
+        expect(getCreditCardDebt(100_000, 20, 100_000)).toBe(20_000);
+        expect(getCreditCardDebt(100_000, 0, 50_000)).toBe(50_000);
+    });
+});
+
+describe("contrato monetario de pr茅stamos", () => {
+    test("principalAmount se devuelve en unidades monetarias y en centavos solo si se pide", () => {
+        const source = loan({ principalAmount: 100_000, movements: [] });
+        const normalized = toLoanResponse(source);
+        const cents = toLoanResponse(source, { moneyAmount: false });
+
+        expect(normalized.principalAmount).toBe(1000);
+        expect(cents.principalAmount).toBe(100_000);
+    });
+});
+
 describe("sugerencias de presupuesto", () => {
     test("redondea hacia arriba en pasos de 5 unidades", () => {
         expect(roundBudgetSuggestion(0)).toBe(0);
@@ -397,5 +499,28 @@ describe("detecci贸n de movimientos recurrentes", () => {
         );
 
         expect(pattern).toBeNull();
+    });
+});
+
+describe("buildMonthKeys", () => {
+    test("genera los meses en orden ascendente", () => {
+        expect(buildMonthKeys("2026-03", 3)).toEqual([
+            "2026-01",
+            "2026-02",
+            "2026-03",
+        ]);
+    });
+
+    test("cruza correctamente el cambio de a駉", () => {
+        expect(buildMonthKeys("2026-02", 4)).toEqual([
+            "2025-11",
+            "2025-12",
+            "2026-01",
+            "2026-02",
+        ]);
+    });
+
+    test("siempre devuelve al menos un mes", () => {
+        expect(buildMonthKeys("2026-07", 0)).toEqual(["2026-07"]);
     });
 });

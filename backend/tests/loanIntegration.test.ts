@@ -26,7 +26,7 @@ import {
     TypeTransaction,
 } from "../src/utils/Enums";
 
-const hasDatabase = Boolean(process.env.DATABASE_URL || process.env.DB_HOST);
+const hasDatabase = Boolean(process.env.TEST_DATABASE_URL);
 const describeDb = hasDatabase ? describe : describe.skip;
 
 describeDb("integración del ledger de préstamos", () => {
@@ -296,6 +296,90 @@ describeDb("integración del ledger de préstamos", () => {
         expect(reset.status).toBe(RecurringOccurrenceStatus.PENDING);
         expect(reset.transactionId).toBeNull();
         expect(reset.executedAt).toBeNull();
+    }, 30000);
+
+    test("no ejecuta ocurrencias automáticas de una regla pausada", async () => {
+        const category = await AppDataSourceProd.getRepository(Category).save(
+            AppDataSourceProd.getRepository(Category).create({
+                name: "Integration Paused",
+                type: TypeTransaction.EXPENSE,
+                user: { id: userId } as User,
+            })
+        );
+        const recurringService = new RecurringPaymentService();
+        const payment = await recurringService.createPayment(userId as any, {
+            name: "Integration paused occurrence",
+            type: "EXPENSE",
+            amount: 500,
+            frequency: RecurrenceFrequency.ONCE,
+            intervalCount: 1,
+            startDate: dayjs().format("YYYY-MM-DD"),
+            autoDebit: true,
+            accountId,
+            categoryId: category.id,
+            loanAction: "NONE",
+        } as any);
+        const occurrence = await AppDataSourceProd.getRepository(RecurringPaymentOccurrence).findOneByOrFail({
+            paymentId: payment.id,
+        });
+
+        await AppDataSourceProd.getRepository(RecurringPayment).update(payment.id, { isActive: false });
+        await recurringService.processDuePayments(userId as any);
+
+        const after = await AppDataSourceProd.getRepository(RecurringPaymentOccurrence).findOneByOrFail({
+            id: occurrence.id,
+        });
+        expect(after.status).not.toBe(RecurringOccurrenceStatus.PAID);
+        expect(after.transactionId).toBeNull();
+    }, 30000);
+
+    test("no permite pagar una cuota que pertenece a otro usuario", async () => {
+        const suffix = Date.now().toString().slice(-8);
+        const otherUser = await AppDataSourceProd.getRepository(User).save(
+            AppDataSourceProd.getRepository(User).create({
+                name: "Integration Other User",
+                birthDate: new Date("1991-01-01"),
+                phone: Number(`7${suffix}`),
+                country: "PE",
+                isAdmin: false,
+                is_verified: true,
+            })
+        );
+        const otherContact = await AppDataSourceProd.getRepository(Contact).save(
+            AppDataSourceProd.getRepository(Contact).create({
+                userId: otherUser.id,
+                name: "Integration Other Contact",
+                normalizedName: "INTEGRATION OTHER CONTACT",
+            })
+        );
+        const otherInstallment = await AppDataSourceProd.getRepository(DebtInstallment).save(
+            AppDataSourceProd.getRepository(DebtInstallment).create({
+                contactId: otherContact.id,
+                sequence: 1,
+                dueDate: dayjs().format("YYYY-MM-DD"),
+                amountDue: 1_000,
+                principalDue: 1_000,
+                paidAmount: 0,
+                status: DebtInstallmentStatus.PENDING,
+            })
+        );
+
+        let message = "";
+        try {
+            await new LoansService().payInstallment(userId as any, otherInstallment.id as any, {
+                amount: 100,
+                date: dayjs().format("YYYY-MM-DD"),
+                accountId,
+            } as any);
+        } catch (error) {
+            message = error instanceof Error ? error.message : String(error);
+        } finally {
+            await AppDataSourceProd.getRepository(DebtInstallment).delete(otherInstallment.id);
+            await AppDataSourceProd.getRepository(Contact).delete(otherContact.id);
+            await AppDataSourceProd.getRepository(User).delete(otherUser.id);
+        }
+
+        expect(message).toMatch(/no encontrada/i);
     }, 30000);
 
     test("fusiona contactos y reasigna recurrentes", async () => {

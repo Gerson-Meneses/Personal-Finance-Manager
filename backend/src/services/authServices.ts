@@ -49,6 +49,7 @@ export class AuthService {
 
 			const user: User = this.userRepo.create({
 				...userData,
+				isAdmin: false,
 				credential: credential
 			});
 			await queryRunner.manager.save(user);
@@ -98,17 +99,18 @@ export class AuthService {
 			select: ['id', 'email', 'password'],
 			relations: ['user']
 		});
-		if (!credential) {
-			throw new NotFoundError('Invalid credentials');
+		if (!credential || !credential.user || credential.user.deletedAt) {
+			throw new UnauthorizedError('Credenciales inválidas');
 		}
 		const isPasswordValid = await Bun.password.verify(credentials.password, credential.password);
 		if (!isPasswordValid) {
-			throw new ConflictError('Invalid credentials');
+			throw new UnauthorizedError('Credenciales inválidas');
 		}
 		const payload = {
 			sub: credential.user.id,
 			email: credential.email,
 			role: credential.user.isAdmin ? 'admin' : 'user',
+			tokenVersion: credential.user.tokenVersion ?? 0,
 			exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24 horas
 		}
 
@@ -274,6 +276,9 @@ export class AuthService {
 			user.credential.password = await Bun.password.hash(newPassword);
 			await queryRunner.manager.save(user.credential);
 
+			user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+			await queryRunner.manager.save(user);
+
 			codeDb.used = true;
 			codeDb.ip_validation_address = currentIp;
 			await queryRunner.manager.save(codeDb);
@@ -394,6 +399,9 @@ export class AuthService {
 			user.credential.email = data.newEmail;
 			await queryRunner.manager.save(user.credential);
 
+			user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+			await queryRunner.manager.save(user);
+
 			await queryRunner.manager.save(codeDb);
 
 			sendEmail({
@@ -440,6 +448,9 @@ export class AuthService {
 		try {
 			user.credential.password = await Bun.password.hash(data.newPassword);
 			await queryRunner.manager.save(user.credential);
+
+			user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+			await queryRunner.manager.save(user);
 
 			await queryRunner.manager.save(codeDb);
 

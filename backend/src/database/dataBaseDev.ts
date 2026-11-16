@@ -60,10 +60,13 @@ const commonOptions = {
 
 function buildDataSourceOptions(): DataSourceOptions {
     const sslEnv = process.env.DB_SSL // 'true' | 'false'
+    // TEST_DATABASE_URL solo se usa en tests para aislar integración de la base real.
+    const testDatabaseUrl = process.env.NODE_ENV === "test" ? process.env.TEST_DATABASE_URL : undefined
+    const databaseUrl = testDatabaseUrl || process.env.DATABASE_URL
 
     // 1) Parámetros individuales (DB_HOST) → configuración local/ explícita
     // DATABASE_URL tiene prioridad si ambas variables existen (Render).
-    if (process.env.DB_HOST && !process.env.DATABASE_URL) {
+    if (process.env.DB_HOST && !databaseUrl) {
         return {
             ...commonOptions,
             type: 'postgres',
@@ -76,16 +79,16 @@ function buildDataSourceOptions(): DataSourceOptions {
         }
     }
 
-    // 2) DATABASE_URL → entorno con URL completa (p.ej. producción)
-    if (process.env.DATABASE_URL) {
+    // 2) DATABASE_URL / TEST_DATABASE_URL → entorno con URL completa
+    if (databaseUrl) {
         const useSsl = sslEnv
             ? sslEnv === 'true'
-            : !isLocalHost(new URL(process.env.DATABASE_URL).hostname)
+            : !isLocalHost(new URL(databaseUrl).hostname)
 
         return {
             ...commonOptions,
             type: 'postgres',
-            url: process.env.DATABASE_URL,
+            url: databaseUrl,
             ssl: useSsl ? { rejectUnauthorized: false } : undefined,
         }
     }

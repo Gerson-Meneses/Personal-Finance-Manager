@@ -3,7 +3,7 @@ import { useLogout } from "../../features/auth/useLogout";
 import { matchPath, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { ArrowLeft, ArrowLeftRight, CalendarClock, HandCoins, Home, Menu, PiggyBank, Plus, ShieldCheck, Sparkles, Tags, Users, Wallet, X } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, CalendarClock, ChartNoAxesCombined, HandCoins, Home, Menu, PiggyBank, Plus, ShieldCheck, Sparkles, Tags, Users, Wallet, X } from "lucide-react";
 import ModalPortal from "../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "../../features/transactions/components/TransactionForm/TransactionForm";
 import { AddAnotherTransactionPrompt } from "../../features/transactions/components/AddAnotherTransactionPrompt";
@@ -51,6 +51,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/contacts", label: "Contactos", icon: Users },
   RECURRING_NAV,
   { to: "/budgets", label: "Presupuestos", icon: PiggyBank },
+  { to: "/reports", label: "Reportes", icon: ChartNoAxesCombined },
   { to: "/categories", label: "Categorías", icon: Tags },
   { to: "/admin", label: "Administración", icon: ShieldCheck, adminOnly: true },
 ];

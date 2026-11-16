@@ -36,6 +36,10 @@ export class User {
     })
     isAdmin: boolean;
 
+    /** Se incrementa al cambiar credenciales para invalidar JWT anteriores. */
+    @Column({ type: 'integer', default: 0 })
+    tokenVersion: number;
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
 

@@ -8,13 +8,10 @@ import { handleFieldChange } from "../../../shared/utils/handleFieldChange"
 import type { DetailsError } from "../../../shared/dataApiInterface"
 import type { RegisterOotput } from "../../../features/auth/types"
 
-const ADMIN_EMAIL = "gersonmeneses1612@gmail.com"
-
 const initialForm: Omit<RegisterOotput, "birthDate"> = {
     name: "",
     phone: "",
     country: "",
-    isAdmin: false,
     email: "",
     password: "",
 }
@@ -43,10 +40,6 @@ export const RegisterPage = () => {
 
     const onChange = <K extends keyof typeof formData>(field: K, value: (typeof formData)[K]) => {
         handleFieldChange(field, value, setFormData, setErrors)
-        // Si cambia el email, quitar admin automáticamente
-        if (field === "email") {
-            setFormData(prev => ({ ...prev, isAdmin: false }))
-        }
     }
 
     const getError = (field: keyof RegisterOotput) => errors?.[field]?.[0] ?? null
@@ -199,23 +192,6 @@ export const RegisterPage = () => {
                     ))}
                 </ul>
             </div>
-
-            {/* Admin (solo visible si el email coincide) */}
-            {formData.email === ADMIN_EMAIL && (
-                <div className="form-default-row">
-                    <label className="input-label" style={{ cursor: "pointer" }}>
-                        <input
-                            type="checkbox"
-                            checked={formData.isAdmin ?? false}
-                            onChange={(e) =>
-                                setFormData(prev => ({ ...prev, isAdmin: e.target.checked }))
-                            }
-                            disabled={register.isPending}
-                        />
-                        Es administrador
-                    </label>
-                </div>
-            )}
 
             {/* Error general del servidor (sin details) */}
             {register.error && !register.error.details && (

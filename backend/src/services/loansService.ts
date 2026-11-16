@@ -369,7 +369,7 @@ export class LoansService {
       // Búsqueda general (acreedor o ID)
       if (filters.search) {
         qb.andWhere(
-          "(LOWER(loan.lender) ILIKE LOWER(:search) OR loan.id ILIKE :search)",
+          "(LOWER(loan.lender) ILIKE LOWER(:search) OR CAST(loan.id AS text) ILIKE :search)",
           { search: `%${filters.search}%` }
         );
       }
@@ -562,7 +562,7 @@ export class LoansService {
 
       // Filtro de monto mínimo pendiente
       if (filters?.minRemaining && filters.minRemaining > 0) {
-        filtered = filtered.filter(item => item.payment.totalRemaining >= filters.minRemaining!);
+        filtered = filtered.filter(item => item.payment.totalRemainingInCents >= filters.minRemaining!);
       }
 
       // ============ AGRUPAR POR LENDER Y TIPO ============
@@ -1543,10 +1543,12 @@ export class LoansService {
       }
 
       const installment = await manager.findOne(DebtInstallment, {
-        where: { id: installmentId },
+        where: { id: installmentId, contact: { userId } },
         relations: ["loan", "loan.contact", "contact", "plan"],
       });
-      if (!installment) throw new NotFoundError("Cuota no encontrada");
+      if (!installment || installment.contact?.userId !== userId) {
+        throw new NotFoundError("Cuota no encontrada");
+      }
       if (installment.status === DebtInstallmentStatus.CANCELLED) {
         throw new ConflictError("Esta cuota está cancelada");
       }

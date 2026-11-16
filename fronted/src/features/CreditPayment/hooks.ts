@@ -14,7 +14,6 @@ export const usePayCreditCard = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["transactions"] });
             queryClient.invalidateQueries({ queryKey: ["accounts"] });
-            queryClient.invalidateQueries({ queryKey: ["credit-cards"] });
             queryClient.invalidateQueries({ queryKey: ["dashboard"] })
         }
     });

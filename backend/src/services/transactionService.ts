@@ -19,6 +19,7 @@ import { toTransactionResponse } from "../mappers/TransactionMapper";
 import { TransactionResponse, TransactionStatsResponse } from "../ResponseInterfaces/TransactionInterface";
 import { money } from "../utils/normalizarMoney";
 import { computeBalanceEffect } from "../utils/balance";
+import { getCreditCardDebt } from "../utils/getBalanceToCreditCard";
 
 export class TransactionService {
     private transactionRepo = AppDataSourceProd.getRepository(Transaction);
@@ -239,6 +240,13 @@ export class TransactionService {
             });
             if (!user) throw new NotFoundError("Usuario no encontrado");
 
+            const requestedType = transaction.type as TypeTransaction;
+            if (requestedType !== TypeTransaction.INCOME && requestedType !== TypeTransaction.EXPENSE) {
+                throw new BadRequestError(
+                    "Las transferencias y pagos de tarjeta deben registrarse desde sus propios endpoints."
+                );
+            }
+
             const category = await manager.findOne(Category, {
                 where: { id: transaction.categoryId, user: { id: userId } }
             });
@@ -410,8 +418,11 @@ export class TransactionService {
                 throw new NotFoundError("Cuenta para pagar no encontrada o no pertenece al usuario o no es de tipo débito/cash");
             }
 
-            const withOverDraft = relatedAccount.creditLimit * ((relatedAccount.overdraft || 0) + 1);
-            const debt = withOverDraft - relatedAccount.balance;
+            const debt = getCreditCardDebt(
+                relatedAccount.creditLimit,
+                relatedAccount.overdraft || 0,
+                relatedAccount.balance
+            );
 
             if (account.balance < payment.amount) {
                 throw new ConflictError("Sin saldo suficiente para hacer el pago", {
@@ -473,9 +484,29 @@ export class TransactionService {
 
             const transaction = await manager.findOne(Transaction, {
                 where: { id, user: { id: userId } },
-                relations: ['account', 'relatedAccount', 'category']
+                relations: ['account', 'relatedAccount', 'category', 'loan']
             });
             if (!transaction) throw new NotFoundError("Transacción no encontrada");
+            if (
+                transaction.type !== TypeTransaction.INCOME &&
+                transaction.type !== TypeTransaction.EXPENSE
+            ) {
+                throw new ConflictError(
+                    "Solo se pueden editar ingresos y gastos. Las transferencias y pagos de tarjeta tienen su propio flujo."
+                );
+            }
+
+            const linkedMovement = await manager.findOne(LoanMovement, {
+                where: { transactionId: id },
+            });
+            const linkedOccurrence = await manager.findOne(RecurringPaymentOccurrence, {
+                where: { transactionId: id, userId },
+            });
+            if (linkedMovement || transaction.loan || linkedOccurrence) {
+                throw new ConflictError(
+                    "Esta transacción está vinculada a un préstamo o pago previsto. Edítala desde su flujo original."
+                );
+            }
 
             // 2) Estado actual (old*) y estado deseado (next*)
             const oldType = transaction.type;
@@ -483,7 +514,7 @@ export class TransactionService {
             const oldAccountId = transaction.account.id;
             const oldRelatedAccountId = transaction.relatedAccount?.id ?? null;
 
-            const nextType = updateData.type ?? transaction.type;
+            const nextType = (updateData.type ?? transaction.type) as TypeTransaction;
             const nextAmount = updateData.amount ?? transaction.amount;
             const usesRelatedAccount =
                 nextType === TypeTransaction.TRANSFER || nextType === TypeTransaction.CREDIT_PAYMENT;
@@ -568,8 +599,11 @@ export class TransactionService {
                 }
 
                 const baseRelatedBalance = nextRelatedAccount.balance - (oldEffect.get(nextRelatedAccount.id) ?? 0);
-                const withOverDraft = nextRelatedAccount.creditLimit * ((nextRelatedAccount.overdraft || 0) + 1);
-                const debt = withOverDraft - baseRelatedBalance;
+                const debt = getCreditCardDebt(
+                    nextRelatedAccount.creditLimit,
+                    nextRelatedAccount.overdraft || 0,
+                    baseRelatedBalance
+                );
 
                 if (nextAmount > debt) {
                     throw new BadRequestError("El pago excede la deuda de la tarjeta.", {

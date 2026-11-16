@@ -23,9 +23,16 @@ export const calculateLoanPaymentStatus = (loan: Loan): PaymentCalculation => {
         let advancesInCents = 0;
         let debtIncreaseInCents = 0;
         let repaidInCents = 0;
+        let reversedRepaidInCents = 0;
         let forgivenInCents = 0;
 
         for (const movement of loan.movements) {
+            // Un movimiento de reversión no aumenta la deuda: deshace el pago original.
+            if (movement.reversalOfMovementId) {
+                reversedRepaidInCents += Math.abs(movement.amount);
+                continue;
+            }
+
             if (movement.type === LoanMovementType.ADVANCE) {
                 advancesInCents += movement.amount;
                 debtIncreaseInCents += movement.amount;
@@ -41,6 +48,7 @@ export const calculateLoanPaymentStatus = (loan: Loan): PaymentCalculation => {
             }
         }
 
+        repaidInCents = Math.max(0, repaidInCents - reversedRepaidInCents);
         const totalDebtInCents = Math.max(0, debtIncreaseInCents - forgivenInCents);
         const remainingInCents = Math.max(0, totalDebtInCents - repaidInCents);
 
@@ -91,19 +99,28 @@ export const toLoanResponse = (loan: Loan, { moneyAmount = true, moneyTransactio
     const { id, lender, type, startDate, status, termInMonths, installmentAmount, movements, transactionReference, disbursementAmount, extraCost, tea, contact, notes, cancelledAt, cancelReason } = loan
     const calculation = calculateLoanPaymentStatus(loan)
     const { totalPaid, totalRemaining, percentagePaid, totalAdvanced, totalForgiven, totalDebt } = calculation
+    const reversedMovementIds = new Set(
+        (movements ?? [])
+            .map((movement) => movement.reversalOfMovementId)
+            .filter((id): id is string => Boolean(id))
+    )
 
     let loanResponse: LoanResponse = {
         id,
         lender,
         type,
-        principalAmount: moneyAmount ? Math.round(totalDebt * 100) : Math.round(totalDebt * 100),
+        principalAmount: moneyAmount ? totalDebt : Math.round(totalDebt * 100),
         status,
         startDate,
         amountPaid: totalPaid,
         amountRemaining: totalRemaining,
         percentagePaid,
         paymentCount: movements
-            ? movements.filter((movement) => movement.type === LoanMovementType.REPAYMENT).length
+            ? movements.filter(
+                (movement) =>
+                    movement.type === LoanMovementType.REPAYMENT &&
+                    !reversedMovementIds.has(movement.id)
+            ).length
             : 0,
         totalAdvanced,
         totalForgiven,
@@ -129,7 +146,11 @@ export const toLoanResponse = (loan: Loan, { moneyAmount = true, moneyTransactio
     }
 
     if (movements) {
-        const repayments = movements.filter((movement) => movement.type === LoanMovementType.REPAYMENT)
+        const repayments = movements.filter(
+            (movement) =>
+                movement.type === LoanMovementType.REPAYMENT &&
+                !reversedMovementIds.has(movement.id)
+        )
         if (repayments.length > 0) {
             loanResponse.lastPaymentDate = dayjs.max(repayments.map((movement) => dayjs(movement.date)))?.toDate()
         }

@@ -148,15 +148,17 @@ export default function TransactionItem({ transaction, currentAccountId, search 
                             </div>
 
                             <div className="tx-actions">
-                                <button
-                                    type="button"
-                                    className="tx-action-btn edit tooltip-top"
-                                    onClick={openEdit}
-                                    aria-label={`Editar transacción ${name}`}
-                                    data-tooltip="Editar"
-                                >
-                                    <Pencil size={13} />
-                                </button>
+                                {(type === "INCOME" || type === "EXPENSE") && (
+                                    <button
+                                        type="button"
+                                        className="tx-action-btn edit tooltip-top"
+                                        onClick={openEdit}
+                                        aria-label={`Editar transacción ${name}`}
+                                        data-tooltip="Editar"
+                                    >
+                                        <Pencil size={13} />
+                                    </button>
+                                )}
                                 <button
                                     type="button"
                                     className="tx-action-btn delete tooltip-top"

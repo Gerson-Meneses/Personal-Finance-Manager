@@ -1,7 +1,7 @@
 import z from "zod";
 import type { Account } from "../accounts/types";
 import type { Category } from "../categories/types";
-import { booleanSchema, dateSchema, emailSchema, nameSchema, passwordSchema, phoneSchema } from "../../shared/Schemas/Base.schema";
+import { dateSchema, emailSchema, nameSchema, passwordSchema, phoneSchema } from "../../shared/Schemas/Base.schema";
 
 export interface User {
     id: string;
@@ -34,7 +34,6 @@ export const RegisterSchema = z.object({
     birthDate: dateSchema("Cumpleaños"),
     phone: phoneSchema(),
     country: nameSchema("Pais").optional(),
-    isAdmin: booleanSchema().nullish(),
     email: emailSchema(),
     password: passwordSchema()
 })
