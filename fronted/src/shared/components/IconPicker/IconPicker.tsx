@@ -6,9 +6,8 @@ import {
   useState,
 } from "react";
 
-import * as LucideIcons from "lucide-react";
-
 import { getIcon } from "../../utils/GetIcon";
+import { ICON_NAMES } from "../../utils/iconRegistry";
 import { usePopoverPlacement } from "../../Hooks/usePopoverPlacement";
 
 import type { BaseInputProps } from "../types";
@@ -25,17 +24,6 @@ const DEFAULT_ICONS = [
   "Home",
   "Zap",
 ];
-
-const EXCLUDED_EXPORTS = [
-  "createLucideIcon",
-  "icons",
-  "IconNode",
-  "LucideProvider",
-];
-
-const LUCIDE_ICON_NAMES = Object.keys(LucideIcons)
-  .filter((key) => /^[A-Z]/.test(key))
-  .filter((key) => !EXCLUDED_EXPORTS.includes(key));
 
 interface IconPickerProps
   extends BaseInputProps<string> {
@@ -76,6 +64,7 @@ export const IconPicker = ({
 
   const generatedId = useId();
   const inputId = id ?? name ?? `icon-picker-${generatedId.replace(/:/g, "")}`;
+  const errorId = `${generatedId.replace(/:/g, "")}-error`;
 
   /* Abre hacia arriba / alineado a la derecha si no hay espacio */
   const placement = usePopoverPlacement(isOpen, containerRef, popoverRef);
@@ -125,7 +114,7 @@ export const IconPicker = ({
   const filteredIcons = useMemo(() => {
     if (!search) return icons;
 
-    return LUCIDE_ICON_NAMES
+    return ICON_NAMES
       .filter((name) =>
         name
           .toLowerCase()
@@ -161,6 +150,9 @@ export const IconPicker = ({
           className="icon-trigger"
           disabled={disabled}
           aria-expanded={isOpen}
+          aria-haspopup="dialog"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           onClick={() =>
             setIsOpen((prev) => !prev)
           }
@@ -177,6 +169,8 @@ export const IconPicker = ({
         {isOpen && (
           <div
             ref={popoverRef}
+            role="dialog"
+            aria-label="Seleccionar icono"
             className={[
               "icon-popover",
               placement.up ? "open-up" : "",
@@ -228,7 +222,7 @@ export const IconPicker = ({
       </div>
 
       {error && (
-        <span className="error-text">
+        <span id={errorId} className="error-text" role="alert">
           {error}
         </span>
       )}

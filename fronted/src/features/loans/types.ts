@@ -84,6 +84,9 @@ export interface LoanQueryFilters {
     type?: LoanType;
     status?: StatusLoan;
 
+    // Contacto asociado
+    contactId?: string;
+
     // Búsqueda por acreedor
     lender?: string;
 
@@ -122,6 +125,7 @@ export const initialQuery: LoanQueryFilters = {
 }
 
 export interface LoanSummaryQuerySchema {
+    contactId?: string,
     type?: LoanType,
     status?: StatusLoan,
     excludeCompleted?: boolean,

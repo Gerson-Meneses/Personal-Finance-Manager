@@ -2,6 +2,7 @@ import { AppDataSourceProd } from "../database/dataBaseDev";
 import { Category } from "../entities/Category.entity";
 import { ReccurentTransaction } from "../entities/ReccurentTransaction.entity";
 import { Transaction } from "../entities/Transaction.entity";
+import { TransactionSplit } from "../entities/TransactionSplit.entity";
 import { User } from "../entities/User.entity";
 import { BadRequestError, ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
 import { CategoryQuerySchema, CategorySchema, UpdateCategorySchema } from "../schemas/category.schema";
@@ -70,6 +71,7 @@ export class CategoryService {
     private userRepo = AppDataSourceProd.getRepository(User)
     private transactionRepo = AppDataSourceProd.getRepository(Transaction)
     private recurrentRepo = AppDataSourceProd.getRepository(ReccurentTransaction)
+    private splitRepo = AppDataSourceProd.getRepository(TransactionSplit)
 
     async getCategoriesByUser(userId: UuidSchema, filters: CategoryQuerySchema): Promise<PaginatedResult<CategoryWithUsage>> {
         const page = filters.page && filters.page > 0 ? filters.page : 1;
@@ -86,25 +88,40 @@ export class CategoryService {
 
         const [categories, total] = await qb.getManyAndCount();
 
-        const usageQb = this.transactionRepo
-            .createQueryBuilder('tx')
-            .select('tx.categoryId', 'categoryId')
-            .addSelect('COUNT(tx.id)', 'transactionCount')
-            .addSelect('COALESCE(SUM(tx.amount), 0)', 'totalAmount')
-            .where('tx.userId = :userId', { userId })
-            .andWhere('tx.categoryId IS NOT NULL')
-            .groupBy('tx.categoryId');
-
         // Métricas del mes solicitado (YYYY-MM). Sin month = histórico completo.
+        let dateFilter = "";
+        const params: unknown[] = [userId];
         if (filters.month) {
             const [year, monthNumber] = filters.month.split('-').map(Number);
             const lastDay = new Date(year, monthNumber, 0).getDate();
             const from = `${filters.month}-01`;
             const to = `${filters.month}-${String(lastDay).padStart(2, '0')}`;
-            usageQb.andWhere('tx.date >= :from AND tx.date <= :to', { from, to });
+            dateFilter = "AND t.date >= $2 AND t.date <= $3";
+            params.push(from, to);
         }
 
-        const usageRaw = await usageQb.getRawMany();
+        // Las divisiones aportan su propio monto/categoría; las transacciones
+        // sin divisiones usan su monto/categoría principal.
+        const usageRaw: { categoryId: string; transactionCount: string; totalAmount: string }[] =
+            await this.transactionRepo.query(
+                `
+                SELECT src."categoryId",
+                       COUNT(DISTINCT src.id)::text AS "transactionCount",
+                       COALESCE(SUM(src.amount), 0)::text AS "totalAmount"
+                FROM (
+                    SELECT t.id,
+                           COALESCE(split."categoryId", t."categoryId") AS "categoryId",
+                           COALESCE(split.amount, t.amount) AS amount
+                    FROM "transactions" t
+                    LEFT JOIN "transaction_splits" split ON split."transactionId" = t.id
+                    WHERE t."userId" = $1
+                    ${dateFilter}
+                ) src
+                WHERE src."categoryId" IS NOT NULL
+                GROUP BY src."categoryId"
+                `,
+                params
+            );
 
         const usageById = new Map<string, { transactionCount: string | number; totalAmount: string | number }>(
             usageRaw.map((row) => [row.categoryId, row])
@@ -180,17 +197,52 @@ export class CategoryService {
         };
     }
 
+    private async resolveParentCategory(
+        userId: UuidSchema,
+        parentCategoryId: string,
+        type: TypeTransaction,
+        categoryId?: string
+    ): Promise<Category> {
+        const parent = await this.categoryRepo.findOne({
+            where: { id: parentCategoryId, user: { id: userId } },
+        });
+
+        if (!parent) {
+            throw new NotFoundError("Categoría padre no encontrada o no pertenece al usuario.");
+        }
+        if (categoryId && parent.id === categoryId) {
+            throw new BadRequestError("Una categoría no puede ser su propia categoría padre.");
+        }
+        if (parent.type !== type) {
+            throw new ConflictError("La categoría padre debe ser del mismo tipo.", {
+                parentCategoryId: ["La categoría padre debe ser del mismo tipo."],
+            });
+        }
+        if (parent.parentCategoryId) {
+            throw new BadRequestError("Solo se permite un nivel de subcategorías.");
+        }
+
+        return parent;
+    }
+
     async createCategory(category: CategorySchema, userId: string): Promise<Category> {
         const user = await this.userRepo.findOneBy({ id: userId })
         if (!user) throw new BadRequestError("User not found")
         const categoryExist = await this.categoryRepo.findOneBy({ name: category.name, user: { id: userId }, type: category.type })
         if (categoryExist) throw new ConflictError("Usuario ya tiene categoria con este nombre y tipo", { name: "Ya existe una categoría con este nombre y tipo" })
+
+        const parent = category.parentCategoryId
+            ? await this.resolveParentCategory(userId, category.parentCategoryId, category.type)
+            : null
+
         let nCategory = this.categoryRepo.create({
             color: category.color,
             icon: category.icon ?? "Tag",
             name: category.name,
             type: category.type,
             user: user,
+            parentCategoryId: parent?.id ?? null,
+            parentCategory: parent,
         })
         const newCategory = await this.categoryRepo.save(nCategory)
         return newCategory
@@ -205,14 +257,46 @@ export class CategoryService {
             if (categoryExist && categoryExist.id !== categoryId) throw new ConflictError("Usuario ya tiene categoria con este nombre y tipo", { name: "Ya existe una categoría con este nombre y tipo" })
         }
 
+        const { parentCategoryId, ...rest } = categoryUpdate;
+
         if (categoryFound.isBase) {
             if (categoryUpdate.name) {
                 throw new BadRequestError("No se puede cambiar el nombre de una categoria base")
-            } else {
-                Object.assign(categoryFound, categoryUpdate)
             }
-        } else {
-            Object.assign(categoryFound, categoryUpdate)
+            if (parentCategoryId) {
+                throw new BadRequestError("Una categoria base no puede ser subcategoría")
+            }
+        }
+
+        Object.assign(categoryFound, rest)
+
+        if (parentCategoryId !== undefined) {
+            if (parentCategoryId && categoryFound.isBase) {
+                throw new BadRequestError("Una categoria base no puede ser subcategoría")
+            }
+
+            if (parentCategoryId) {
+                const childrenCount = await this.categoryRepo.count({
+                    where: { parentCategoryId: categoryId },
+                })
+                if (childrenCount > 0) {
+                    throw new BadRequestError(
+                        "Esta categoría tiene subcategorías. Quítalas o muévelas antes de convertirla en subcategoría."
+                    )
+                }
+            }
+
+            const parent = parentCategoryId
+                ? await this.resolveParentCategory(
+                    userId,
+                    parentCategoryId,
+                    categoryFound.type,
+                    categoryId
+                )
+                : null
+
+            categoryFound.parentCategoryId = parent?.id ?? null
+            categoryFound.parentCategory = parent
         }
 
         await this.categoryRepo.save(categoryFound)
@@ -226,18 +310,29 @@ export class CategoryService {
         if (!categoryFound) throw new NotFoundError("Categoria no encontrada o no pertenece al usuario.")
         if (categoryFound.isBase) throw new BadRequestError("No se puede eliminar una categoria base")
 
-        const [transactionCount, recurrentCount] = await Promise.all([
+        const [transactionCount, recurrentCount, splitCount] = await Promise.all([
             this.transactionRepo.createQueryBuilder('tx')
                 .where('tx.categoryId = :categoryId', { categoryId })
                 .getCount(),
             this.recurrentRepo.createQueryBuilder('rt')
                 .where('rt.categoryId = :categoryId', { categoryId })
                 .getCount(),
+            this.splitRepo.createQueryBuilder('split')
+                .where('split.categoryId = :categoryId', { categoryId })
+                .getCount(),
         ])
 
-        if (transactionCount > 0 || recurrentCount > 0) {
+        if (transactionCount > 0 || recurrentCount > 0 || splitCount > 0) {
             throw new BadRequestError("No se puede eliminar una categoria que tiene transacciones asociadas")
         }
+
+        // Las subcategorías no se eliminan: pasan a ser categorías principales.
+        await this.categoryRepo
+            .createQueryBuilder()
+            .update(Category)
+            .set({ parentCategoryId: null })
+            .where("parentCategoryId = :categoryId", { categoryId })
+            .execute()
 
         await this.categoryRepo.remove(categoryFound)
         return categoryFound

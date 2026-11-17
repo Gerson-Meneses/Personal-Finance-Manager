@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import { getIcon } from "../../utils/GetIcon";
 
 import type { BaseInputProps } from "../types";
@@ -28,8 +30,10 @@ export const ColorPicker = ({
 
   className,
 }: ColorPickerProps) => {
+  const generatedId = useId();
   const inputId =
     id ?? name ?? "color-picker";
+  const errorId = `${generatedId}-error`;
 
   const displayValue =
     value?.toUpperCase() ?? "#000000";
@@ -77,6 +81,8 @@ export const ColorPicker = ({
           value={value ?? "#000"}
           disabled={disabled}
           required={required}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           className="color-input-hidden"
           onChange={(e) =>
             onChange(e.target.value)
@@ -85,7 +91,7 @@ export const ColorPicker = ({
       </div>
 
       {error && (
-        <span className="error-text">
+        <span id={errorId} className="error-text" role="alert">
           {error}
         </span>
       )}

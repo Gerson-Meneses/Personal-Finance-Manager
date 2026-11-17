@@ -5,6 +5,7 @@ export const loanQuerySchema = z.object({
     // Filtros por tipo y estado
     type: z.enum(TypeLoan).nullish(),
     status: z.enum(StatusLoan).nullish(),
+    contactId: z.uuid().nullish(),
 
     // Búsqueda por acreedor
     lender: z.string().trim().min(1).max(100).nullish(),

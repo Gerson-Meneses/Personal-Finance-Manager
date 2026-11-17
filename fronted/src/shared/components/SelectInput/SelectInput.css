@@ -316,3 +316,15 @@ option {
     background-color: var(--bg-surface);
     cursor: pointer;
 }
+
+/* El chevron actua como boton para contraer el panel */
+.select-input-chevron {
+    cursor: pointer;
+    padding: 4px;
+    margin: -4px;
+    border-radius: 6px;
+}
+
+.select-input-chevron:hover {
+    background: var(--bg-hover);
+}

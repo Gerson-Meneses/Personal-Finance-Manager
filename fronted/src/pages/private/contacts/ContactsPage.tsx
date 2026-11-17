@@ -9,6 +9,7 @@ import { FormContainer } from "../../../shared/components/FormContainer/FormCont
 import { TextInput } from "../../../shared/components/TextInput/TextInput";
 import { SelectInput } from "../../../shared/components/SelectInput/SelectInput";
 import { SearchInput } from "../../../shared/components/SearchInput/SearchInput";
+import { QueryErrorState } from "../../../shared/components/QueryErrorState/QueryErrorState";
 import { useToast } from "../../../shared/Hooks/useToast";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import "./ContactsPage.css";
@@ -20,7 +21,7 @@ const getInitials = (name: string) =>
     name.split(" ").filter(Boolean).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
 
 export default function ContactsPage() {
-    const { contacts, loading, updateContact, mergeContacts } = useContacts();
+    const { contacts, loading, fetching, error: queryError, refetch, updateContact, mergeContacts } = useContacts();
     const { summary } = useLoanSummary({ status: "PENDING" });
     const toast = useToast();
     const [search, setSearch] = useState("");
@@ -97,6 +98,19 @@ export default function ContactsPage() {
     };
 
     if (loading) return <LoadingScreen message="Cargando contactos..." />;
+
+    if (queryError && contacts.length === 0) {
+        return (
+            <div className="page-container contacts-page">
+                <QueryErrorState
+                    title="No se pudieron cargar los contactos"
+                    error={queryError instanceof Error ? queryError.message : String(queryError)}
+                    onRetry={() => refetch()}
+                    retrying={fetching}
+                />
+            </div>
+        );
+    }
 
     return (
         <div className="page-container contacts-page">

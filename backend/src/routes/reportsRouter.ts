@@ -1,9 +1,11 @@
 import { Hono } from "hono";
 import { AppEnv } from "../types";
 import { zodErrorResponse } from "../helpers/zodErrorResponse";
-import { getMonthlyReport } from "../controllers/reportsController";
+import { exportMonthlyReport, getMonthlyReport } from "../controllers/reportsController";
 import {
+    monthlyReportExportQuerySchema,
     monthlyReportQuerySchema,
+    type MonthlyReportExportQuery,
     type MonthlyReportQuery,
 } from "../schemas/reports.schema";
 
@@ -21,5 +23,20 @@ reportsRouter.get("/monthly", async (c) => {
         c,
         userId,
         parsed.data as MonthlyReportQuery
+    );
+});
+
+reportsRouter.get("/monthly/export", async (c) => {
+    const userId = c.get("user").sub;
+    const parsed = monthlyReportExportQuerySchema.safeParse(c.req.query());
+
+    if (!parsed.success) {
+        return zodErrorResponse(parsed.error, c);
+    }
+
+    return await exportMonthlyReport(
+        c,
+        userId,
+        parsed.data as MonthlyReportExportQuery
     );
 });

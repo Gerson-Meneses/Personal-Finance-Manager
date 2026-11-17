@@ -1,0 +1,446 @@
+.contact-debt-page {
+    gap: 14px;
+}
+
+.contact-debt-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) auto auto;
+    align-items: center;
+    gap: 18px;
+    padding: 20px 22px;
+    background:
+        radial-gradient(ellipse 60% 130% at 0% 0%, rgba(139, 92, 246, 0.1), transparent 60%),
+        radial-gradient(ellipse 45% 110% at 100% 0%, rgba(8, 145, 178, 0.06), transparent 55%),
+        var(--bg-surface);
+}
+
+.contact-debt-hero__identity {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-width: 0;
+}
+
+.contact-debt-hero__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    background: rgba(139, 92, 246, 0.16);
+    color: #c4b5fd;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.contact-debt-hero__eyebrow {
+    display: inline-flex;
+    font-size: 0.64rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #c4b5fd;
+    margin-bottom: 3px;
+}
+
+.contact-debt-hero h1 {
+    margin: 0;
+    font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.contact-debt-hero p {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+}
+
+.contact-debt-hero__notes {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 46ch;
+}
+
+.contact-debt-hero__net {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.022);
+}
+
+.contact-debt-hero__net small {
+    font-size: 0.62rem;
+    color: var(--text-tertiary);
+}
+
+.contact-debt-hero__net strong {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.contact-debt-hero__net span {
+    font-size: 0.62rem;
+    color: var(--text-tertiary);
+}
+
+.contact-debt-hero__net.is-positive strong { color: var(--success); }
+.contact-debt-hero__net.is-negative strong { color: var(--danger); }
+
+.contact-debt-hero__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.contact-debt-hero__actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.76rem;
+    padding: 8px 11px;
+}
+
+.contact-debt-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.contact-debt-stat {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px 15px;
+}
+
+.contact-debt-stat > span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    flex-shrink: 0;
+}
+
+.contact-debt-stat.is-given > span { background: rgba(139, 92, 246, 0.12); color: #c4b5fd; }
+.contact-debt-stat.is-received > span { background: rgba(8, 145, 178, 0.12); color: var(--info); }
+.contact-debt-stat.is-due > span { background: rgba(241, 196, 15, 0.1); color: var(--accent); }
+.contact-debt-stat.is-overdue > span { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+.contact-debt-stat > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.contact-debt-stat small {
+    font-size: 0.66rem;
+    color: var(--text-tertiary);
+}
+
+.contact-debt-stat strong {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.contact-debt-panel {
+    padding: 15px 16px;
+}
+
+.contact-debt-panel__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.contact-debt-panel__head h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.contact-debt-panel__head p {
+    margin: 3px 0 0;
+    font-size: 0.72rem;
+}
+
+.contact-debt-panel__head .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+}
+
+.contact-debt-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 8px;
+}
+
+.contact-debt-plan {
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.contact-debt-plan.is-paused { opacity: 0.72; }
+.contact-debt-plan.is-cancelled { opacity: 0.5; }
+
+.contact-debt-plan__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.contact-debt-plan__head strong {
+    font-size: 0.76rem;
+    color: var(--text-primary);
+}
+
+.contact-debt-plan__head small {
+    margin-left: auto;
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+}
+
+.contact-debt-plan__status {
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.contact-debt-plan__status.is-active {
+    color: var(--success);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.contact-debt-plan__status.is-paused {
+    color: var(--accent);
+    background: rgba(241, 196, 15, 0.1);
+}
+
+.contact-debt-plan__bar {
+    height: 5px;
+    margin: 8px 0 5px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+}
+
+.contact-debt-plan__bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+}
+
+.contact-debt-plan__meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.64rem;
+    color: var(--text-tertiary);
+}
+
+.contact-debt-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.85fr);
+    gap: 10px;
+    align-items: start;
+}
+
+.contact-debt-debts {
+    min-width: 0;
+}
+
+.contact-debt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.contact-debt-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.contact-debt-installments,
+.contact-debt-activity {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.contact-debt-installments li,
+.contact-debt-activity li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 5px;
+    border-radius: 8px;
+}
+
+.contact-debt-installments li:hover,
+.contact-debt-activity li:hover {
+    background: rgba(255, 255, 255, 0.022);
+}
+
+.contact-debt-installment__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-tertiary);
+}
+
+.contact-debt-installment__dot.is-pending { background: var(--info); }
+.contact-debt-installment__dot.is-partial { background: var(--accent); }
+.contact-debt-installment__dot.is-overdue { background: var(--danger); }
+.contact-debt-installment__dot.is-paid { background: var(--success); }
+
+.contact-debt-installments li > div,
+.contact-debt-activity li > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.contact-debt-installments strong,
+.contact-debt-activity strong {
+    font-size: 0.74rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.contact-debt-installments small,
+.contact-debt-activity small {
+    font-size: 0.64rem;
+    color: var(--text-tertiary);
+}
+
+.contact-debt-installments .btn-ghost {
+    font-size: 0.68rem;
+    padding: 4px 6px;
+}
+
+.contact-debt-activity li > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    font-size: 0.62rem;
+    color: var(--text-tertiary);
+}
+
+.contact-debt-activity li > strong {
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.contact-debt-empty {
+    margin: 0;
+    font-size: 0.74rem;
+    color: var(--text-tertiary);
+}
+
+@media (max-width: 1100px) {
+    .contact-debt-hero {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+    }
+
+    .contact-debt-hero__actions {
+        justify-content: flex-start;
+    }
+
+    .contact-debt-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-debt-side {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: grid;
+    }
+}
+
+@media (max-width: 760px) {
+    .contact-debt-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .contact-debt-side {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .contact-debt-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+.contact-debt-activity__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    margin-top: 6px;
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.022);
+    color: #c4b5fd;
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.contact-debt-activity__toggle:hover {
+    background: rgba(139, 92, 246, 0.08);
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.contact-debt-activity__toggle svg {
+    transition: transform 0.15s;
+}
+
+.contact-debt-activity__toggle svg.is-open {
+    transform: rotate(180deg);
+}

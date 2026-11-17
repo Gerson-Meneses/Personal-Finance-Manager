@@ -168,7 +168,7 @@ export default function QuickStats({
                             type="button"
                             className="qs-tag qs-tag-warning"
                             aria-label="Ver préstamos: yo debo"
-                            onClick={() => navigate("/loans")}
+                            onClick={() => navigate("/debts")}
                         >
                             <span>Yo debo</span>
                             <span className="text-danger">
@@ -182,7 +182,7 @@ export default function QuickStats({
                             type="button"
                             className="qs-tag qs-tag-success"
                             aria-label="Ver préstamos: me deben"
-                            onClick={() => navigate("/loans")}
+                            onClick={() => navigate("/debts")}
                         >
                             <span>Me deben</span>
                             <span className="text-success">

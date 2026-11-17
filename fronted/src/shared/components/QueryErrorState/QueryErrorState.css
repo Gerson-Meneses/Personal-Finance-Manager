@@ -1,0 +1,35 @@
+.query-error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px 24px;
+    text-align: center;
+}
+
+.query-error-state__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--danger);
+    margin-bottom: 4px;
+}
+
+.query-error-state h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.query-error-state p {
+    margin: 0 0 8px;
+    max-width: 420px;
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+}

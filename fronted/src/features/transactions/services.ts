@@ -1,4 +1,4 @@
-import { apiFetch } from "../../shared/api";
+import { apiFetch, downloadApiFile } from "../../shared/api";
 import type { Data } from "../../shared/dataApiInterface";
 import type { Transaction, TransactionOutput, TransactionQuerySchemaOutput, TransactionStats, UpdateTransactionOutput } from "./types";
 
@@ -20,6 +20,9 @@ export const getTransactions = async (query?: TransactionQuerySchemaOutput): Pro
 export const getTransactionStats = async (query?: TransactionQuerySchemaOutput): Promise<TransactionStats> => {
   return await apiFetch<TransactionStats>(`/transaction/stats${toSearchParams(query)}`);
 };
+
+export const exportTransactions = (query?: TransactionQuerySchemaOutput): Promise<string> =>
+  downloadApiFile(`/transaction/export${toSearchParams(query)}`, "transacciones.csv");
 
 export const getTransactionById = async (id: string): Promise<Transaction> => {
   return await apiFetch<Transaction>(`/transaction/${id}`);

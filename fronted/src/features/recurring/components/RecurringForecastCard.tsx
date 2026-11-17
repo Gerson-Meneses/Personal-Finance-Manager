@@ -33,7 +33,7 @@ export function RecurringForecastCard() {
                     <CalendarClock size={15} />
                     Flujo previsto
                 </h3>
-                <Link className="btn-ghost" to="/recurring">
+                <Link className="btn-ghost" to="/planning?tab=recurring">
                     Gestionar <ArrowRight size={14} />
                 </Link>
             </div>

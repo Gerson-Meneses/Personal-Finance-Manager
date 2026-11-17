@@ -328,7 +328,7 @@ main {
 /* Portátiles/tabletas: nav solo iconos. Con etiquetas no cabe en anchos
    medios (el último enlace quedaría fuera), así que se muestran desde
    pantallas realmente anchas. */
-@media (max-width: 1660px) {
+@media (max-width: 2080px) {
     .header-nav {
         /* Si los iconos no caben, se deslizan en horizontal en vez de
            recortarse o solaparse con los controles de la derecha. */

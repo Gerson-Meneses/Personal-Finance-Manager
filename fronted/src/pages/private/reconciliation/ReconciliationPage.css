@@ -1,0 +1,939 @@
+.reconciliation-page {
+    gap: 14px;
+}
+
+/* ═══ Header ═══════════════════════════════════════════════ */
+.reconciliation-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 20px 22px;
+    background:
+        radial-gradient(ellipse 60% 120% at 0% 0%, rgba(56, 189, 248, 0.08), transparent 60%),
+        var(--bg-surface);
+}
+
+.reconciliation-header__text {
+    min-width: 0;
+}
+
+.reconciliation-header__eyebrow {
+    display: inline-flex;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--info);
+    margin-bottom: 4px;
+}
+
+.reconciliation-header h1 {
+    margin: 0;
+    font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.reconciliation-header p {
+    margin: 5px 0 0;
+    font-size: 0.84rem;
+}
+
+.reconciliation-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.reconciliation-header__actions button {
+    font-size: 0.8rem;
+    padding: 9px 13px;
+}
+
+.reconciliation-account.custom-form-group {
+    width: 190px;
+}
+
+.is-spinning {
+    animation: reconciliationSpin 0.8s linear infinite;
+}
+
+@keyframes reconciliationSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* ═══ KPIs ════════════════════════════════════════════════ */
+.reconciliation-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.reconciliation-kpi {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 13px 15px;
+    min-width: 0;
+}
+
+.reconciliation-kpi__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.reconciliation-kpi__icon.is-pending {
+    background: rgba(241, 196, 15, 0.12);
+    color: var(--accent);
+}
+
+.reconciliation-kpi__icon.is-matched {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--success);
+}
+
+.reconciliation-kpi__icon.is-imported {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--info);
+}
+
+.reconciliation-kpi__icon.is-ignored {
+    background: rgba(148, 163, 184, 0.12);
+    color: var(--text-secondary);
+}
+
+.reconciliation-kpi > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.reconciliation-kpi span {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+}
+
+.reconciliation-kpi strong {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.reconciliation-kpi small {
+    font-size: 0.66rem;
+    color: var(--text-tertiary);
+}
+
+/* ═══ Toolbar ═════════════════════════════════════════════ */
+.reconciliation-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    flex-wrap: wrap;
+}
+
+.reconciliation-toolbar .si-wrapper {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.reconciliation-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.reconciliation-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background: rgba(255, 255, 255, 0.025);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.reconciliation-chip span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--bg-hover);
+    color: var(--text-tertiary);
+    font-size: 0.64rem;
+}
+
+.reconciliation-chip:hover {
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+}
+
+.reconciliation-chip.is-active {
+    color: var(--accent-contrast);
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.reconciliation-chip.is-active span {
+    background: rgba(0, 0, 0, 0.18);
+    color: inherit;
+}
+
+/* ═══ Lista ═══════════════════════════════════════════════ */
+.reconciliation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bank-line {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    border-left: 3px solid rgba(241, 196, 15, 0.6);
+}
+
+.bank-line.is-matched {
+    border-left-color: var(--success);
+}
+
+.bank-line.is-imported {
+    border-left-color: var(--info);
+}
+
+.bank-line.is-ignored {
+    border-left-color: var(--text-tertiary);
+    opacity: 0.7;
+}
+
+.bank-line__main {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+}
+
+.bank-line__date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-subtle);
+}
+
+.bank-line__date span {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-primary);
+}
+
+.bank-line__date small {
+    font-size: 0.58rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+}
+
+.bank-line__info {
+    min-width: 0;
+}
+
+.bank-line__title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.bank-line__title-row > strong {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.bank-line__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    background: rgba(241, 196, 15, 0.12);
+    color: var(--accent);
+}
+
+.bank-line__status.is-matched {
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--success);
+}
+
+.bank-line__status.is-imported {
+    background: rgba(56, 189, 248, 0.12);
+    color: var(--info);
+}
+
+.bank-line__status.is-ignored {
+    background: var(--bg-hover);
+    color: var(--text-tertiary);
+}
+
+.bank-line__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 3px;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    min-width: 0;
+}
+
+.bank-line__dot {
+    opacity: 0.5;
+}
+
+.bank-line__amount {
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bank-line__amount.is-income {
+    color: var(--success);
+}
+
+.bank-line__amount.is-expense {
+    color: var(--danger);
+}
+
+/* Coincidencias */
+.bank-match {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 9px;
+    border-top: 1px dashed var(--border-subtle);
+    margin-left: 53px;
+}
+
+.bank-match__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--info);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.bank-match__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    border-radius: 9px;
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    background: rgba(56, 189, 248, 0.04);
+    min-width: 0;
+}
+
+.bank-match__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1;
+}
+
+.bank-match__body strong {
+    font-size: 0.78rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bank-match__body small {
+    font-size: 0.65rem;
+    color: var(--text-tertiary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bank-match__score {
+    flex-shrink: 0;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--info);
+}
+
+.bank-match__btn {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    padding: 5px 9px;
+}
+
+/* Acciones / conciliado */
+.bank-line__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-top: 2px;
+}
+
+.bank-line__actions button {
+    font-size: 0.72rem;
+    padding: 6px 10px;
+}
+
+.bank-line__linked {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    border-radius: 9px;
+    border: 1px solid rgba(34, 197, 94, 0.16);
+    background: rgba(34, 197, 94, 0.04);
+}
+
+.bank-line__linked-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: var(--success);
+}
+
+.bank-line__linked-info > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.bank-line__linked-info strong {
+    font-size: 0.78rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bank-line__linked-info small {
+    font-size: 0.65rem;
+    color: var(--text-tertiary);
+}
+
+.bank-line__linked .btn-ghost {
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.bank-line__hint {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+}
+
+/* Estado vacío */
+.reconciliation-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.reconciliation-empty__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: rgba(56, 189, 248, 0.08);
+    color: var(--info);
+}
+
+.reconciliation-empty h3 {
+    margin: 4px 0 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.reconciliation-empty p {
+    margin: 0;
+    font-size: 0.86rem;
+    max-width: 420px;
+}
+
+/* ═══ Wizard de importación ══════════════════════════════ */
+.bank-import-form {
+    gap: 12px;
+}
+
+.bi-field {
+    width: 100%;
+}
+
+.bi-dropzone {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px dashed var(--border-strong);
+    background: var(--surface-soft);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.bi-dropzone:hover,
+.bi-dropzone.is-dragging {
+    border-color: var(--info);
+    background: var(--info-soft);
+}
+
+.bi-dropzone__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    background: var(--info-soft);
+    color: var(--info);
+}
+
+.bi-dropzone__text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1;
+}
+
+.bi-dropzone__text strong {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bi-dropzone__text small {
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+}
+
+.bi-dropzone__button {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    padding: 6px 10px;
+    pointer-events: none;
+}
+
+.bi-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.bi-detected {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+}
+
+.bi-detected strong {
+    color: var(--text-secondary);
+}
+
+.bi-mapping {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+}
+
+.bi-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bi-mode__label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.bi-mode__toggle {
+    display: flex;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--input-bg);
+}
+
+.bi-mode__toggle button {
+    flex: 1;
+    padding: 8px 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    font-family: inherit;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.bi-mode__toggle button.is-active {
+    background: var(--info-soft);
+    color: var(--info);
+    font-weight: 600;
+}
+
+.bi-summary {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.bi-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    background: var(--surface-soft);
+}
+
+.bi-chip.is-valid {
+    color: var(--success);
+    border-color: rgba(34, 197, 94, 0.25);
+    background: rgba(34, 197, 94, 0.06);
+}
+
+.bi-chip.is-error {
+    color: var(--danger);
+    border-color: rgba(239, 68, 68, 0.25);
+    background: rgba(239, 68, 68, 0.06);
+}
+
+.bi-chip.is-income {
+    color: var(--success);
+}
+
+.bi-chip.is-expense {
+    color: var(--danger);
+}
+
+.bi-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.bi-preview__title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+}
+
+.bi-preview__scroll {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+}
+
+.bi-preview__table {
+    width: 100%;
+    min-width: 460px;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+}
+
+.bi-preview__table th {
+    text-align: left;
+    padding: 7px 9px;
+    color: var(--text-tertiary);
+    font-weight: 600;
+    background: var(--surface-soft);
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: nowrap;
+}
+
+.bi-preview__table td {
+    padding: 7px 9px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-soft);
+    white-space: nowrap;
+}
+
+.bi-preview__table tr:last-child td {
+    border-bottom: none;
+}
+
+.bi-preview__desc {
+    max-width: 190px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bi-type {
+    display: inline-flex;
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.bi-type.is-income {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--success);
+}
+
+.bi-type.is-expense {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.bi-errors-note {
+    margin: 0;
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    width: 100%;
+}
+
+/* Resumen al crear transacción */
+.bank-create-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--info-soft);
+    background: var(--info-soft);
+    width: 100%;
+}
+
+.bank-create-summary > div {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.bank-create-summary span {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bank-create-summary small {
+    font-size: 0.66rem;
+    color: var(--text-tertiary);
+}
+
+.bank-create-summary strong {
+    font-size: 0.88rem;
+    white-space: nowrap;
+}
+
+/* ═══ Responsive ══════════════════════════════════════════ */
+@media (max-width: 980px) {
+    .reconciliation-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .reconciliation-header {
+        padding: 16px;
+    }
+
+    .reconciliation-header__actions {
+        width: 100%;
+    }
+
+    .reconciliation-account.custom-form-group {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .reconciliation-header__actions .btn-secondary,
+    .reconciliation-header__actions .btn-primary {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .reconciliation-toolbar {
+        padding: 12px;
+    }
+
+    .reconciliation-toolbar .si-wrapper {
+        flex-basis: 100%;
+    }
+
+    .reconciliation-filters {
+        width: 100%;
+    }
+
+    .reconciliation-chip {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 620px) {
+    .bank-line__main {
+        grid-template-columns: 40px minmax(0, 1fr);
+    }
+
+    .bank-line__amount {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .bank-match {
+        margin-left: 0;
+    }
+
+    .bank-match__item {
+        flex-wrap: wrap;
+    }
+
+    .bank-match__body {
+        flex: 1 1 60%;
+    }
+
+    .bank-match__btn {
+        flex: 1;
+    }
+
+    .bank-line__actions button {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .bi-mapping {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 420px) {
+    .reconciliation-kpis {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .reconciliation-kpi {
+        gap: 9px;
+        padding: 11px 12px;
+    }
+
+    .reconciliation-kpi__icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+    }
+
+    .bi-dropzone {
+        flex-wrap: wrap;
+    }
+
+    .bi-dropzone__button {
+        width: 100%;
+        text-align: center;
+    }
+
+    .bank-create-summary {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* ═══ Tema claro ══════════════════════════════════════════ */
+:root[data-theme="light"] .bank-line,
+:root[data-theme="light"] .reconciliation-toolbar,
+:root[data-theme="light"] .bank-match__item,
+:root[data-theme="light"] .bank-line__linked,
+:root[data-theme="light"] .bi-preview__table th {
+    background: var(--bg-surface);
+}
+
+:root[data-theme="light"] .reconciliation-chip {
+    background: var(--surface-soft);
+}
+
+:root[data-theme="light"] .reconciliation-chip.is-active {
+    color: #ffffff;
+}

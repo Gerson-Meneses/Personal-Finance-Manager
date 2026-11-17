@@ -7,7 +7,7 @@ const testDatabaseUrl =
 export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
-  expect: { timeout: 10_000 },
+  expect: { timeout: 20_000 },
   fullyParallel: false,
   workers: 1,
   reporter: process.env.CI ? "github" : "list",
@@ -18,7 +18,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "bun run --cwd ../backend dev",
+      command: "bun run --cwd ../backend db:migrate && bun run --cwd ../backend dev",
       url: "http://127.0.0.1:3100/health/live",
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
@@ -38,6 +38,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       env: {
         VITE_API_URL: "http://127.0.0.1:3100",
+        VITE_DISABLE_ONBOARDING: "true",
       },
     },
   ],

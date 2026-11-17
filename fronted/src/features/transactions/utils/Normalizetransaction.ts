@@ -16,6 +16,11 @@ export function normalizeTransaction(tx: Transaction): string {
         tx.category?.name,
         tx.account?.name,
         tx.relatedAccount?.name,
+        tx.merchantName,
+        tx.merchantAddress,
+        tx.items?.map((item) => item.name).join(" "),
+        tx.tags?.map((tag) => tag.name).join(" "),
+        tx.splits?.map((split) => `${split.category?.name ?? ""} ${split.description ?? ""}`).join(" "),
         formatCurrency(tx.amount),                        // "S/ 150.00"
         dayjs(tx.date).locale("es").format("dddd D"),     // "lunes 2"
         dayjs(tx.date).locale("es").format("MMMM YYYY"),  // "junio 2025" — búsqueda por mes

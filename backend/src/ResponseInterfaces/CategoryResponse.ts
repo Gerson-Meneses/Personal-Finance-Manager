@@ -10,6 +10,7 @@ export interface CategoryResponse {
     icon?: string
     isBase: boolean
     isVisible: boolean
+    parentCategoryId?: string | null
     transactions?: TransactionResponse[]
     reccurentTransactions?: TransactionResponse[]
 }

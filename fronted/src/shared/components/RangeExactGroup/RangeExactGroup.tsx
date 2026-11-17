@@ -32,6 +32,7 @@ export const RangeExactGroup = ({
                 <div className="flex bg-white/[0.03] p-0.5 rounded-lg border border-white/[0.08]">
                     <button
                         type="button"
+                        aria-pressed={mode === "range"}
                         onClick={() => onModeChange("range")}
                         className={`relative tooltip-left px-3 py-1 text-[0.75rem] font-medium rounded-md transition-all cursor-pointer ${
                             mode === "range"
@@ -44,6 +45,7 @@ export const RangeExactGroup = ({
                     </button>
                     <button
                         type="button"
+                        aria-pressed={mode === "exact"}
                         onClick={() => onModeChange("exact")}
                         className={`relative tooltip-left px-3 py-1 text-[0.75rem] font-medium rounded-md transition-all cursor-pointer ${
                             mode === "exact"

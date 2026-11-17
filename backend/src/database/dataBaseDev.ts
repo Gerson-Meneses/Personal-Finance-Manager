@@ -21,6 +21,11 @@ import { LoanPlan } from '../entities/LoanPlan.entity'
 import { DebtInstallment } from '../entities/DebtInstallment.entity'
 import { LoanPaymentAllocation } from '../entities/LoanPaymentAllocation.entity'
 import { AuditLog } from '../entities/AuditLog.entity'
+import { BankStatementLine } from '../entities/BankStatementLine.entity'
+import { Tag } from '../entities/Tag.entity'
+import { TransactionSplit } from '../entities/TransactionSplit.entity'
+import { TransactionAttachment } from '../entities/TransactionAttachment.entity'
+import { TransactionItem } from '../entities/TransactionItem.entity'
 
 const entities = [
     Account,
@@ -42,6 +47,11 @@ const entities = [
     DebtInstallment,
     LoanPaymentAllocation,
     AuditLog,
+    BankStatementLine,
+    Tag,
+    TransactionSplit,
+    TransactionAttachment,
+    TransactionItem,
 ]
 
 // En desarrollo (bun desde src) carga *.ts; en producción (dist) carga *.js

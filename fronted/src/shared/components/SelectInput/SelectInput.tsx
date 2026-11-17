@@ -61,6 +61,7 @@ export const SelectInput = ({
 }: SelectAccountProps) => {
     const generatedId = useId();
     const inputId = id ?? name ?? `select-${generatedId.replace(/:/g, "")}`;
+    const errorId = `${generatedId.replace(/:/g, "")}-error`;
 
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
@@ -332,6 +333,8 @@ export const SelectInput = ({
                     aria-expanded={open}
                     aria-required={required}
                     aria-label={label || placeholder}
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? errorId : undefined}
                     onClick={handleTriggerClick}
                     onKeyDown={handleTriggerKeyDown}
                 >
@@ -346,6 +349,14 @@ export const SelectInput = ({
                     <span
                         className={`select-input-chevron ${open ? "open" : ""}`}
                         aria-hidden="true"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            if (open) {
+                                closeMenu();
+                            } else {
+                                openMenu();
+                            }
+                        }}
                     >
                         {getIcon("ChevronDown", {
                             size: 16,
@@ -497,7 +508,7 @@ export const SelectInput = ({
             </div>
 
             {error && (
-                <span className="error-text">
+                <span id={errorId} className="error-text" role="alert">
                     {error}
                 </span>
             )}

@@ -76,3 +76,10 @@ export enum RecurringLoanAction {
     RECEIVE_LOAN = "RECEIVE_LOAN",
     ADVANCE_LOAN = "ADVANCE_LOAN"
 }
+
+export enum BankLineStatus {
+    PENDING = "PENDING",
+    MATCHED = "MATCHED",
+    IMPORTED = "IMPORTED",
+    IGNORED = "IGNORED"
+}

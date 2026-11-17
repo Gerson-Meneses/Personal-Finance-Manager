@@ -4,7 +4,7 @@ import { toTransactionResponse } from "./TransactionMapper";
 
 export const toCategoryResponse = (cat: Category): CategoryResponse => {
 
-    const { id, name, type, color, isBase, visible, icon, transactions, reccurentTransactions } = cat
+    const { id, name, type, color, isBase, visible, icon, parentCategoryId, transactions, reccurentTransactions } = cat
 
     let categoryResponse: CategoryResponse = {
         id,
@@ -12,7 +12,8 @@ export const toCategoryResponse = (cat: Category): CategoryResponse => {
         type,
         color,
         isBase,
-        isVisible: visible
+        isVisible: visible,
+        parentCategoryId: parentCategoryId ?? null
     }
 
     if (icon) categoryResponse.icon = icon

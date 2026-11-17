@@ -7,6 +7,7 @@ import LoanForm from "../../../features/loans/components/CreateLoanForm/loanForm
 import { LenderSummary } from "../../../features/loans/components/LoanCardSummary/LenderSummary";
 import { useLoansQuery, useLoanSummary } from "../../../features/loans/hooks";
 import { SearchInput } from "../../../shared/components/SearchInput/SearchInput";
+import { QueryErrorState } from "../../../shared/components/QueryErrorState/QueryErrorState";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import "./LoansPage.css";
 
@@ -16,7 +17,7 @@ const normalize = (value: string) =>
     value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 export const LoansPage = () => {
-    const { summary = [], isLoading } = useLoanSummary({ status: "PENDING" });
+    const { summary = [], isLoading, isFetching, error, refetch } = useLoanSummary({ status: "PENDING" });
     const { createLoan } = useLoansQuery()
     const navigate = useNavigate()
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,6 +63,19 @@ export const LoansPage = () => {
 
     if (isLoading) {
         return <LoadingScreen message="Cargando los datos de préstamos." />;
+    }
+
+    if (error && summary.length === 0) {
+        return (
+            <div className="page-container loans-page">
+                <QueryErrorState
+                    title="No se pudieron cargar los préstamos"
+                    error={error}
+                    onRetry={() => refetch()}
+                    retrying={isFetching}
+                />
+            </div>
+        );
     }
 
     return (
@@ -138,6 +152,7 @@ export const LoansPage = () => {
                         <button
                             key={opt.value}
                             type="button"
+                            aria-pressed={filter === opt.value}
                             className={`loans-chip ${filter === opt.value ? "is-active" : ""}`}
                             onClick={() => setFilter(opt.value)}
                         >

@@ -7,6 +7,9 @@ import { Loan } from './Loan.entity';
 import { ReccurentTransaction } from './ReccurentTransaction.entity';
 import { Codes } from './Codes.entity';
 import type { Contact } from './Contact.entity';
+import type { Tag } from './Tag.entity';
+import type { TransactionAttachment } from './TransactionAttachment.entity';
+import type { TransactionItem } from './TransactionItem.entity';
 
 
 @Entity('users')
@@ -73,6 +76,15 @@ export class User {
 
     @OneToMany("Contact", "user")
     contacts: Contact[];
+
+    @OneToMany("Tag", "user")
+    tags: Tag[];
+
+    @OneToMany("TransactionAttachment", "user")
+    attachments: TransactionAttachment[];
+
+    @OneToMany("TransactionItem", "user")
+    transactionItems: TransactionItem[];
 
     @OneToMany(() => ReccurentTransaction, reccurentTransaction => reccurentTransaction.user)
     reccurentTransactions: ReccurentTransaction[];

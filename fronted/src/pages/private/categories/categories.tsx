@@ -6,7 +6,8 @@ import { useCategories } from "../../../features/categories/hooks";
 import { CategoryForm } from "../../../features/categories/components/CategoryForm/CategoryForm";
 import { CategoryDetail } from "../../../features/categories/components/CategoryDetail/CategoryDetail";
 import { TYPE_LABELS, normalizeText } from "../../../features/categories/constants";
-import type { Category } from "../../../features/categories/types";
+import type { Category, CategorySchemaInput } from "../../../features/categories/types";
+import { TagsManager } from "../../../features/tags/components/TagsManager";
 import { getIcon } from "../../../shared/utils/GetIcon";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
@@ -34,30 +35,47 @@ const MONTH_OPTIONS = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Fila de categoría                                                   */
+/*  Fila de categoría                                                  */
 /* ------------------------------------------------------------------ */
 interface RowProps {
     cat: Category;
+    count: number;
+    amount: number;
     share: number;
     showType?: boolean;
+    isSubcategory?: boolean;
+    childCount?: number;
     deletePending: boolean;
     onOpen: (cat: Category) => void;
     onEdit: (cat: Category) => void;
     onDelete: (cat: Category) => void;
+    onAddSubcategory?: (cat: Category) => void;
 }
 
-function CategoryRow({ cat, share, showType, deletePending, onOpen, onEdit, onDelete }: RowProps) {
-    const count = cat.transactionCount ?? 0;
+function CategoryRow({
+    cat,
+    count,
+    amount,
+    share,
+    showType,
+    isSubcategory,
+    childCount = 0,
+    deletePending,
+    onOpen,
+    onEdit,
+    onDelete,
+    onAddSubcategory,
+}: RowProps) {
     const pct = Math.round(share);
 
     return (
-        <div className="category-item">
-                <button
-                    type="button"
-                    className="category-item-main tooltip-top"
-                    onClick={() => onOpen(cat)}
-                    data-tooltip={`Ver detalle de ${cat.name}`}
-                >
+        <div className={`category-item ${isSubcategory ? "is-subcategory" : ""}`}>
+            <button
+                type="button"
+                className="category-item-main tooltip-top"
+                onClick={() => onOpen(cat)}
+                data-tooltip={`Ver detalle de ${cat.name}`}
+            >
                 <div className="category-item-left">
                     <div className="category-dot" style={{ background: cat.color }} />
                     <div
@@ -69,6 +87,14 @@ function CategoryRow({ cat, share, showType, deletePending, onOpen, onEdit, onDe
                     <div className="category-item-text">
                         <div className="category-item-title">
                             <span className="category-name">{cat.name}</span>
+                            {isSubcategory && (
+                                <span className="cat-sub-badge">Subcategoría</span>
+                            )}
+                            {childCount > 0 && (
+                                <span className="cat-sub-count">
+                                    {childCount} subcategoría{childCount !== 1 ? "s" : ""}
+                                </span>
+                            )}
                             {cat.isBase && (
                                 <span
                                     className="cat-base-badge tooltip-top tooltip-anchor"
@@ -77,23 +103,44 @@ function CategoryRow({ cat, share, showType, deletePending, onOpen, onEdit, onDe
                                     Sistema
                                 </span>
                             )}
-                            {showType && <span className="cat-type-badge">{TYPE_LABELS[cat.type] ?? cat.type}</span>}
+                            {showType && (
+                                <span className="cat-type-badge">
+                                    {TYPE_LABELS[cat.type] ?? cat.type}
+                                </span>
+                            )}
                         </div>
                         <span className="cat-usage">
-                            {count} transacción{count !== 1 ? "es" : ""} · {formatCurrency(cat.totalAmount ?? 0)}
+                            {count} transacción{count !== 1 ? "es" : ""} ·{" "}
+                            {formatCurrency(amount)}
                         </span>
                     </div>
                 </div>
 
                 <div className="cat-share" aria-hidden="true">
                     <span className="cat-share-bar">
-                        <span className="cat-share-fill" style={{ width: `${pct}%`, background: cat.color }} />
+                        <span
+                            className="cat-share-fill"
+                            style={{ width: `${pct}%`, background: cat.color }}
+                        />
                     </span>
                     <span className="cat-share-pct">{pct}%</span>
                 </div>
             </button>
 
             <div className="category-actions">
+                {!isSubcategory &&
+                    onAddSubcategory &&
+                    (cat.type === "EXPENSE" || cat.type === "INCOME") && (
+                    <button
+                        type="button"
+                        className="category-edit-btn tooltip-left"
+                        onClick={() => onAddSubcategory(cat)}
+                        aria-label={`Agregar subcategoría a ${cat.name}`}
+                        data-tooltip="Nueva subcategoría"
+                    >
+                        <Plus size={14} />
+                    </button>
+                )}
                 <button
                     type="button"
                     className="category-edit-btn tooltip-left"
@@ -125,8 +172,15 @@ function CategoryRow({ cat, share, showType, deletePending, onOpen, onEdit, onDe
 }
 
 /* ------------------------------------------------------------------ */
-/*  Página                                                              */
+/*  Página                                                             */
 /* ------------------------------------------------------------------ */
+interface CategoryGroup {
+    category: Category;
+    children: Category[];
+    totalCount: number;
+    totalAmount: number;
+}
+
 export default function CategoriesPage() {
     const [month, setMonth] = useState(() => dayjs().format("YYYY-MM"));
     const navigate = useNavigate();
@@ -145,27 +199,121 @@ export default function CategoriesPage() {
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState<SortMode>("az");
     const [showForm, setShowForm] = useState(false);
+    const [formDefaults, setFormDefaults] = useState<Partial<CategorySchemaInput>>();
     const [editing, setEditing] = useState<Category | null>(null);
     const [detail, setDetail] = useState<Category | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
     const toast = useToast();
 
+    const childrenByParent = useMemo(() => {
+        const map = new Map<string, Category[]>();
+        for (const category of categories) {
+            if (!category.parentCategoryId) continue;
+            const list = map.get(category.parentCategoryId) ?? [];
+            list.push(category);
+            map.set(category.parentCategoryId, list);
+        }
+        return map;
+    }, [categories]);
+
+    const groups = useMemo(() => {
+        const term = normalizeText(search);
+        const rootIds = new Set(categories.map((category) => category.id));
+        const roots = categories.filter(
+            (category) =>
+                !category.parentCategoryId ||
+                !rootIds.has(category.parentCategoryId)
+        );
+
+        const childComparator = (a: Category, b: Category) => {
+            if (sort === "az") return a.name.localeCompare(b.name, "es");
+            if (sort === "za") return b.name.localeCompare(a.name, "es");
+            const byCount = (b.transactionCount ?? 0) - (a.transactionCount ?? 0);
+            return byCount !== 0
+                ? byCount
+                : (b.totalAmount ?? 0) - (a.totalAmount ?? 0);
+        };
+
+        const built: CategoryGroup[] = roots.map((category) => {
+            const children = [...(childrenByParent.get(category.id) ?? [])].sort(
+                childComparator
+            );
+            const totalCount =
+                (category.transactionCount ?? 0) +
+                children.reduce(
+                    (sum, child) => sum + (child.transactionCount ?? 0),
+                    0
+                );
+            const totalAmount =
+                (category.totalAmount ?? 0) +
+                children.reduce(
+                    (sum, child) => sum + (child.totalAmount ?? 0),
+                    0
+                );
+
+            return { category, children, totalCount, totalAmount };
+        });
+
+        const filtered = built.filter((group) => {
+            if (!term) return true;
+            return (
+                normalizeText(group.category.name).includes(term) ||
+                group.children.some((child) =>
+                    normalizeText(child.name).includes(term)
+                )
+            );
+        });
+
+        return filtered.sort((a, b) => {
+            if (sort === "az") {
+                return a.category.name.localeCompare(b.category.name, "es");
+            }
+            if (sort === "za") {
+                return b.category.name.localeCompare(a.category.name, "es");
+            }
+            const byCount = b.totalCount - a.totalCount;
+            return byCount !== 0 ? byCount : b.totalAmount - a.totalAmount;
+        });
+    }, [categories, childrenByParent, search, sort]);
+
+    const groupedGroups = {
+        EXPENSE: groups.filter((group) => group.category.type === "EXPENSE"),
+        INCOME: groups.filter((group) => group.category.type === "INCOME"),
+        OTHER: groups.filter(
+            (group) =>
+                group.category.type !== "EXPENSE" &&
+                group.category.type !== "INCOME"
+        ),
+    };
+
     const summary = useMemo(() => {
         const expenses = categories.filter((cat) => cat.type === "EXPENSE");
         const incomes = categories.filter((cat) => cat.type === "INCOME");
         return {
-            expenseTotal: expenses.reduce((sum, cat) => sum + (cat.totalAmount ?? 0), 0),
-            incomeTotal: incomes.reduce((sum, cat) => sum + (cat.totalAmount ?? 0), 0),
-            activeCount: categories.filter((cat) => (cat.transactionCount ?? 0) > 0).length,
+            expenseTotal: expenses.reduce(
+                (sum, cat) => sum + (cat.totalAmount ?? 0),
+                0
+            ),
+            incomeTotal: incomes.reduce(
+                (sum, cat) => sum + (cat.totalAmount ?? 0),
+                0
+            ),
+            activeCount: categories.filter(
+                (cat) => (cat.transactionCount ?? 0) > 0
+            ).length,
         };
     }, [categories]);
 
-    const monthLabel = month ? dayjs(`${month}-01`).format("MMMM YYYY") : "todo el tiempo";
+    const monthLabel = month
+        ? dayjs(`${month}-01`).format("MMMM YYYY")
+        : "todo el tiempo";
     const expenseLabel = month ? `Gastos de ${monthLabel}` : "Gastos totales";
     const incomeLabel = month ? `Ingresos de ${monthLabel}` : "Ingresos totales";
     const monthFrom = month ? `${month}-01` : "";
-    const monthTo = month ? dayjs(`${month}-01`).endOf("month").format("YYYY-MM-DD") : "";
+    const monthTo = month
+        ? dayjs(`${month}-01`).endOf("month").format("YYYY-MM-DD")
+        : "";
 
     const openTransactions = (type: "EXPENSE" | "INCOME") => {
         const params = new URLSearchParams({ type });
@@ -176,65 +324,111 @@ export default function CategoriesPage() {
         navigate(`/transactions?${params.toString()}`);
     };
 
-    const visible = useMemo(() => {
-        const q = normalizeText(search);
-        const list = q ? categories.filter((c) => normalizeText(c.name).includes(q)) : categories;
-        return [...list].sort((a, b) => {
-            if (sort === "az") return a.name.localeCompare(b.name, "es");
-            if (sort === "za") return b.name.localeCompare(a.name, "es");
-            const byCount = (b.transactionCount ?? 0) - (a.transactionCount ?? 0);
-            return byCount !== 0 ? byCount : (b.totalAmount ?? 0) - (a.totalAmount ?? 0);
-        });
-    }, [categories, search, sort]);
-
-    const grouped = {
-        EXPENSE: visible.filter((c) => c.type === "EXPENSE"),
-        INCOME: visible.filter((c) => c.type === "INCOME"),
-        OTHER: visible.filter((c) => c.type !== "EXPENSE" && c.type !== "INCOME"),
-    };
-
-    const shareOf = (list: Category[], cat: Category) => {
-        const groupTotal = list.reduce((sum, c) => sum + (c.totalAmount ?? 0), 0);
-        return groupTotal > 0 ? ((cat.totalAmount ?? 0) / groupTotal) * 100 : 0;
-    };
-
     const handleDelete = (cat: Category) => {
         if (cat.isBase || deleteCategory.isPending) return;
         setDeleteError(null);
         setPendingDelete(cat);
     };
 
+    const openNewCategory = () => {
+        setDeleteError(null);
+        setFormDefaults(undefined);
+        setShowForm(true);
+    };
+
+    const openNewSubcategory = (parent: Category) => {
+        setDeleteError(null);
+        setFormDefaults({
+            type: parent.type === "INCOME" ? "INCOME" : "EXPENSE",
+            parentCategoryId: parent.id,
+        });
+        setShowForm(true);
+    };
+
+    const closeCategoryForm = () => {
+        setShowForm(false);
+        setFormDefaults(undefined);
+    };
+
     const confirmDelete = () => {
         if (!pendingDelete || deleteCategory.isPending) return;
         deleteCategory.mutate(pendingDelete.id, {
-            // Cierra en ambos casos: en éxito desaparece, en error se muestra
-            // el banner deleteError detrás del modal.
             onSettled: () => setPendingDelete(null),
             onSuccess: () => toast.success("Categoría eliminada"),
-            onError: (err) => setDeleteError(err.message || "No se pudo eliminar la categoría"),
+            onError: (err) =>
+                setDeleteError(err.message || "No se pudo eliminar la categoría"),
         });
     };
 
-    const renderList = (list: Category[], showType = false) => (
-        <div className="category-list">
-            {list.length === 0 ? (
-                <p className="text-muted category-empty">Sin categorías</p>
-            ) : (
-                list.map((cat) => (
-                    <CategoryRow
-                        key={cat.id}
-                        cat={cat}
-                        share={shareOf(list, cat)}
-                        showType={showType}
-                        deletePending={deleteCategory.isPending}
-                        onOpen={setDetail}
-                        onEdit={setEditing}
-                        onDelete={handleDelete}
-                    />
-                ))
-            )}
-        </div>
-    );
+    const renderList = (list: CategoryGroup[], showType = false) => {
+        const totalAmount = list.reduce(
+            (sum, group) => sum + group.totalAmount,
+            0
+        );
+
+        return (
+            <div className="category-list">
+                {list.length === 0 ? (
+                    <p className="text-muted category-empty">Sin categorías</p>
+                ) : (
+                    list.map((group) => (
+                        <div key={group.category.id} className="category-group">
+                            <CategoryRow
+                                cat={group.category}
+                                count={group.totalCount}
+                                amount={group.totalAmount}
+                                share={
+                                    totalAmount > 0
+                                        ? (group.totalAmount / totalAmount) * 100
+                                        : 0
+                                }
+                                childCount={group.children.length}
+                                showType={showType}
+                                deletePending={deleteCategory.isPending}
+                                onOpen={setDetail}
+                                onEdit={setEditing}
+                                onDelete={handleDelete}
+                                onAddSubcategory={openNewSubcategory}
+                            />
+
+                            {group.children.length > 0 && (
+                                <div className="category-children">
+                                    {group.children.map((child) => (
+                                        <CategoryRow
+                                            key={child.id}
+                                            cat={child}
+                                            count={child.transactionCount ?? 0}
+                                            amount={child.totalAmount ?? 0}
+                                            share={
+                                                group.totalAmount > 0
+                                                    ? ((child.totalAmount ?? 0) /
+                                                        group.totalAmount) *
+                                                    100
+                                                    : 0
+                                            }
+                                            isSubcategory
+                                            showType={showType}
+                                            deletePending={deleteCategory.isPending}
+                                            onOpen={setDetail}
+                                            onEdit={setEditing}
+                                            onDelete={handleDelete}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))
+                )}
+            </div>
+        );
+    };
+
+    const countFor = (list: CategoryGroup[]) =>
+        list.reduce((sum, group) => sum + 1 + group.children.length, 0);
+
+    const pendingDeleteChildren = pendingDelete
+        ? childrenByParent.get(pendingDelete.id)?.length ?? 0
+        : 0;
 
     if (loading) return <LoadingScreen message="Cargando categorías..." />;
 
@@ -263,10 +457,16 @@ export default function CategoriesPage() {
             <header className="page-header card categories-header">
                 <div>
                     <h1>Categorías</h1>
-                    <p className="text-muted">Organiza tus ingresos y gastos</p>
+                    <p className="text-muted">
+                        Organiza tus ingresos y gastos con categorías, subcategorías y etiquetas.
+                    </p>
                 </div>
                 <div className="categories-toolbar">
-                    <SearchInput value={search} onChange={setSearch} placeholder="Buscar categoría..." />
+                    <SearchInput
+                        value={search}
+                        onChange={setSearch}
+                        placeholder="Buscar categoría o subcategoría..."
+                    />
                     <SelectInput
                         compact
                         label="Filtrar por mes"
@@ -292,10 +492,7 @@ export default function CategoriesPage() {
                     <button
                         type="button"
                         className="btn-primary"
-                        onClick={() => {
-                            setDeleteError(null);
-                            setShowForm(true);
-                        }}
+                        onClick={openNewCategory}
                     >
                         <Plus size={18} />
                         Nueva categoría
@@ -356,58 +553,61 @@ export default function CategoriesPage() {
                 <div className="card cat-empty-card">
                     <p>Aún no tienes categorías.</p>
                     <p className="text-muted">Crea la primera para organizar tus transacciones.</p>
-                    <button type="button" className="btn-primary" onClick={() => setShowForm(true)}>
+                    <button type="button" className="btn-primary" onClick={openNewCategory}>
                         <Plus size={18} />
                         Nueva categoría
                     </button>
                 </div>
-            ) : visible.length === 0 ? (
+            ) : groups.length === 0 ? (
                 <div className="card cat-empty-card">
-                    <p>No se encontraron categorías para «{search}».</p>
+                    <p>No se encontraron categorías para “{search}”.</p>
                     <button type="button" className="btn-ghost" onClick={() => setSearch("")}>
                         Limpiar búsqueda
                     </button>
                 </div>
             ) : (
-                <>
-                    <div className="categories-grid">
-                        {(["EXPENSE", "INCOME"] as const).map((type) => (
-                            <div key={type} className="card">
-                                <div className="card-head">
-                                    <h3 className="card-head-title">
-                                        {type === "INCOME" ? "Ingresos" : "Gastos"}
-                                        <span className="category-count">{grouped[type].length}</span>
-                                    </h3>
-                                </div>
-                                {renderList(grouped[type])}
-                            </div>
-                        ))}
-                    </div>
-
-                    {grouped.OTHER.length > 0 && (
-                        <div className="card">
+                <div className="categories-grid">
+                    {(["EXPENSE", "INCOME"] as const).map((type) => (
+                        <div key={type} className="card">
                             <div className="card-head">
                                 <h3 className="card-head-title">
-                                    Otros
-                                    <span className="category-count">{grouped.OTHER.length}</span>
+                                    {type === "INCOME" ? "Ingresos" : "Gastos"}
+                                    <span className="category-count">
+                                        {countFor(groupedGroups[type])}
+                                    </span>
                                 </h3>
                             </div>
-                            {renderList(grouped.OTHER, true)}
+                            {renderList(groupedGroups[type])}
                         </div>
-                    )}
-                </>
+                    ))}
+                </div>
             )}
 
-            {/* ── Modal: crear ─────────────────────────────────────────── */}
-            <ModalPortal isOpen={showForm} onClose={() => setShowForm(false)}>
+            {groupedGroups.OTHER.length > 0 && (
+                <div className="card">
+                    <div className="card-head">
+                        <h3 className="card-head-title">
+                            Otros
+                            <span className="category-count">
+                                {countFor(groupedGroups.OTHER)}
+                            </span>
+                        </h3>
+                    </div>
+                    {renderList(groupedGroups.OTHER, true)}
+                </div>
+            )}
+
+            <TagsManager embedded />
+
+            <ModalPortal isOpen={showForm} onClose={closeCategoryForm}>
                 <CategoryForm
                     mutation={createCategory}
-                    onSuccess={() => setShowForm(false)}
-                    onClose={() => setShowForm(false)}
+                    initialValues={formDefaults}
+                    onSuccess={closeCategoryForm}
+                    onClose={closeCategoryForm}
                 />
             </ModalPortal>
 
-            {/* ── Modal: editar ────────────────────────────────────────── */}
             <ModalPortal isOpen={!!editing} onClose={() => setEditing(null)}>
                 {editing && (
                     <CategoryForm
@@ -420,7 +620,6 @@ export default function CategoriesPage() {
                 )}
             </ModalPortal>
 
-            {/* ── Modal: detalle de uso ────────────────────────────────── */}
             <ModalPortal isOpen={!!detail} onClose={() => setDetail(null)}>
                 {detail && (
                     <CategoryDetail
@@ -431,14 +630,17 @@ export default function CategoriesPage() {
                 )}
             </ModalPortal>
 
-            {/* ── Confirmación de borrado ──────────────────────────────── */}
             <InfoModal
                 isOpen={!!pendingDelete}
                 onClose={() => setPendingDelete(null)}
                 onConfirm={confirmDelete}
                 type="error"
                 title="Eliminar categoría"
-                message={`¿Eliminar la categoría "${pendingDelete?.name}"? Esta acción no se puede deshacer.`}
+                message={
+                    pendingDeleteChildren > 0
+                        ? `¿Eliminar la categoría "${pendingDelete?.name}"? Sus ${pendingDeleteChildren} subcategorías pasarán a ser categorías principales.`
+                        : `¿Eliminar la categoría "${pendingDelete?.name}"? Esta acción no se puede deshacer.`
+                }
                 confirmText={deleteCategory.isPending ? "Eliminando…" : "Eliminar"}
                 cancelText="Cancelar"
                 confirmDisabled={deleteCategory.isPending}

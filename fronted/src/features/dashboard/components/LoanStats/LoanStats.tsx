@@ -48,7 +48,7 @@ export default function LoanStats({ loans }: Props) {
         <div className="card loan-card-container">
             <div className="card-head">
                 <h3 className="card-head-title">Préstamos</h3>
-                <button onClick={() => navigate("/loans")} className="btn-ghost">
+                <button onClick={() => navigate("/debts")} className="btn-ghost">
                     Gestionar <ArrowRight size={14} />
                 </button>
             </div>
@@ -77,7 +77,7 @@ export default function LoanStats({ loans }: Props) {
                                 key={name}
                                 style={{ '--index': index } as React.CSSProperties}
                                 aria-label={`Ver préstamos con ${name}`}
-                                onClick={() => navigate("/loans")}
+                                onClick={() => navigate("/debts")}
                             >
                                 <span className="detail-name">{name}</span>
                                 <span className="detail-amount">{formatCurrency(amount)}</span>
@@ -111,7 +111,7 @@ export default function LoanStats({ loans }: Props) {
                                 key={name}
                                 style={{ '--index': index } as React.CSSProperties}
                                 aria-label={`Ver préstamos con ${name}`}
-                                onClick={() => navigate("/loans")}
+                                onClick={() => navigate("/debts")}
                             >
                                 <span className="detail-name">{name}</span>
                                 <span className="detail-amount">{formatCurrency(amount)}</span>

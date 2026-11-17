@@ -11,6 +11,7 @@ interface Props {
 }
 
 let bodyScrollLocks = 0;
+let modalTitleIds = 0;
 
 function lockBodyScroll() {
   if (bodyScrollLocks === 0) {
@@ -59,6 +60,20 @@ export default function ModalPortal({ children, isOpen, onClose }: Props) {
 
     document.addEventListener("keydown", onKeyDown);
 
+    /* Asocia el diálogo con su título visible para lectores de pantalla. */
+    const content = contentRef.current;
+    const heading = content?.querySelector<HTMLElement>("h1, h2, h3");
+    if (content) {
+      if (heading) {
+        if (!heading.id) heading.id = `modal-title-${++modalTitleIds}`;
+        content.setAttribute("aria-labelledby", heading.id);
+        content.removeAttribute("aria-label");
+      } else {
+        content.setAttribute("aria-label", "Ventana de diálogo");
+        content.removeAttribute("aria-labelledby");
+      }
+    }
+
     const focusFrame = requestAnimationFrame(() => {
       focusFirstElement(contentRef.current);
     });
@@ -80,6 +95,8 @@ export default function ModalPortal({ children, isOpen, onClose }: Props) {
       <div
         className="modal-content"
         ref={contentRef}
+        role="dialog"
+        aria-modal="true"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >

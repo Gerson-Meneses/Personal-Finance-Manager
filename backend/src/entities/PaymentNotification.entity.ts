@@ -13,6 +13,7 @@ import type { DebtInstallment } from "./DebtInstallment.entity";
 
 @Entity({ name: "payment_notifications" })
 @Index("IDX_payment_notifications_user_read", ["userId", "readAt"])
+@Index("UQ_payment_notifications_dedupe", ["userId", "dedupeKey"], { unique: true })
 export class PaymentNotification {
     @PrimaryGeneratedColumn("uuid")
     id: string;
@@ -37,6 +38,13 @@ export class PaymentNotification {
 
     @Column({ type: "uuid", unique: true, nullable: true })
     installmentId?: string | null;
+
+    @Column({ type: "varchar", length: 30, default: "PAYMENT" })
+    kind: string;
+
+    /** Clave estable para evitar duplicados en alertas generadas (presupuesto/tarjeta). */
+    @Column({ type: "varchar", length: 200, nullable: true })
+    dedupeKey?: string | null;
 
     @Column({ type: "varchar", length: 160 })
     title: string;

@@ -10,6 +10,10 @@ export const CategorySchema = z.object({
   type: z.enum(TransactionTypeValues),
   color: colorSchema().optional(),
   icon: nameSchema("Icono").optional(),
+  parentCategoryId: z
+    .union([z.uuid(), z.literal(""), z.null()])
+    .optional()
+    .transform((value) => (value === "" || value == null ? null : value)),
 });
 
 /* ---------- Input (before transform) ---------- */
@@ -34,6 +38,7 @@ export interface Category {
   icon?: string;
   visible: boolean;
   isBase: boolean;
+  parentCategoryId?: string | null;
   transactionCount?: number;
   totalAmount?: number;
   transactions?: Transaction[];

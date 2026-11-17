@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import { getIcon } from "../../utils/GetIcon";
 import type { BaseInputProps } from "../types";
 import "./NumericInput.css";
@@ -31,7 +33,9 @@ export const NumericInput = ({
   className,
 }: NumericInputProps) => {
   const displayValue = value ?? "";
+  const generatedId = useId();
   const inputId = id ?? name ?? "numeric-input";
+  const errorId = `${generatedId}-error`;
 
   const inputWidth = autoResize
     ? displayValue.length > 0
@@ -72,13 +76,19 @@ export const NumericInput = ({
           step={step}
           min={min}
           max={max}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
           style={{ width: inputWidth }}
           onChange={(e) => onChange(e.target.value)}
           onFocus={(e) => e.target.select()}
         />
       </div>
 
-      {error && <span className="error-text">{error}</span>}
+      {error && (
+        <span id={errorId} className="error-text" role="alert">
+          {error}
+        </span>
+      )}
     </div>
   );
 };

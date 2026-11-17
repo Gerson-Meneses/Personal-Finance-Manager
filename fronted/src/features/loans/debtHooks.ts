@@ -10,6 +10,7 @@ const invalidateDebt = (queryClient: ReturnType<typeof useQueryClient>) => {
     queryClient.invalidateQueries({ queryKey: ["accounts"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     queryClient.invalidateQueries({ queryKey: ["recurringSuggestions"] });
+    queryClient.invalidateQueries({ queryKey: ["reports"] });
 };
 
 export const useLoanPlans = (loanId?: string) => {
@@ -90,6 +91,7 @@ export const useDebtInstallments = (month?: string) => {
     return {
         installments: query.data ?? [],
         loading: query.isLoading,
+        error: query.error,
         refetch: query.refetch,
         payInstallment: payMutation,
     };

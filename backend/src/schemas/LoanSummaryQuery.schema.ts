@@ -14,6 +14,9 @@ export const loanSummaryQuerySchema = z.object({
   // Excluir préstamos sin deuda (totalRemaining = 0)
   excludePaidOff: z.enum(['true', 'false']).transform(val => val === 'true').nullish(),
 
+  // Filtro por contacto
+  contactId: z.uuid().nullish(),
+
   // Filtro por acreedor
   lender: z.string().trim().min(1).max(100).nullish(),
 

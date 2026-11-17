@@ -9,7 +9,16 @@ import { transactionSchema, updateTransactionSchema } from "../src/schemas/trans
 import { daysInRange } from "../src/services/recurringPaymentService";
 import { detectRecurrence } from "../src/services/recurringSuggestionService";
 import { roundBudgetSuggestion } from "../src/services/budgetService";
+import { categorySchema, updateCategorySchema } from "../src/schemas/category.schema";
+import { buildCsv } from "../src/utils/csv";
+import { buildMonthlyReportCsv, buildMonthlyReportPdf } from "../src/services/reportExportService";
+import { monthlyEquivalent } from "../src/services/subscriptionService";
+import type { MonthlyReportResponse } from "../src/services/reportsService";
 import { buildMonthKeys } from "../src/services/reportsService";
+import {
+    buildBankLineFingerprint,
+    computeSuggestionScore,
+} from "../src/services/bankImportService";
 import { LoanMovementType, RecurrenceFrequency, TypeTransaction } from "../src/utils/Enums";
 import type { RecurringPayment } from "../src/entities/RecurringPayment.entity";
 import type { Loan } from "../src/entities/Loan.entity";
@@ -434,6 +443,82 @@ describe("contrato monetario de préstamos", () => {
     });
 });
 
+describe("exportaciones", () => {
+    const report: MonthlyReportResponse = {
+        range: { from: "2026-01", to: "2026-03", months: 3 },
+        totals: {
+            income: 3_000,
+            expense: 2_000,
+            net: 1_000,
+            savingsRate: 33.3,
+            transactionCount: 12,
+            avgIncome: 1_000,
+            avgExpense: 666.67,
+            avgNet: 333.33,
+            totalBudget: 2_500,
+            budgetUsage: 80,
+        },
+        months: [
+            { month: "2026-01", income: 1_000, expense: 700, net: 300, savingsRate: 30, count: 4, budget: 800, budgetUsage: 87.5 },
+            { month: "2026-02", income: 1_000, expense: 650, net: 350, savingsRate: 35, count: 4, budget: 850, budgetUsage: 76.5 },
+            { month: "2026-03", income: 1_000, expense: 650, net: 350, savingsRate: 35, count: 4, budget: 850, budgetUsage: 76.5 },
+        ],
+        expenseCategories: [
+            { id: "cat-1", name: "Comida", color: "#ef4444", icon: null, total: 1_200, count: 6, monthly: [400, 400, 400] },
+        ],
+        incomeCategories: [
+            { id: "cat-2", name: "Sueldo", color: "#22c55e", icon: null, total: 3_000, count: 3, monthly: [1_000, 1_000, 1_000] },
+        ],
+        topExpenses: [{ name: "Supermercado", total: 800, count: 3 }],
+        highlights: {
+            bestMonth: null,
+            worstMonth: null,
+            highestExpenseMonth: null,
+            highestIncomeMonth: null,
+        },
+    };
+
+    test("escapa separadores, comillas y saltos de línea en CSV", () => {
+        const csv = buildCsv([
+            ["simple", "con;separador"],
+            ['comillas "dobles"'],
+            ["linea\nnueva"],
+        ]);
+
+        expect(csv).toBe(
+            '\uFEFFsimple;"con;separador"\r\n"comillas ""dobles"""\r\n"linea\nnueva"\r\n'
+        );
+    });
+
+    test("genera CSV de reporte con secciones", () => {
+        const csv = buildMonthlyReportCsv(report);
+
+        expect(csv).toContain("Reporte financiero");
+        expect(csv).toContain("Serie mensual");
+        expect(csv).toContain("Comida");
+        expect(csv).toContain("Supermercado");
+    });
+
+    test("genera un PDF válido del reporte", async () => {
+        const pdf = await buildMonthlyReportPdf(report);
+        const header = Buffer.from(pdf.slice(0, 4)).toString("utf8");
+
+        expect(header).toBe("%PDF");
+        expect(pdf.byteLength).toBeGreaterThan(1_000);
+    });
+});
+
+describe("hub de suscripciones", () => {
+    test("normaliza el costo mensual según la frecuencia", () => {
+        expect(monthlyEquivalent(100, RecurrenceFrequency.MONTHLY)).toBe(100);
+        expect(monthlyEquivalent(1_200, RecurrenceFrequency.YEARLY)).toBe(100);
+        expect(monthlyEquivalent(120, RecurrenceFrequency.MONTHLY, 3)).toBe(40);
+        expect(monthlyEquivalent(1_200 / 52, RecurrenceFrequency.WEEKLY)).toBe(100);
+        expect(monthlyEquivalent(1_200 / 26, RecurrenceFrequency.BIWEEKLY)).toBe(100);
+        expect(monthlyEquivalent((1_200 * 15) / 365, RecurrenceFrequency.FIFTEEN_DAYS)).toBe(100);
+    });
+});
+
 describe("sugerencias de presupuesto", () => {
     test("redondea hacia arriba en pasos de 5 unidades", () => {
         expect(roundBudgetSuggestion(0)).toBe(0);
@@ -511,7 +596,7 @@ describe("buildMonthKeys", () => {
         ]);
     });
 
-    test("cruza correctamente el cambio de a�o", () => {
+    test("cruza correctamente el cambio de anio", () => {
         expect(buildMonthKeys("2026-02", 4)).toEqual([
             "2025-11",
             "2025-12",
@@ -522,5 +607,119 @@ describe("buildMonthKeys", () => {
 
     test("siempre devuelve al menos un mes", () => {
         expect(buildMonthKeys("2026-07", 0)).toEqual(["2026-07"]);
+    });
+});
+
+describe("bank import", () => {
+    test("el fingerprint es estable e ignora mayusculas y acentos", () => {
+        const a = buildBankLineFingerprint({
+            accountId: "acc-1",
+            date: "2026-03-10",
+            amount: 4590,
+            description: "PAGO  S\u00faper \u00d1and\u00fa",
+        });
+        const b = buildBankLineFingerprint({
+            accountId: "acc-1",
+            date: "2026-03-10",
+            amount: 4590,
+            description: "PAGO  S\u00faper \u00d1and\u00fa",
+        });
+
+        expect(a).toBe(b);
+        expect(a).toHaveLength(64);
+    });
+
+    test("sugiere coincidencias con mismo monto, tipo y fecha", () => {
+        const result = computeSuggestionScore(
+            {
+                date: "2026-03-10",
+                amount: 4590,
+                type: TypeTransaction.EXPENSE,
+                description: "PAGO  S\u00faper \u00d1and\u00fa",
+            },
+            {
+                date: "2026-03-10",
+                amount: 4590,
+                type: TypeTransaction.EXPENSE,
+                name: "Supermercado",
+            }
+        );
+
+        expect(result).not.toBeNull();
+        expect(result?.score).toBeGreaterThanOrEqual(80);
+        expect(result?.dayDiff).toBe(0);
+        expect(result?.reasons).toContain("Mismo monto");
+        expect(result?.reasons).toContain("Misma fecha");
+    });
+
+    test("descarta montos distintos y fechas fuera de 7 d�as", () => {
+        expect(
+            computeSuggestionScore(
+                {
+                    date: "2026-03-10",
+                    amount: 4590,
+                    type: TypeTransaction.EXPENSE,
+                    description: "PAGO  S\u00faper \u00d1and\u00fa",
+                },
+                {
+                    date: "2026-03-10",
+                    amount: 5000,
+                    type: TypeTransaction.EXPENSE,
+                    name: "Pago",
+                }
+            )
+        ).toBeNull();
+
+        expect(
+            computeSuggestionScore(
+                {
+                    date: "2026-03-10",
+                    amount: 4590,
+                    type: TypeTransaction.EXPENSE,
+                    description: "PAGO  S\u00faper \u00d1and\u00fa",
+                },
+                {
+                    date: "2026-03-25",
+                    amount: 4590,
+                    type: TypeTransaction.EXPENSE,
+                    name: "Pago",
+                }
+            )
+        ).toBeNull();
+    });
+});
+
+describe("category subcategories schema", () => {
+    const base = {
+        name: "COMIDA",
+        type: "EXPENSE" as const,
+        color: "#f97316",
+    };
+
+    test("normaliza parent vacio a null", () => {
+        const parsed = categorySchema.parse({
+            ...base,
+            parentCategoryId: "",
+        });
+
+        expect(parsed.parentCategoryId).toBeNull();
+    });
+
+    test("acepta un uuid de categoria padre", () => {
+        const parentCategoryId = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
+        const parsed = categorySchema.parse({
+            ...base,
+            parentCategoryId,
+        });
+
+        expect(parsed.parentCategoryId).toBe(parentCategoryId);
+    });
+
+    test("permite quitar la categoria padre en una actualizacion", () => {
+        const parsed = updateCategorySchema.parse({
+            parentCategoryId: "",
+        });
+
+        expect(parsed.parentCategoryId).toBeNull();
     });
 });

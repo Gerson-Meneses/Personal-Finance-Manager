@@ -10,6 +10,7 @@ import type { UseMutationResult } from "@tanstack/react-query";
 import type { DataError } from "../../../../shared/dataApiInterface";
 import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle";
 import { TextInput } from "../../../../shared/components/TextInput/TextInput";
+import { SelectInput } from "../../../../shared/components/SelectInput/SelectInput";
 import { ColorPicker } from "../../../../shared/components/ColorPicker/ColorPicker";
 import { IconPicker } from "../../../../shared/components/IconPicker/IconPicker";
 import { useToast } from "../../../../shared/Hooks/useToast";
@@ -51,6 +52,7 @@ const defaultValues: CategorySchemaInput = {
     name: "",
     color: "#123456",
     icon: "LayoutGrid",
+    parentCategoryId: "",
 };
 
 /* ------------------------------------------------------------------ */
@@ -65,7 +67,7 @@ export const CategoryForm = ({
     onClose,
 }: PropsCategoryForm) => {
     const { mutateAsync, isPending, error } = mutation;
-    const { deleteCategory } = useCategories();
+    const { categories, deleteCategory } = useCategories();
     const toast = useToast();
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -88,6 +90,25 @@ export const CategoryForm = ({
     const categoryType = useWatch({ control, name: "type" });
     const nameValue = useWatch({ control, name: "name" }) ?? "";
     const isIncome = categoryType === "INCOME";
+
+    const hasChildren = isEdit && category
+        ? categories.some((item) => item.parentCategoryId === category.id)
+        : false;
+    const childCount = category
+        ? categories.filter((item) => item.parentCategoryId === category.id).length
+        : 0;
+
+    const parentOptions = categories
+        .filter((item) =>
+            item.type === categoryType &&
+            !item.parentCategoryId &&
+            item.id !== category?.id
+        )
+        .map((item) => ({
+            value: item.id,
+            label: item.name,
+            color: item.color,
+        }));
 
     const [styleTouched, setStyleTouched] = useState({ color: false, icon: false });
 
@@ -112,6 +133,7 @@ export const CategoryForm = ({
             name: category.name,
             color: category.color,
             icon: category.icon ?? "LayoutGrid",
+            parentCategoryId: category.parentCategoryId ?? "",
         });
         mutation.reset();
     }, [isEdit, category, reset]);
@@ -215,7 +237,12 @@ export const CategoryForm = ({
                         render={({ field, fieldState }) => (
                             <TypeToggle<TransactionType>
                                 value={field.value}
-                                onChange={field.onChange}
+                                onChange={(value) => {
+                                    field.onChange(value);
+                                    setValue("parentCategoryId", "", {
+                                        shouldDirty: true,
+                                    });
+                                }}
                                 error={fieldState.error?.message}
                                 disabled={isPending}
                                 leftOption={{
@@ -251,6 +278,32 @@ export const CategoryForm = ({
                         />
                     )}
                 />
+
+                {/* ── CATEGORÍA PADRE (opcional) ────────────────────────────── */}
+                <Controller
+                    control={control}
+                    name="parentCategoryId"
+                    render={({ field, fieldState }) => (
+                        <SelectInput
+                            label="Categoría padre (opcional)"
+                            icon="Layers"
+                            value={field.value ?? ""}
+                            onChange={field.onChange}
+                            options={parentOptions}
+                            placeholder="Sin categoría padre (principal)"
+                            error={fieldState.error?.message}
+                            disabled={isPending || (isEdit && (category?.isBase || hasChildren))}
+                            searchable={parentOptions.length > 6}
+                        />
+                    )}
+                />
+
+                {isEdit && hasChildren && (
+                    <p className="category-parent-hint">
+                        Esta categoría tiene subcategorías, así que debe seguir
+                        siendo una categoría principal.
+                    </p>
+                )}
 
                 {/* ── COLOR + ICONO ─────────────────────────────────────────── */}
                 <div className="form-default-grid-2col">
@@ -342,7 +395,11 @@ export const CategoryForm = ({
                 }}
                 type="error"
                 title="Eliminar categoría"
-                message="¿Seguro que deseas eliminar esta categoría? Esta acción no se puede deshacer."
+                message={
+                    childCount > 0
+                        ? `¿Seguro que deseas eliminar esta categoría? Sus ${childCount} subcategorías pasarán a ser categorías principales.`
+                        : "¿Seguro que deseas eliminar esta categoría? Esta acción no se puede deshacer."
+                }
                 confirmText={deleteCategory.isPending ? "Eliminando…" : "Eliminar"}
                 cancelText="Cancelar"
                 confirmDisabled={deleteCategory.isPending}

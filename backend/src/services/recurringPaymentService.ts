@@ -95,6 +95,7 @@ export interface RecurringMonthProjection {
 
 export interface PaymentNotificationResponse {
     id: string;
+    kind: string;
     title: string;
     message: string;
     readAt?: Date | null;
@@ -527,6 +528,7 @@ export class RecurringPaymentService {
             .values({
                 occurrenceId: occurrence.id,
                 userId: occurrence.userId,
+                kind: "PAYMENT",
                 title,
                 message,
             })
@@ -877,6 +879,7 @@ export class RecurringPaymentService {
 
         return notifications.map((notification) => ({
             id: notification.id,
+            kind: notification.kind ?? "PAYMENT",
             title: notification.title,
             message: notification.message,
             readAt: notification.readAt,

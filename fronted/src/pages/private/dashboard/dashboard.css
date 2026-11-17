@@ -32,6 +32,13 @@
     text-transform: capitalize;
 }
 
+.dash-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 /* ─── Estado de error ─────────────────────────────────── */
 .dashboard-error {
     display: flex;
@@ -385,6 +392,18 @@ button.qs-item:focus-visible {
     }
 
     .dash-header .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .dash-header__actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .dash-header__actions .btn-secondary,
+    .dash-header__actions .btn-primary {
         width: 100%;
         justify-content: center;
     }

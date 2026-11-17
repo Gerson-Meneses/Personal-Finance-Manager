@@ -139,15 +139,19 @@ export default function SelectCategory({
         }
 
         for (const cat of filteredCategories) {
+            const parent = cat.parentCategoryId
+                ? categories.find((item) => item.id === cat.parentCategoryId)
+                : undefined;
+
             list.push({
                 value: cat.id,
-                label: cat.name,
+                label: parent ? `${parent.name} › ${cat.name}` : cat.name,
                 color: cat.color,
             });
         }
 
         return list;
-    }, [allowCreate, filteredCategories]);
+    }, [allowCreate, filteredCategories, categories]);
 
     const handleSelectChange = (
         selected: string

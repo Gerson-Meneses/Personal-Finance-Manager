@@ -35,6 +35,7 @@ export const useContacts = () => {
     return {
         contacts: query.data ?? [],
         loading: query.isLoading,
+        fetching: query.isFetching,
         error: query.error,
         refetch: query.refetch,
         createContact: createMutation,

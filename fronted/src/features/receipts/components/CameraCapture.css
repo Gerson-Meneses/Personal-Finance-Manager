@@ -1,0 +1,86 @@
+.camera-capture {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(560px, 92vw);
+}
+
+.camera-capture__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.camera-capture__head h2 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.camera-capture__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.camera-capture__video {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 3 / 4;
+    max-height: 62vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.camera-capture__video video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-capture__status,
+.camera-capture__error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+}
+
+.camera-capture__status {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.camera-capture__error {
+    color: var(--danger);
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.22);
+}
+
+.camera-capture__spinner {
+    animation: cameraSpin 0.8s linear infinite;
+}
+
+.camera-capture__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+@keyframes cameraSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}

@@ -14,6 +14,10 @@ import { budgetRouter } from './budgetRouter'
 import { contactRouter } from './contactRouter'
 import { debtRouter } from './debtRouter'
 import { reportsRouter } from './reportsRouter'
+import { bankImportRouter } from './bankImportRouter'
+import { tagRouter } from './tagRouter'
+import { attachmentRouter } from './attachmentRouter'
+import { productRouter } from './productRouter'
 import { authRateLimit } from '../middlewares/security'
 import { AppDataSourceProd } from '../database/dataBaseDev'
 
@@ -65,5 +69,9 @@ router.route('/budgets', budgetRouter)
 router.route('/contacts', contactRouter)
 router.route('/debt', debtRouter)
 router.route('/reports', reportsRouter)
+router.route('/bank-import', bankImportRouter)
+router.route('/tags', tagRouter)
+router.route('/attachments', attachmentRouter)
+router.route('/products', productRouter)
 
 export default router

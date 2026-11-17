@@ -1,28 +1,190 @@
 import { AppDataSourceProd } from "../database/dataBaseDev";
 import { Account } from "../entities/Account.entity";
+import { BankStatementLine } from "../entities/BankStatementLine.entity";
 import { Category } from "../entities/Category.entity";
 import { ReccurentTransaction } from "../entities/ReccurentTransaction.entity";
 import { Transaction } from "../entities/Transaction.entity";
+import { TransactionSplit } from "../entities/TransactionSplit.entity";
+import { TransactionItem } from "../entities/TransactionItem.entity";
+import { TransactionAttachment } from "../entities/TransactionAttachment.entity";
+import { Tag } from "../entities/Tag.entity";
 import { LoanMovement } from "../entities/LoanMovement.entity";
 import { RecurringPaymentOccurrence } from "../entities/RecurringPaymentOccurrence.entity";
 import { User } from "../entities/User.entity";
 import { BadRequestError, ConflictError, NotFoundError } from "../helpers/errors/domain.errors";
 import { PaymentCreditCardSchema } from "../schemas/paymentCreditCard.schema";
-import { TransactionSchema, UpdateTransactionSchema } from "../schemas/transaction.schema";
+import { TransactionSchema, TransactionSplitSchema, UpdateTransactionSchema } from "../schemas/transaction.schema";
 import { TransferSchema } from "../schemas/transfers.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
-import { RecurringOccurrenceStatus, TypeAccount, TypeTransaction } from "../utils/Enums";
+import { BankLineStatus, RecurringOccurrenceStatus, TypeAccount, TypeTransaction } from "../utils/Enums";
 import { PaginatedResult } from "../types";
 import { TransactionQuerySchema } from "../schemas/querysTransaction.schema";
-import { EntityManager, QueryRunner, SelectQueryBuilder } from "typeorm";
+import { EntityManager, In, QueryRunner, SelectQueryBuilder } from "typeorm";
 import { toTransactionResponse } from "../mappers/TransactionMapper";
 import { TransactionResponse, TransactionStatsResponse } from "../ResponseInterfaces/TransactionInterface";
 import { money } from "../utils/normalizarMoney";
 import { computeBalanceEffect } from "../utils/balance";
 import { getCreditCardDebt } from "../utils/getBalanceToCreditCard";
+import { normalizeProductName } from "../utils/productName";
+
+const TRANSACTION_RELATIONS = [
+    "account",
+    "relatedAccount",
+    "category",
+    "tags",
+    "splits",
+    "splits.category",
+    "splits.tags",
+    "items",
+] as const;
+
+
+
+type ResolvedSplit = {
+    amount: number;
+    description?: string;
+    category: Category;
+    tags: Tag[];
+};
 
 export class TransactionService {
     private transactionRepo = AppDataSourceProd.getRepository(Transaction);
+
+    /** Resuelve y valida las etiquetas enviadas contra el ownership del usuario. */
+    private async resolveTags(
+        manager: EntityManager,
+        tagIds: string[] | undefined,
+        userId: UuidSchema
+    ): Promise<Tag[]> {
+        if (!tagIds || tagIds.length === 0) return [];
+
+        const uniqueIds = [...new Set(tagIds)];
+        const tags = await manager.find(Tag, {
+            where: { id: In(uniqueIds), user: { id: userId } },
+        });
+
+        if (tags.length !== uniqueIds.length) {
+            throw new BadRequestError("Una o más etiquetas no existen o no pertenecen al usuario.", {
+                tagIds: ["Etiquetas inválidas"],
+            });
+        }
+
+        return tags;
+    }
+
+    /** Valida que las divisiones sumen el total y resuelve sus categorías/etiquetas. */
+    private async resolveSplits(
+        manager: EntityManager,
+        splits: TransactionSplitSchema[] | undefined,
+        userId: UuidSchema,
+        type: TypeTransaction,
+        totalAmount: number
+    ): Promise<ResolvedSplit[]> {
+        if (!splits || splits.length === 0) return [];
+
+        const total = splits.reduce((sum, split) => sum + split.amount, 0);
+        if (total !== totalAmount) {
+            throw new BadRequestError("La suma de las divisiones debe ser igual al monto total.", {
+                splits: [
+                    `La suma de las divisiones (${money(total)}) no coincide con el monto total (${money(totalAmount)}).`,
+                ],
+            });
+        }
+
+        const categoryIds = [...new Set(splits.map((split) => split.categoryId))];
+        const categories = await manager.find(Category, {
+            where: { id: In(categoryIds), user: { id: userId } },
+        });
+        const categoriesById = new Map(categories.map((category) => [category.id, category]));
+
+        const resolved: ResolvedSplit[] = [];
+        for (const split of splits) {
+            const category = categoriesById.get(split.categoryId);
+            if (!category) {
+                throw new NotFoundError("Una categoría de la división no existe o no pertenece al usuario.");
+            }
+            if (category.type !== type) {
+                throw new ConflictError("El tipo de la categoría de una división no coincide con la transacción.", {
+                    splits: ["El tipo de la categoría de una división no coincide con la transacción."],
+                });
+            }
+
+            resolved.push({
+                amount: split.amount,
+                description: split.description,
+                category,
+                tags: await this.resolveTags(manager, split.tagIds, userId),
+            });
+        }
+
+        return resolved;
+    }
+
+    /** Reemplaza los productos comprados asociados a la transacción. */
+    private async replaceItems(
+        manager: EntityManager,
+        transaction: Transaction,
+        userId: UuidSchema,
+        items: TransactionSchema["items"]
+    ): Promise<TransactionItem[]> {
+        await manager
+            .createQueryBuilder()
+            .delete()
+            .from(TransactionItem)
+            .where('"transactionId" = :transactionId', { transactionId: transaction.id })
+            .execute();
+
+        if (!items || items.length === 0) return [];
+
+        const saved: TransactionItem[] = [];
+        for (const item of items) {
+            const name = item.name.trim().replace(/\s+/g, " ");
+            const unitPrice = item.unitPrice;
+            const total = item.total ?? Math.round(item.quantity * unitPrice);
+
+            const entity = manager.create(TransactionItem, {
+                name,
+                normalizedName: normalizeProductName(name),
+                quantity: String(item.quantity),
+                unitPrice,
+                total,
+                transaction,
+                user: { id: userId } as TransactionItem["user"],
+            });
+
+            saved.push(await manager.save(entity));
+        }
+
+        return saved;
+    }
+
+    /** Reemplaza las divisiones de una transacción (y sus etiquetas en cascada). */
+    private async replaceSplits(
+        manager: EntityManager,
+        transaction: Transaction,
+        resolved: ResolvedSplit[]
+    ): Promise<TransactionSplit[]> {
+        await manager
+            .createQueryBuilder()
+            .delete()
+            .from(TransactionSplit)
+            .where('"transactionId" = :transactionId', { transactionId: transaction.id })
+            .execute();
+
+        const saved: TransactionSplit[] = [];
+        for (const split of resolved) {
+            const entity = manager.create(TransactionSplit, {
+                amount: split.amount,
+                description: split.description,
+                category: split.category,
+                transaction,
+                tags: split.tags,
+            });
+            saved.push(await manager.save(entity));
+        }
+
+        return saved;
+    }
 
     /**
      * Bloquea (SELECT ... FOR UPDATE) las cuentas indicadas dentro de la transacción
@@ -67,7 +229,8 @@ export class TransactionService {
     /** Construye la consulta base y aplica todos los filtros del listado. */
     private buildTransactionQuery(
         userId: UuidSchema,
-        filters: TransactionQuerySchema
+        filters: TransactionQuerySchema,
+        withDetails = true
     ): SelectQueryBuilder<Transaction> {
         const qb = this.transactionRepo
             .createQueryBuilder('t')
@@ -76,6 +239,24 @@ export class TransactionService {
             .leftJoinAndSelect('t.category', 'category')
             .leftJoinAndSelect('t.loan', 'loan')
             .where('t.userId = :userId', { userId });
+
+        // Las agregaciones (stats) no deben multiplicarse por las relaciones
+        // uno-a-muchos; solo se unen cuando se devuelven las entidades.
+        if (withDetails) {
+            qb            .leftJoinAndSelect('t.tags', 'tag')
+                .leftJoinAndSelect('t.splits', 'split')
+                .leftJoinAndSelect('split.category', 'splitCategory')
+                .leftJoinAndSelect('split.tags', 'splitTag')
+                .leftJoinAndSelect('t.items', 'item')
+                .leftJoin('t.attachments', 'attachment')
+                .addSelect([
+                    'attachment.id',
+                    'attachment.fileName',
+                    'attachment.mimeType',
+                    'attachment.size',
+                    'attachment.createdAt',
+                ]);
+        }
 
         if (filters.type) {
             qb.andWhere('t.type = :type', { type: filters.type });
@@ -90,7 +271,36 @@ export class TransactionService {
         }
 
         if (filters.categoryId) {
-            qb.andWhere('t.categoryId = :categoryId', { categoryId: filters.categoryId });
+            qb.andWhere(
+                `(
+                    t.categoryId = :categoryId
+                    OR EXISTS (
+                        SELECT 1 FROM "transaction_splits" split_filter
+                        WHERE split_filter."transactionId" = t.id
+                        AND split_filter."categoryId" = :categoryId
+                    )
+                )`,
+                { categoryId: filters.categoryId }
+            );
+        }
+
+        if (filters.tagId) {
+            qb.andWhere(
+                `(
+                    EXISTS (
+                        SELECT 1 FROM "transaction_tags" tt
+                        WHERE tt."transactionId" = t.id AND tt."tagId" = :tagId
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM "transaction_splits" split_tag
+                        INNER JOIN "transaction_split_tags" split_tag_link
+                            ON split_tag_link."splitId" = split_tag.id
+                        WHERE split_tag."transactionId" = t.id
+                        AND split_tag_link."tagId" = :tagId
+                    )
+                )`,
+                { tagId: filters.tagId }
+            );
         }
 
         if (filters.search) {
@@ -98,9 +308,31 @@ export class TransactionService {
                 `(
                     t.name ILIKE :search
                     OR t.description ILIKE :search
+                    OR t."merchantName" ILIKE :search
+                    OR t."merchantAddress" ILIKE :search
                     OR category.name ILIKE :search
                     OR account.name ILIKE :search
                     OR relatedAccount.name ILIKE :search
+                    OR EXISTS (
+                        SELECT 1 FROM "transaction_items" item_search
+                        WHERE item_search."transactionId" = t.id
+                        AND item_search.name ILIKE :search
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM "transaction_tags" tt_search
+                        INNER JOIN "tags" tag_search ON tag_search.id = tt_search."tagId"
+                        WHERE tt_search."transactionId" = t.id
+                        AND tag_search.name ILIKE :search
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM "transaction_splits" split_search
+                        INNER JOIN "transaction_split_tags" split_search_link
+                            ON split_search_link."splitId" = split_search.id
+                        INNER JOIN "tags" split_tag_search
+                            ON split_tag_search.id = split_search_link."tagId"
+                        WHERE split_search."transactionId" = t.id
+                        AND split_tag_search.name ILIKE :search
+                    )
                 )`,
                 { search: `%${filters.search}%` }
             );
@@ -169,11 +401,22 @@ export class TransactionService {
         };
     }
 
+    async exportTransactions(
+        userId: UuidSchema,
+        filters: TransactionQuerySchema
+    ): Promise<Transaction[]> {
+        return this.buildTransactionQuery(userId, filters)
+            .orderBy("t.date", "DESC")
+            .addOrderBy("t.id", "DESC")
+            .take(50_000)
+            .getMany();
+    }
+
     async getTransactionsStats(
         userId: UuidSchema,
         filters: TransactionQuerySchema
     ): Promise<TransactionStatsResponse> {
-        const raw = await this.buildTransactionQuery(userId, filters)
+        const raw = await this.buildTransactionQuery(userId, filters, false)
             .andWhere("t.reportingImpact = :reportingImpact", { reportingImpact: "REPORTABLE" })
             .select('COUNT(t.id)', 'count')
             .addSelect(
@@ -211,13 +454,19 @@ export class TransactionService {
     async getTransactionById(id: UuidSchema, userId: UuidSchema): Promise<TransactionResponse> {
         const transaction = await this.transactionRepo.findOne({
             where: { id, user: { id: userId } },
-            relations: ['account', 'relatedAccount', 'category']
+            relations: [...TRANSACTION_RELATIONS]
         })
         if (!transaction) throw new NotFoundError("Transacción no encontrada para el usuario")
+
+        transaction.attachments = await AppDataSourceProd.getRepository(TransactionAttachment).find({
+            where: { transaction: { id } },
+            select: ["id", "fileName", "mimeType", "size", "createdAt"],
+        })
+
         return toTransactionResponse(transaction)
     }
 
-    async createTransaction(transaction: TransactionSchema, userId: UuidSchema,moneyAmount: boolean = true, entityManager?: EntityManager): Promise<TransactionResponse> {
+    async createTransaction(transaction: TransactionSchema, userId: UuidSchema,moneyAmount: boolean = true, entityManager?: EntityManager, options?: { allowNegativeBalance?: boolean }): Promise<TransactionResponse> {
 
         let queryRunner: QueryRunner | undefined;
         let manager: EntityManager;
@@ -247,51 +496,85 @@ export class TransactionService {
                 );
             }
 
-            const category = await manager.findOne(Category, {
-                where: { id: transaction.categoryId, user: { id: userId } }
-            });
-            if (!category) throw new NotFoundError("Categoría no encontrada");
-            if (category.type !== transaction.type) {
-                throw new ConflictError("El tipo de categoría no coincide con la transacción.", {
-                    type: ["El tipo de categoría no coincide con la transacción."]
+            const {
+                tagIds,
+                splits: splitPayload = [],
+                items: itemPayload = [],
+                ...transactionData
+            } = transaction;
+
+            let category: Category | null = null;
+            if (transactionData.categoryId) {
+                category = await manager.findOne(Category, {
+                    where: { id: transactionData.categoryId, user: { id: userId } }
                 });
+                if (!category) throw new NotFoundError("Categoría no encontrada");
+                if (category.type !== transactionData.type) {
+                    throw new ConflictError("El tipo de categoría no coincide con la transacción.", {
+                        type: ["El tipo de categoría no coincide con la transacción."]
+                    });
+                }
             }
 
-            const accountsById = await this.lockAccounts(manager, [transaction.accountId], userId);
-            const account = accountsById.get(transaction.accountId);
+            const tags = await this.resolveTags(manager, tagIds, userId);
+            const resolvedSplits = await this.resolveSplits(
+                manager,
+                splitPayload,
+                userId,
+                requestedType,
+                transactionData.amount
+            );
+
+            if (!category && resolvedSplits.length === 0) {
+                throw new BadRequestError(
+                    "Selecciona una categoría o divide la transacción en categorías.",
+                    { categoryId: ["Selecciona una categoría o divide la transacción."] }
+                );
+            }
+
+            const accountsById = await this.lockAccounts(manager, [transactionData.accountId], userId);
+            const account = accountsById.get(transactionData.accountId);
             if (!account) throw new NotFoundError("Cuenta no encontrada");
 
-            if (transaction.isRecurrent) {
+            if (transactionData.isRecurrent) {
                 throw new BadRequestError("Lógica para transacciones recurrentes no implementada.");
             }
 
-            if (transaction.type === TypeTransaction.INCOME) {
+            if (transactionData.type === TypeTransaction.INCOME) {
                 if (account.type === TypeAccount.CREDIT) {
                     throw new ConflictError("No se pueden hacer ingresos directos a cuentas de crédito.", {
                         type: ["No se pueden hacer ingresos directos a cuentas de crédito."]
                     });
                 }
-                account.balance += transaction.amount;
-            } else if (transaction.type === TypeTransaction.EXPENSE) {
-                if (account.balance < transaction.amount) {
+                account.balance += transactionData.amount;
+            } else if (transactionData.type === TypeTransaction.EXPENSE) {
+                if (!options?.allowNegativeBalance && account.balance < transactionData.amount) {
                     throw new ConflictError("Saldo insuficiente en la cuenta.", {
                         amount: ["Monto no disponible en la cuenta."]
                     });
                 }
-                account.balance -= transaction.amount;
+                account.balance -= transactionData.amount;
             }
 
             await manager.save(account);
 
             const newTransaction = manager.create(Transaction, {
-                ...transaction,
+                ...transactionData,
                 user,
                 account,
-                category,
-                isRecurrent: transaction.isRecurrent ?? false
+                category: category ?? undefined,
+                tags,
+                isRecurrent: transactionData.isRecurrent ?? false
             });
 
             const savedTransaction = await manager.save(newTransaction);
+            const savedSplits = await this.replaceSplits(manager, savedTransaction, resolvedSplits);
+            const savedItems = await this.replaceItems(manager, savedTransaction, userId, itemPayload);
+
+            savedTransaction.tags = tags;
+            savedTransaction.splits = savedSplits;
+            savedTransaction.items = savedItems;
+            savedTransaction.attachments = [];
 
             if (isOwnTransaction && queryRunner) {
                 await queryRunner.commitTransaction();
@@ -484,7 +767,7 @@ export class TransactionService {
 
             const transaction = await manager.findOne(Transaction, {
                 where: { id, user: { id: userId } },
-                relations: ['account', 'relatedAccount', 'category', 'loan']
+                relations: ['account', 'relatedAccount', 'category', 'loan', 'tags', 'splits', 'splits.category', 'splits.tags', 'items']
             });
             if (!transaction) throw new NotFoundError("Transacción no encontrada");
             if (
@@ -562,11 +845,38 @@ export class TransactionService {
                 if (!category) throw new NotFoundError("La categoría no existe.");
                 nextCategory = category;
             }
-            if (!nextCategory) throw new NotFoundError("La categoría no existe.");
-            if (nextCategory.type !== nextType) {
+
+            const existingSplits = transaction.splits ?? [];
+            const hasSplits = updateData.splits !== undefined
+                ? updateData.splits.length > 0
+                : existingSplits.length > 0;
+
+            if (!nextCategory && !hasSplits) {
+                throw new BadRequestError(
+                    "Selecciona una categoría o divide la transacción en categorías.",
+                    { categoryId: ["Selecciona una categoría o divide la transacción."] }
+                );
+            }
+            if (nextCategory && nextCategory.type !== nextType) {
                 throw new ConflictError("El tipo de la categoría no coincide con la transacción.", {
                     categoryId: ["El tipo de la categoría no coincide con la transacción."]
                 });
+            }
+
+            // Las divisiones nuevas deben sumar el monto final. Si no se envían y
+            // ya existían, verificamos que sigan cuadrando con el monto/ tipo.
+            const resolvedSplits = updateData.splits !== undefined
+                ? await this.resolveSplits(manager, updateData.splits, userId, nextType, nextAmount)
+                : undefined;
+
+            if (resolvedSplits === undefined && existingSplits.length > 0) {
+                const existingTotal = existingSplits.reduce((sum, split) => sum + split.amount, 0);
+                if (existingTotal !== nextAmount) {
+                    throw new BadRequestError(
+                        "El monto no coincide con las divisiones existentes. Actualiza las divisiones.",
+                        { amount: ["El monto no coincide con las divisiones existentes."] }
+                    );
+                }
             }
 
             // 5) Efectos de saldo. base = saldo actual - efecto viejo = saldo como
@@ -642,16 +952,47 @@ export class TransactionService {
             transaction.amount = nextAmount;
             transaction.account = nextAccount;
             transaction.relatedAccount = nextRelatedAccount ?? null;
-            transaction.category = nextCategory;
+            transaction.category = (nextCategory ?? null) as Category;
             if (updateData.name) transaction.name = updateData.name;
             if (updateData.description !== undefined) transaction.description = updateData.description;
             if (updateData.date) transaction.date = updateData.date;
             if (updateData.time) transaction.time = updateData.time;
+            if (updateData.merchantName !== undefined) transaction.merchantName = updateData.merchantName;
+            if (updateData.merchantAddress !== undefined) transaction.merchantAddress = updateData.merchantAddress;
+            if (updateData.merchantRuc !== undefined) transaction.merchantRuc = updateData.merchantRuc;
 
             for (const account of accountsToSave) {
                 await manager.save(account);
             }
-            const updatedTransaction = await manager.save(transaction);
+            await manager.save(transaction);
+
+            if (updateData.tagIds !== undefined) {
+                const tags = await this.resolveTags(manager, updateData.tagIds, userId);
+                await manager
+                    .createQueryBuilder()
+                    .relation(Transaction, "tags")
+                    .of(transaction.id)
+                    .set(tags);
+            }
+
+            if (resolvedSplits !== undefined) {
+                await this.replaceSplits(manager, transaction, resolvedSplits);
+            }
+
+            if (updateData.items !== undefined) {
+                await this.replaceItems(manager, transaction, userId, updateData.items);
+            }
+
+            const updatedTransaction = await manager.findOne(Transaction, {
+                where: { id, user: { id: userId } },
+                relations: [...TRANSACTION_RELATIONS],
+            });
+            if (!updatedTransaction) throw new NotFoundError("Transacción no encontrada");
+
+            updatedTransaction.attachments = await manager.find(TransactionAttachment, {
+                where: { transaction: { id } },
+                select: ["id", "fileName", "mimeType", "size", "createdAt"],
+            });
 
             await queryRunner.commitTransaction();
             return toTransactionResponse(updatedTransaction);
@@ -722,6 +1063,17 @@ export class TransactionService {
                 account.balance -= delta;
                 await manager.save(account);
             }
+
+            await manager
+                .createQueryBuilder()
+                .update(BankStatementLine)
+                .set({
+                    transactionId: null,
+                    status: BankLineStatus.PENDING,
+                    matchedAt: null,
+                })
+                .where("transactionId = :transactionId", { transactionId: id })
+                .execute();
 
             await manager.delete(Transaction, { id, user: { id: userId } });
             await queryRunner.commitTransaction();

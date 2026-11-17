@@ -18,3 +18,9 @@ export const monthlyReportQuerySchema = z.object({
 });
 
 export type MonthlyReportQuery = z.infer<typeof monthlyReportQuerySchema>;
+
+export const monthlyReportExportQuerySchema = monthlyReportQuerySchema.extend({
+    format: z.enum(["csv", "pdf"]).default("csv"),
+});
+
+export type MonthlyReportExportQuery = z.infer<typeof monthlyReportExportQuerySchema>;

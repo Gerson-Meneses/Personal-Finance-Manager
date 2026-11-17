@@ -129,6 +129,7 @@ export interface RecurringSuggestionsResponse {
 
 export interface PaymentNotification {
     id: string;
+    kind: string;
     title: string;
     message: string;
     readAt?: string | null;

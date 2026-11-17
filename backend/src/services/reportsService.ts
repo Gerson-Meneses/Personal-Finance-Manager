@@ -178,33 +178,44 @@ export class ReportsService {
             .groupBy("TO_CHAR(t.date, 'YYYY-MM')")
             .getRawMany<MonthlyRow>();
 
-        const categoryPromise = this.transactionRepo
-            .createQueryBuilder("t")
-            .leftJoin("t.category", "category")
-            .select("TO_CHAR(t.date, 'YYYY-MM')", "month")
-            .addSelect("t.type", "type")
-            .addSelect("t.categoryId", "categoryId")
-            .addSelect("category.name", "name")
-            .addSelect("category.color", "color")
-            .addSelect("category.icon", "icon")
-            .addSelect("COALESCE(SUM(t.amount), 0)", "amount")
-            .addSelect("COUNT(t.id)", "count")
-            .where("t.userId = :userId", { userId })
-            .andWhere("t.reportingImpact = :impact", {
-                impact: TransactionReportingImpact.REPORTABLE,
-            })
-            .andWhere("t.type IN (:...types)", {
-                types: [TypeTransaction.INCOME, TypeTransaction.EXPENSE],
-            })
-            .andWhere("t.date >= :from", { from })
-            .andWhere("t.date <= :to", { to })
-            .groupBy("TO_CHAR(t.date, 'YYYY-MM')")
-            .addGroupBy("t.type")
-            .addGroupBy("t.categoryId")
-            .addGroupBy("category.name")
-            .addGroupBy("category.color")
-            .addGroupBy("category.icon")
-            .getRawMany<CategoryRow>();
+        // Si la transacción tiene divisiones, cada una aporta su monto y
+        // categoría; si no, se usa el monto/categoría de la transacción.
+        const categoryPromise = this.transactionRepo.query<CategoryRow[]>(
+            `
+            SELECT src.month,
+                   src.type,
+                   src."categoryId",
+                   category.name,
+                   category.color,
+                   category.icon,
+                   COALESCE(SUM(src.amount), 0) AS amount,
+                   COUNT(DISTINCT src.id)::text AS count
+            FROM (
+                SELECT t.id,
+                       TO_CHAR(t.date, 'YYYY-MM') AS month,
+                       t.type,
+                       COALESCE(split."categoryId", t."categoryId") AS "categoryId",
+                       COALESCE(split.amount, t.amount) AS amount
+                FROM "transactions" t
+                LEFT JOIN "transaction_splits" split ON split."transactionId" = t.id
+                WHERE t."userId" = $1
+                  AND t."reportingImpact" = $2
+                  AND t.type IN ($3, $4)
+                  AND t.date >= $5
+                  AND t.date <= $6
+            ) src
+            LEFT JOIN "categories" category ON category.id = src."categoryId"
+            GROUP BY src.month, src.type, src."categoryId", category.name, category.color, category.icon
+            `,
+            [
+                userId,
+                TransactionReportingImpact.REPORTABLE,
+                TypeTransaction.INCOME,
+                TypeTransaction.EXPENSE,
+                from,
+                to,
+            ]
+        );
 
         const topExpensesPromise = this.transactionRepo
             .createQueryBuilder("t")
@@ -219,7 +230,7 @@ export class ReportsService {
             .andWhere("t.date >= :from", { from })
             .andWhere("t.date <= :to", { to })
             .groupBy("t.name")
-            .orderBy("SUM(t.amount)", "DESC")
+            .orderBy("total", "DESC")
             .limit(8)
             .getRawMany<TopExpenseRow>();
 
@@ -235,13 +246,17 @@ export class ReportsService {
             .groupBy("b.month")
             .getRawMany<BudgetRow>();
 
-        const [monthlyRows, categoryRows, topExpenseRows, budgetRows] =
-            await Promise.all([
-                monthlyPromise,
-                categoryPromise,
-                topExpensesPromise,
-                budgetPromise,
-            ]);
+        const [monthlyRows, categoryRows, topExpenseRows, budgetRows]: [
+            MonthlyRow[],
+            CategoryRow[],
+            TopExpenseRow[],
+            BudgetRow[],
+        ] = await Promise.all([
+            monthlyPromise,
+            categoryPromise,
+            topExpensesPromise,
+            budgetPromise,
+        ]);
 
         /* ------------------------------------------------------------------ */
         /* Serie mensual                                                       */

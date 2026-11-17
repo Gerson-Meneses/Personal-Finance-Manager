@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import { getIcon } from "../../utils/GetIcon";
 
 import type { BaseInputProps } from "../types";
@@ -53,9 +55,11 @@ export const TextInput = ({
   className,
 }: TextInputProps) => {
   const displayValue = value ?? "";
+  const generatedId = useId();
 
   const inputId =
     id ?? name ?? "text-input";
+  const errorId = `${generatedId}-error`;
 
   const inputWidth = autoResize
     ? displayValue.length > 0
@@ -106,6 +110,8 @@ export const TextInput = ({
             required={required}
             disabled={disabled}
             autoFocus={autoFocus}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
             style={
               inputWidth
                 ? { width: inputWidth }
@@ -127,6 +133,8 @@ export const TextInput = ({
             disabled={disabled}
             autoFocus={autoFocus}
             rows={rows}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
             onFocus={handleFocus}
             onChange={(e) =>
               onChange(e.target.value)
@@ -136,7 +144,7 @@ export const TextInput = ({
       </div>
 
       {error && (
-        <span className="error-text">
+        <span id={errorId} className="error-text" role="alert">
           {error}
         </span>
       )}

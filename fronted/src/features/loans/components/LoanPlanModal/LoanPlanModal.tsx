@@ -185,25 +185,44 @@ export function LoanPlanModal({ loan, isPending, onSubmit, onClose }: Props) {
                             </div>
                             <div className="loan-plan-row__actions">
                                 {plan.status !== "CANCELLED" && (
-                                    <button type="button" className="btn-ghost" onClick={() => startEdit(plan)} title="Recalcular">
+                                    <button
+                                        type="button"
+                                        className="btn-ghost tooltip-anchor tooltip-left"
+                                        onClick={() => startEdit(plan)}
+                                        aria-label="Recalcular"
+                                        data-tooltip="Recalcular"
+                                    >
                                         <Pencil size={13} />
                                     </button>
                                 )}
                                 {plan.status === "ACTIVE" && (
-                                    <button type="button" className="btn-ghost" onClick={() => pausePlan.mutate(plan.id)} title="Pausar">
+                                    <button
+                                        type="button"
+                                        className="btn-ghost tooltip-anchor tooltip-left"
+                                        onClick={() => pausePlan.mutate(plan.id)}
+                                        aria-label="Pausar"
+                                        data-tooltip="Pausar"
+                                    >
                                         <Pause size={13} />
                                     </button>
                                 )}
                                 {plan.status === "PAUSED" && (
-                                    <button type="button" className="btn-ghost" onClick={() => resumePlan.mutate(plan.id)} title="Reactivar">
+                                    <button
+                                        type="button"
+                                        className="btn-ghost tooltip-anchor tooltip-left"
+                                        onClick={() => resumePlan.mutate(plan.id)}
+                                        aria-label="Reactivar"
+                                        data-tooltip="Reactivar"
+                                    >
                                         <Play size={13} />
                                     </button>
                                 )}
                                 {(plan.status === "ACTIVE" || plan.status === "PAUSED") && (
                                     <button
                                         type="button"
-                                        className="btn-ghost danger"
-                                        title="Cancelar plan"
+                                        className="btn-ghost danger tooltip-anchor tooltip-left"
+                                        data-tooltip="Cancelar plan"
+                                        aria-label="Cancelar plan"
                                         onClick={() => {
                                             cancelPlan.mutate(
                                                 { planId: plan.id, reason: "Cancelado por el usuario" },

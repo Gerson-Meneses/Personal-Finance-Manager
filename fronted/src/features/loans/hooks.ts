@@ -31,6 +31,7 @@ export const useLoansQuery = (filters?: LoanQueryFilters) => {
     queryClient.invalidateQueries({ queryKey: ["summary"] })
     queryClient.invalidateQueries({ queryKey: ["loanSummary"] })
     queryClient.invalidateQueries({ queryKey: ["recurringSuggestions"] })
+    queryClient.invalidateQueries({ queryKey: ["reports"] })
   }
 
   // ============ MUTATIONS PARA PRÉSTAMOS ============
@@ -107,6 +108,7 @@ export const useLoanPayments = () => {
     queryClient.invalidateQueries({ queryKey: ["summary"] })
     queryClient.invalidateQueries({ queryKey: ["loanSummary"] })
     queryClient.invalidateQueries({ queryKey: ["recurringSuggestions"] })
+    queryClient.invalidateQueries({ queryKey: ["reports"] })
   }
 
   // ============ MUTATIONS PARA PAGOS ============
@@ -182,6 +184,7 @@ export const useInvalidateAllLoans = () => {
     queryClient.invalidateQueries({ queryKey: ["loans"] })
     queryClient.invalidateQueries({ queryKey: ["loanSummary"] })
     queryClient.invalidateQueries({ queryKey: ["recurringSuggestions"] })
+    queryClient.invalidateQueries({ queryKey: ["reports"] })
     queryClient.invalidateQueries({ queryKey: ["transactions"] })
     queryClient.invalidateQueries({ queryKey: ["accounts"] })
     queryClient.invalidateQueries({ queryKey: ["dashboard"] })

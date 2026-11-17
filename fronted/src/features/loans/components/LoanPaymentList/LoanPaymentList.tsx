@@ -78,10 +78,22 @@ export const LoanPaymentsList = ({ loan, payments, isGiven }: LoanPaymentsListPr
                                 </span>
                                 {loan && (
                                     <div className="payment-row-item__actions">
-                                        <button type="button" className="btn-ghost" title="Editar pago" onClick={() => setEditingPayment(payment)}>
+                                        <button
+                                            type="button"
+                                            className="btn-ghost tooltip-anchor tooltip-left"
+                                            aria-label="Editar pago"
+                                            data-tooltip="Editar pago"
+                                            onClick={() => setEditingPayment(payment)}
+                                        >
                                             <Pencil size={13} />
                                         </button>
-                                        <button type="button" className="btn-ghost danger" title="Reversar pago" onClick={() => setReversingPayment(payment)}>
+                                        <button
+                                            type="button"
+                                            className="btn-ghost danger tooltip-anchor tooltip-left"
+                                            aria-label="Reversar pago"
+                                            data-tooltip="Reversar pago"
+                                            onClick={() => setReversingPayment(payment)}
+                                        >
                                             <RotateCcw size={13} />
                                         </button>
                                     </div>

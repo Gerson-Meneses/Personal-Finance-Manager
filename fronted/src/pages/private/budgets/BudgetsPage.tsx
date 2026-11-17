@@ -6,6 +6,7 @@ import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScree
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import InfoModal from "../../../shared/components/InfoModal/InfoModal";
 import { SelectInput } from "../../../shared/components/SelectInput/SelectInput";
+import { QueryErrorState } from "../../../shared/components/QueryErrorState/QueryErrorState";
 import { useToast } from "../../../shared/Hooks/useToast";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import { getIcon } from "../../../shared/utils/GetIcon";
@@ -30,8 +31,13 @@ export default function BudgetsPage() {
     const [showWizard, setShowWizard] = useState(false);
     const toast = useToast();
 
-    const { data, loading, upsertBudget, bulkUpsertBudgets, deleteBudget } = useBudgets(month);
-    const { data: suggestionData, loading: suggestionsLoading } = useBudgetSuggestions(month);
+    const { data, loading, fetching, error, refetch, upsertBudget, bulkUpsertBudgets, deleteBudget } = useBudgets(month);
+    const {
+        data: suggestionData,
+        loading: suggestionsLoading,
+        error: suggestionsError,
+        refetch: refetchSuggestions,
+    } = useBudgetSuggestions(month);
     const budgets = data?.budgets ?? [];
     const suggestions = suggestionData?.suggestions ?? [];
 
@@ -75,6 +81,19 @@ export default function BudgetsPage() {
 
     if (loading && !data) return <LoadingScreen message="Cargando presupuestos..." />;
 
+    if (error && !data) {
+        return (
+            <div className="page-container budgets-page">
+                <QueryErrorState
+                    title="No se pudieron cargar los presupuestos"
+                    error={error}
+                    onRetry={() => refetch()}
+                    retrying={fetching}
+                />
+            </div>
+        );
+    }
+
     const totalRemaining = data?.totalRemaining ?? 0;
     const topSuggestions = suggestions.filter((item) => item.currentBudget === null).slice(0, 4);
     const budgetedCategories = new Set(budgets.map((budget) => budget.category.id));
@@ -111,6 +130,19 @@ export default function BudgetsPage() {
                     </button>
                 </div>
             </header>
+
+            {suggestionsError && (
+                <div className="error-banner" role="alert">
+                    No se pudieron cargar los montos sugeridos.{" "}
+                    <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={() => refetchSuggestions()}
+                    >
+                        Reintentar
+                    </button>
+                </div>
+            )}
 
             <section className="budgets-stats">
                 <article className="budget-stat card">
@@ -274,10 +306,22 @@ export default function BudgetsPage() {
                                     </div>
 
                                     <div className="budget-row__actions">
-                                        <button type="button" onClick={() => { setEditing(budget); setShowForm(true); }} aria-label="Editar" title="Editar">
+                                        <button
+                                            type="button"
+                                            className="tooltip-anchor tooltip-left"
+                                            onClick={() => { setEditing(budget); setShowForm(true); }}
+                                            aria-label="Editar"
+                                            data-tooltip="Editar"
+                                        >
                                             <Pencil size={14} />
                                         </button>
-                                        <button type="button" className="danger" onClick={() => setPendingDelete(budget)} aria-label="Eliminar" title="Eliminar">
+                                        <button
+                                            type="button"
+                                            className="danger tooltip-anchor tooltip-left"
+                                            onClick={() => setPendingDelete(budget)}
+                                            aria-label="Eliminar"
+                                            data-tooltip="Eliminar"
+                                        >
                                             <Trash2 size={14} />
                                         </button>
                                     </div>

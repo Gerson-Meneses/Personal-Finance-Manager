@@ -1,7 +1,10 @@
-import { List, TrendingDown, TrendingUp, Wallet, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react"
+import { useState } from "react"
+import { List, TrendingDown, TrendingUp, Wallet, CalendarDays, ChevronLeft, ChevronRight, Download } from "lucide-react"
 import dayjs from "dayjs"
 import "dayjs/locale/es"
 import { useTransactions, useTransactionsStats } from "../../../features/transactions/hooks"
+import { exportTransactions } from "../../../features/transactions/services"
+import { useToast } from "../../../shared/Hooks/useToast"
 import TransactionItem from "../../../features/transactions/components/TransactionItem"
 import TransactionsFilters from "../../../features/transactions/components/TransactionsFilters/TransactionsFilters"
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen"
@@ -16,6 +19,8 @@ import { formatCurrency } from "../../../shared/utils/formatCurrency"
 dayjs.locale("es");
 
 export function TransactionsPage() {
+    const [exporting, setExporting] = useState(false)
+    const toast = useToast()
     const {
         filters: query,
         saveFiltersToURL,
@@ -51,6 +56,23 @@ export function TransactionsPage() {
 
     const handlePageChange = (newPage: number) => {
         saveFiltersToURL({ ...query, page: newPage })
+    }
+
+    const handleExport = async () => {
+        setExporting(true)
+        try {
+            const filename = await exportTransactions({
+                ...query,
+                page: undefined,
+                limit: undefined,
+                search: search || undefined,
+            })
+            toast.success(`Exportado: ${filename}`)
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "No se pudo exportar el CSV")
+        } finally {
+            setExporting(false)
+        }
     }
 
     const netClass = (stats?.net ?? 0) >= 0 ? "text-success" : "text-danger"
@@ -109,9 +131,20 @@ export function TransactionsPage() {
                         Revisa, filtra y analiza cada ingreso y gasto.
                     </p>
                 </div>
-                <span className="tx-page-header__count">
-                    {resultLabel} resultado{Number(resultLabel.split(" ")[0]) !== 1 ? "s" : ""}
-                </span>
+                <div className="tx-page-header__actions">
+                    <span className="tx-page-header__count">
+                        {resultLabel} resultado{Number(resultLabel.split(" ")[0]) !== 1 ? "s" : ""}
+                    </span>
+                    <button
+                        type="button"
+                        className="btn-secondary tx-export-btn"
+                        onClick={handleExport}
+                        disabled={exporting}
+                    >
+                        <Download size={15} />
+                        {exporting ? "Exportando..." : "Exportar CSV"}
+                    </button>
+                </div>
             </header>
 
             <section className="tx-period-bar card">

@@ -14,6 +14,7 @@ export const useBudgets = (month?: string) => {
         queryClient.invalidateQueries({ queryKey: ["budgets"] });
         queryClient.invalidateQueries({ queryKey: ["budgetSuggestions"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        queryClient.invalidateQueries({ queryKey: ["reports"] });
     };
 
     const upsertMutation = useMutation({
@@ -34,6 +35,7 @@ export const useBudgets = (month?: string) => {
     return {
         data: query.data,
         loading: query.isLoading,
+        fetching: query.isFetching,
         error: query.error,
         refetch: query.refetch,
         upsertBudget: upsertMutation,
@@ -52,6 +54,7 @@ export const useBudgetSuggestions = (month?: string, lookback = 3) => {
     return {
         data: query.data,
         loading: query.isLoading,
+        fetching: query.isFetching,
         error: query.error,
         refetch: query.refetch,
     };

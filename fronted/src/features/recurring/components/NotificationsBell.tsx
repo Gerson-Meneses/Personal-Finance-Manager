@@ -73,7 +73,13 @@ export function NotificationsBell() {
                                     onClick={() => {
                                         if (!notification.readAt) markRead.mutate(notification.id);
                                         setOpen(false);
-                                        navigate("/recurring");
+                                        navigate(
+                                            notification.kind === "BUDGET"
+                                                ? "/planning?tab=budgets"
+                                                : notification.kind.startsWith("CARD")
+                                                    ? "/accounts"
+                                                    : "/planning?tab=recurring"
+                                        );
                                     }}
                                 >
                                     <span className="notif-item__dot" />
@@ -91,10 +97,10 @@ export function NotificationsBell() {
                         className="notif-panel__footer"
                         onClick={() => {
                             setOpen(false);
-                            navigate("/recurring");
+                            navigate("/planning?tab=recurring");
                         }}
                     >
-                        Ver pagos futuros
+                        Ver planificación
                         <ChevronRight size={14} />
                     </button>
                 </div>

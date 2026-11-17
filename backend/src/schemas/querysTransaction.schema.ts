@@ -11,6 +11,7 @@ export const transactionQuerySchema = z.object({
     accountId: z.uuid().nullish(),
     relatedAccountId: z.uuid().nullish(),
     categoryId: z.uuid().nullish(),
+    tagId: z.uuid().nullish(),
 
     search: z.string().trim().min(1).max(100).nullish(),
 

@@ -1,4 +1,4 @@
-import { Entity, Index, ManyToMany, ManyToOne, OneToMany } from "typeorm";
+import { Entity, Index, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { PrimaryGeneratedColumn, Column } from "typeorm"
 import { TypeTransaction } from "../utils/Enums";
 import type { User } from "./User.entity";
@@ -33,6 +33,20 @@ export class Category {
 
     @Column({ default: true })
     visible: boolean
+
+    /** Categoría padre opcional: permite un nivel de subcategorías. */
+    @Column({ type: "uuid", nullable: true })
+    parentCategoryId: string | null
+
+    @ManyToOne(() => Category, (category) => category.children, {
+        nullable: true,
+        onDelete: "SET NULL",
+    })
+    @JoinColumn({ name: "parentCategoryId" })
+    parentCategory: Category | null
+
+    @OneToMany(() => Category, (category) => category.parentCategory)
+    children: Category[]
 
     @ManyToOne("User", "categories", { nullable: false })
     user: User;

@@ -672,3 +672,23 @@
         min-width: 26px;
     }
 }
+
+/* --- Tema claro ----------------------------------------- */
+:root[data-theme="light"] .reports-range,
+:root[data-theme="light"] .report-highlight,
+:root[data-theme="light"] .report-ranking li,
+:root[data-theme="light"] .report-sources li {
+    background: var(--surface-soft);
+}
+
+:root[data-theme="light"] .reports-range__chip.is-active {
+    color: #ffffff;
+}
+
+.reports-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    padding: 9px 13px;
+}

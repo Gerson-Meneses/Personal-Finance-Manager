@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/es";
 import { useCategories } from "../../../categories/hooks";
 import { useAccounts } from "../../../accounts/hooks";
+import { useTags } from "../../../tags/hooks";
 import { FilterWrapper, type FilterBadgeItem } from "../../../../shared/components/FilterWrapper/FilterWrapper";
 import "./TransactionsFilters.css";
 import { RangeExactGroup } from "../../../../shared/components/RangeExactGroup/RangeExactGroup";
@@ -57,6 +58,7 @@ const KEY_LABELS: Record<string, string> = {
     accountId: "Cuenta",
     relatedAccountId: "Cuenta relacionada",
     categoryId: "Categoría",
+    tagId: "Etiqueta",
     date: "Fecha",
     from: "Desde",
     to: "Hasta",
@@ -71,6 +73,7 @@ const formatDate = (value?: string) => (value ? dayjs(value).format("DD/MM/YYYY"
 export default function TransactionFilters({ query, onChange, onReset, search, onSearchChange }: Props) {
     const { categories } = useCategories();
     const { accounts } = useAccounts();
+    const { tags } = useTags();
     const [open, setOpen] = useState(false);
 
     const [dateMode, setDateMode] = useState<DateMode>(query.date ? "exact" : "range");
@@ -239,6 +242,12 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                 label = category.name;
                 color = category.color;
             }
+        } else if (key === "tagId") {
+            const tag = tags.find((item) => item.id === rawValue);
+            if (tag) {
+                label = tag.name;
+                color = tag.color;
+            }
         } else if (key === "accountId" || key === "relatedAccountId") {
             const account = accounts.find((acc) => acc.id === rawValue);
             if (account) label = account.name;
@@ -297,11 +306,12 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                 {/* ================= PERIODO RÁPIDO ================= */}
                 <div className="tf-group">
                     <span className="tf-group-label">Periodo</span>
-                    <div className="tf-chips">
+                    <div className="tf-chips" role="group" aria-label="Periodo">
                         {PERIOD_OPTIONS.map((opt) => (
                             <button
                                 key={opt.value}
                                 type="button"
+                                aria-pressed={period === opt.value}
                                 className={`tf-chip ${period === opt.value ? "active" : ""}`}
                                 onClick={() => applyPeriod(opt.value)}
                             >
@@ -339,11 +349,12 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                 {/* ================= TIPO ================= */}
                 <div className="tf-group">
                     <span className="tf-group-label">Tipo</span>
-                    <div className="tf-chips">
+                    <div className="tf-chips" role="group" aria-label="Tipo">
                         {TYPE_OPTIONS.map((opt) => (
                             <button
                                 key={opt.label}
                                 type="button"
+                                aria-pressed={query.type === opt.value}
                                 className={`tf-chip ${query.type === opt.value ? "active" : ""}`}
                                 onClick={() => set("type", opt.value)}
                             >
@@ -500,17 +511,37 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                     </div>
                 </div>
 
+                <div className="tf-row">
+                    <div className="tf-group tf-group--third">
+                        <span className="tf-group-label">Etiqueta</span>
+                        <SelectInput
+                            label="Etiqueta"
+                            hideLabel
+                            value={query.tagId ?? ""}
+                            onChange={(v) => set("tagId", v)}
+                            placeholder="Todas"
+                            options={tags.map((tag) => ({
+                                value: tag.id,
+                                label: tag.name,
+                                color: tag.color,
+                            }))}
+                            className="tf-field-select"
+                        />
+                    </div>
+                </div>
+
                 <div className="tf-divider" />
 
                 {/* ================= PAGINACIÓN ================= */}
                 <div className="tf-row tf-row-end">
                     <div className="tf-group">
                         <span className="tf-group-label">Resultados por página</span>
-                        <div className="tf-chips">
+                        <div className="tf-chips" role="group" aria-label="Resultados por página">
                             {[20, 50, 100].map((n) => (
                                 <button
                                     key={n}
                                     type="button"
+                                    aria-pressed={(query.limit ?? 20) === n}
                                     className={`tf-chip ${(query.limit ?? 20) === n ? "active" : ""}`}
                                     onClick={() => set("limit", n)}
                                 >

@@ -12,6 +12,7 @@ import {
     getRecurringProjection,
     listRecurringPayments,
     listRecurringSuggestions,
+    listSubscriptions,
     processDueRecurringPayments,
     skipRecurringOccurrence,
     updateRecurringPayment,
@@ -44,6 +45,11 @@ recurringPaymentRouter.get("/projection", async (c) => {
     if (!parsed.success) return zodErrorResponse(parsed.error, c);
     const query: RecurringMonthQuery = parsed.data;
     return await getRecurringProjection(c, user.sub, query);
+});
+
+recurringPaymentRouter.get("/subscriptions", async (c) => {
+    const user = c.get("user");
+    return await listSubscriptions(c, user.sub);
 });
 
 recurringPaymentRouter.get("/suggestions", async (c) => {

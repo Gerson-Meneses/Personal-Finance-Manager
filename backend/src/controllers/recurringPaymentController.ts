@@ -10,12 +10,21 @@ import type {
 } from "../schemas/recurringPayment.schema";
 import { RecurringPaymentService } from "../services/recurringPaymentService";
 import { RecurringSuggestionService } from "../services/recurringSuggestionService";
+import { AlertService } from "../services/alertService";
+import { SubscriptionService } from "../services/subscriptionService";
 
 const recurringPaymentService = new RecurringPaymentService();
 const recurringSuggestionService = new RecurringSuggestionService();
+const alertService = new AlertService();
+const subscriptionService = new SubscriptionService();
 
 export const listRecurringPayments = async (c: Context, userId: UuidSchema) => {
     const data = await recurringPaymentService.listPayments(userId);
+    return c.json(data, 200);
+};
+
+export const listSubscriptions = async (c: Context, userId: UuidSchema) => {
+    const data = await subscriptionService.getHub(userId);
     return c.json(data, 200);
 };
 
@@ -96,6 +105,7 @@ export const processDueRecurringPayments = async (c: Context, userId: UuidSchema
 };
 
 export const listNotifications = async (c: Context, userId: UuidSchema, unreadOnly: boolean) => {
+    await alertService.refreshAlerts(userId);
     const data = await recurringPaymentService.getNotifications(userId, unreadOnly);
     return c.json(data, 200);
 };

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { ChartNoAxesCombined, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
 import { useAuthContext } from "../../../features/auth/useAuthContext";
@@ -24,6 +25,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default function DashboardPage() {
     const { user } = useAuthContext();
+    const navigate = useNavigate();
     const { dashboardData, loading, error, refresh } = useDashboard();
     const { saveTransaction } = useTransactions();
     const [txModal, setTxModal] = useState(false);
@@ -70,16 +72,25 @@ export default function DashboardPage() {
                     <h1>Hola, {firstName ?? "de nuevo"}</h1>
                     <p className="text-muted">{today}</p>
                 </div>
-                <button
-                    className="btn-primary"
-                    onClick={() => {
-                        saveTransaction.reset();
-                        setTxModal(true);
-                    }}
-                >
-                    <Plus size={18} />
-                    Nueva transacción
-                </button>
+                <div className="dash-header__actions">
+                    <button
+                        className="btn-secondary"
+                        onClick={() => navigate("/reports")}
+                    >
+                        <ChartNoAxesCombined size={17} />
+                        Ver reportes
+                    </button>
+                    <button
+                        className="btn-primary"
+                        onClick={() => {
+                            saveTransaction.reset();
+                            setTxModal(true);
+                        }}
+                    >
+                        <Plus size={18} />
+                        Nueva transacción
+                    </button>
+                </div>
             </header>
 
             <RecurringForecastCard />

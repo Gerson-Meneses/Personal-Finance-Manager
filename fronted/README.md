@@ -1,73 +1,70 @@
-# React + TypeScript + Vite
+# Frontend — Personal Finance Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SPA construida con React 19, TypeScript, Vite y React Router. Los datos se gestionan con TanStack Query y la API del backend (`VITE_API_URL`).
 
-Currently, two official plugins are available:
+## Comandos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm install
+npm run dev       # servidor de desarrollo
+npm run build     # typecheck + build de producción
+npm run preview   # sirve el build
+npm run lint      # ESLint
+npm run test:e2e  # Playwright (levanta API + frontend)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Estructura
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+  components/        Componentes globales (tutorial)
+  features/          Dominios: accounts, transactions, loans, budgets, recurring...
+  pages/
+    public/          Login, registro, verificación y recuperación
+    private/         Vistas autenticadas y layout principal
+  shared/
+    components/      Inputs, modales, tablas, estados de error...
+    Hooks/           Hooks reutilizables
+    theme/           Tema claro/oscuro
+    utils/           Formato, iconos, fechas
+e2e/                 Tests Playwright
+```
+
+## Variables de entorno
+
+Crea `fronted/.env`:
+
+```env
+VITE_API_URL=http://localhost:3000
+# VITE_DISABLE_ONBOARDING=true
+```
+
+## Tests E2E
+
+`playwright.config.ts` arranca dos servidores:
+
+1. Backend en `http://127.0.0.1:3100` con `NODE_ENV=test`, aplicando migraciones sobre `TEST_DATABASE_URL`.
+2. Frontend Vite en `http://127.0.0.1:5174`.
+
+```sh
+npx playwright install chromium
+npm run test:e2e
+```
+
+Los tests cubren health checks, registro/login, navegación principal, menú móvil, skip link, modales accesibles y exportaciones.
+
+### Variables reconocidas por Playwright
+
+| Variable | Uso |
+| --- | --- |
+| `TEST_DATABASE_URL` | Base aislada para E2E (por defecto `finance_manager_test`). |
+| `JWT_SECRET` | Secreto de prueba si no está definido. |
+| `E2E_API_URL` | URL de la API usada por `request`. |
+
+## Rendimiento y accesibilidad
+
+- Las rutas se cargan con `React.lazy` para dividir el bundle.
+- `vite.config.ts` separa vendors en chunks (`vendor-react`, `vendor-forms`, `vendor-charts`, `vendor-icons`...) para mejorar el cacheado.
+- `shared/utils/iconRegistry.ts` contiene el catálogo curado de Lucide; añade ahí cualquier icono nuevo que vaya a guardarse en base de datos o mostrarse con `getIcon`.
+- Inputs y selects exponen `aria-invalid`/`aria-describedby`; los modales usan `role="dialog"` con `aria-labelledby` automático.
+- Los estados de error de datos usan `QueryErrorState` con acción de reintento.

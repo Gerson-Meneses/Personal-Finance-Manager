@@ -25,6 +25,7 @@ import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScree
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import InfoModal from "../../../shared/components/InfoModal/InfoModal";
 import { SelectInput } from "../../../shared/components/SelectInput/SelectInput";
+import { QueryErrorState } from "../../../shared/components/QueryErrorState/QueryErrorState";
 import { useToast } from "../../../shared/Hooks/useToast";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import { RecurringPaymentForm } from "../../../features/recurring/components/RecurringPaymentForm";
@@ -222,7 +223,7 @@ export default function RecurringPaymentsPage() {
     const [debtsOpen, toggleDebtsOpen] = useStoredToggle("recurring:debts:open");
     const toast = useToast();
 
-    const { projection, loading, refetch: refetchProjection } = useRecurringProjection(month);
+    const { projection, loading, error: projectionError, refetch: refetchProjection } = useRecurringProjection(month);
     const {
         suggestions,
         lookbackDays,
@@ -238,6 +239,7 @@ export default function RecurringPaymentsPage() {
         executeOccurrence,
         skipOccurrence,
         processDue,
+        error: paymentsError,
         refetch: refetchPayments,
     } = useRecurringPayments();
     const { notifications, unread, markRead, markAllRead } = usePaymentNotifications();
@@ -441,6 +443,22 @@ export default function RecurringPaymentsPage() {
 
     if (loading && !projection) return <LoadingScreen message="Calculando flujo previsto..." />;
 
+    if ((projectionError && !projection) || (paymentsError && payments.length === 0)) {
+        return (
+            <div className="page-container recurring-page">
+                <QueryErrorState
+                    title="No se pudieron cargar los pagos futuros"
+                    error={projectionError ?? paymentsError}
+                    onRetry={() => {
+                        void refetchProjection();
+                        void refetchPayments();
+                    }}
+                    retrying={loading}
+                />
+            </div>
+        );
+    }
+
     const netClass = (projection?.projectedNet ?? 0) >= 0 ? "text-success" : "text-danger";
 
     return (
@@ -572,10 +590,11 @@ export default function RecurringPaymentsPage() {
                             </button>
                             <button
                                 type="button"
-                                className="recurring-collapse-btn"
+                                className="recurring-collapse-btn tooltip-anchor tooltip-left"
                                 onClick={toggleSuggestionsOpen}
                                 aria-expanded={suggestionsOpen}
-                                title={suggestionsOpen ? "Ocultar sugerencias" : "Mostrar sugerencias"}
+                                aria-label={suggestionsOpen ? "Ocultar sugerencias" : "Mostrar sugerencias"}
+                                data-tooltip={suggestionsOpen ? "Ocultar sugerencias" : "Mostrar sugerencias"}
                             >
                                 {suggestionsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                             </button>
@@ -624,10 +643,11 @@ export default function RecurringPaymentsPage() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    className="btn-ghost recurring-suggestion__omit"
+                                                    className="btn-ghost recurring-suggestion__omit tooltip-anchor tooltip-top"
                                                     onClick={() => handleDismissSuggestion(suggestion)}
                                                     disabled={dismissSuggestion.isPending}
-                                                    title="Omitir esta sugerencia"
+                                                    aria-label="Omitir esta sugerencia"
+                                                    data-tooltip="Omitir esta sugerencia"
                                                 >
                                                     <EyeOff size={13} /> Omitir
                                                 </button>
@@ -678,10 +698,11 @@ export default function RecurringPaymentsPage() {
                             <span className="recurring-section-count">{debtGroups.length}</span>
                             <button
                                 type="button"
-                                className="recurring-collapse-btn"
+                                className="recurring-collapse-btn tooltip-anchor tooltip-left"
                                 onClick={toggleDebtsOpen}
                                 aria-expanded={debtsOpen}
-                                title={debtsOpen ? "Ocultar préstamos" : "Mostrar préstamos"}
+                                aria-label={debtsOpen ? "Ocultar préstamos" : "Mostrar préstamos"}
+                                data-tooltip={debtsOpen ? "Ocultar préstamos" : "Mostrar préstamos"}
                             >
                                 {debtsOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                             </button>
@@ -974,28 +995,28 @@ export default function RecurringPaymentsPage() {
                                     <div className="recurring-rule__actions">
                                         <button
                                             type="button"
-                                            className="recurring-icon-btn"
+                                            className="recurring-icon-btn tooltip-anchor tooltip-left"
                                             onClick={() => handleToggleActive(payment)}
                                             aria-label={payment.isActive ? "Pausar" : "Reactivar"}
-                                            title={payment.isActive ? "Pausar" : "Reactivar"}
+                                            data-tooltip={payment.isActive ? "Pausar" : "Reactivar"}
                                         >
                                             {payment.isActive ? <Pause size={14} /> : <Play size={14} />}
                                         </button>
                                         <button
                                             type="button"
-                                            className="recurring-icon-btn"
+                                            className="recurring-icon-btn tooltip-anchor tooltip-left"
                                             onClick={() => openEdit(payment)}
                                             aria-label="Editar"
-                                            title="Editar"
+                                            data-tooltip="Editar"
                                         >
                                             <Pencil size={14} />
                                         </button>
                                         <button
                                             type="button"
-                                            className="recurring-icon-btn danger"
+                                            className="recurring-icon-btn danger tooltip-anchor tooltip-left"
                                             onClick={() => setPendingDelete(payment)}
                                             aria-label="Eliminar"
-                                            title="Eliminar"
+                                            data-tooltip="Eliminar"
                                         >
                                             <Trash2 size={14} />
                                         </button>

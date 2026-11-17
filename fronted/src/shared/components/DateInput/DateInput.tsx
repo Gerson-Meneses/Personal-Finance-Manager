@@ -183,6 +183,7 @@ export const DatePicker = ({
   const popoverRef = useRef<HTMLDivElement>(null);
   const autoId = useId();
   const inputId = id ?? name ?? autoId;
+  const errorId = `${autoId}-error`;
 
   const today = dayjs();
   const currentValue = value ?? "";
@@ -249,6 +250,8 @@ export const DatePicker = ({
           aria-haspopup="dialog"
           aria-expanded={open}
           aria-required={required || undefined}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
         >
           <span className={display ? "dx-value" : "dx-placeholder"}>
             {display || "Seleccionar fecha"}
@@ -323,7 +326,7 @@ export const DatePicker = ({
       </div>
 
       {error && (
-        <span className="error-text">
+        <span id={errorId} className="error-text" role="alert">
           {error}
         </span>
       )}
@@ -366,6 +369,7 @@ export const TimePicker = ({
   const hourListRef = useRef<HTMLDivElement>(null);
   const autoId = useId();
   const inputId = id ?? name ?? autoId;
+  const errorId = `${autoId}-error`;
 
   const now = dayjs();
   const currentValue = value ?? "";
@@ -433,6 +437,8 @@ export const TimePicker = ({
           aria-haspopup="dialog"
           aria-expanded={open}
           aria-required={required || undefined}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
         >
           <span className={display ? "dx-value dx-mono" : "dx-placeholder"}>
             {display || "Seleccionar hora"}
@@ -504,7 +510,7 @@ export const TimePicker = ({
       </div>
 
       {error && (
-        <span className="error-text">
+        <span id={errorId} className="error-text" role="alert">
           {error}
         </span>
       )}

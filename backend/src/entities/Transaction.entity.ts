@@ -1,10 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, OneToMany, OneToOne, JoinColumn, Index } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, OneToMany, OneToOne, JoinColumn, Index, ManyToMany, JoinTable } from "typeorm";
 import type { Account } from "./Account.entity";
 import type { Category } from "./Category.entity";
 import { TransactionReportingImpact, TypeTransaction } from "../utils/Enums";
 import type { User } from "./User.entity";
 import type { ReccurentTransaction } from "./ReccurentTransaction.entity";
 import type { Loan } from "./Loan.entity";
+import { Tag } from "./Tag.entity";
+import { TransactionSplit } from "./TransactionSplit.entity";
+import { TransactionItem } from "./TransactionItem.entity";
+import type { TransactionAttachment } from "./TransactionAttachment.entity";
 
 @Entity({
     name: 'transactions'
@@ -47,6 +51,17 @@ export class Transaction {
     @Column({ type: 'text', nullable: true })
     description?: string;
 
+    /** Establecimiento donde se realizó la compra. */
+    @Column({ type: "varchar", length: 150, nullable: true })
+    merchantName?: string | null;
+
+    /** Dirección del establecimiento. */
+    @Column({ type: "varchar", length: 255, nullable: true })
+    merchantAddress?: string | null;
+
+    @Column({ type: "varchar", length: 11, nullable: true })
+    merchantRuc?: string | null;
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
 
@@ -85,5 +100,22 @@ export class Transaction {
     @OneToOne("loans", "transactions", { nullable: true })
     @JoinColumn()
     loan: Loan;
+
+    @ManyToMany(() => Tag, (tag) => tag.transactions)
+    @JoinTable({
+        name: "transaction_tags",
+        joinColumn: { name: "transactionId", referencedColumnName: "id" },
+        inverseJoinColumn: { name: "tagId", referencedColumnName: "id" },
+    })
+    tags: Tag[];
+
+    @OneToMany(() => TransactionSplit, (split) => split.transaction, { cascade: true })
+    splits: TransactionSplit[];
+
+    @OneToMany(() => TransactionItem, (item) => item.transaction, { cascade: true })
+    items: TransactionItem[];
+
+    @OneToMany("TransactionAttachment", "transaction", { cascade: true })
+    attachments: TransactionAttachment[];
 
 }

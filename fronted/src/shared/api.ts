@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+const BASE_URL = API_BASE_URL;
 
 interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   body?: unknown; // Objetos, strings, FormData, etc.
@@ -82,6 +83,50 @@ function buildApiError(status: number, statusText: string, body: unknown): ApiEr
   return new ApiError(finalMessage, type, details);
 }
 
+export async function downloadApiFile(endpoint: string, fallbackName: string): Promise<string> {
+  const token = localStorage.getItem("token");
+  const url = `${BASE_URL}/${endpoint.startsWith('/') ? endpoint.slice(1) : endpoint}`;
+  const response = await fetch(url, {
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+    }
+
+    let body: unknown = null;
+    try {
+      const raw = await response.text();
+      body = raw ? JSON.parse(raw) : null;
+    } catch {
+      body = null;
+    }
+
+    throw buildApiError(response.status, response.statusText, body);
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] ?? fallbackName;
+
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+
+  return filename;
+}
+
 export async function apiFetch<T>(
   endpoint: string,
   options: ApiFetchOptions = {}
@@ -89,17 +134,22 @@ export async function apiFetch<T>(
 
   const token = localStorage.getItem("token");
 
-  const isJsonBody = options.body && typeof options.body === 'object' && !(options.body instanceof FormData);
+  const isFormData = options.body instanceof FormData;
+  const isJsonBody = options.body && typeof options.body === 'object' && !isFormData;
   const url = `${BASE_URL}/${endpoint.startsWith('/') ? endpoint.slice(1) : endpoint}`;
 
   const config: RequestInit = {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
-    body: isJsonBody ? JSON.stringify(options.body) : (options.body as BodyInit | null | undefined),
+    body: isFormData
+      ? (options.body as FormData)
+      : isJsonBody
+        ? JSON.stringify(options.body)
+        : (options.body as BodyInit | null | undefined),
   };
 
   const response = await fetch(`${url}`, config);

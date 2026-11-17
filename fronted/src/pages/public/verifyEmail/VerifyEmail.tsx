@@ -130,7 +130,12 @@ export const VerifyEmailPage = () => {
                         <strong>{email}</strong>
                     </p>
 
-                    <div className="otp-inputs" onPaste={handlePaste}>
+                    <div
+                        className="otp-inputs"
+                        onPaste={handlePaste}
+                        role="group"
+                        aria-label="Código de verificación de 6 dígitos"
+                    >
                         {digits.map((digit, i) => (
                             <input
                                 key={i}
@@ -140,6 +145,8 @@ export const VerifyEmailPage = () => {
                                 inputMode="numeric"
                                 maxLength={1}
                                 value={digit}
+                                aria-label={`Dígito ${i + 1} de ${CODE_LENGTH}`}
+                                aria-invalid={verify.isError || undefined}
                                 onChange={e => handleDigitChange(i, e.target.value)}
                                 onKeyDown={e => handleKeyDown(i, e)}
                                 onFocus={e => e.target.select()}
@@ -169,17 +176,25 @@ export const VerifyEmailPage = () => {
                         {verify.isPending ? "Verificando..." : "Verificar"}
                     </button>
 
-                    <p className="button-message" onClick={() => {
-                        setStep(1)
-                        setDigits(Array(CODE_LENGTH).fill(""))
-                        verify.reset()
-                    }}>
+                    <button
+                        type="button"
+                        className="button-message"
+                        onClick={() => {
+                            setStep(1)
+                            setDigits(Array(CODE_LENGTH).fill(""))
+                            verify.reset()
+                        }}
+                    >
                         ← Cambiar email
-                    </p>
+                    </button>
 
-                    <p className="button-message" onClick={() => request.mutate({ email })}>
+                    <button
+                        type="button"
+                        className="button-message"
+                        onClick={() => request.mutate({ email })}
+                    >
                         ¿No llegó? <span>Reenviar código</span>
-                    </p>
+                    </button>
                 </form>
             )}
         </div>

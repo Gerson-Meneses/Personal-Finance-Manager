@@ -99,31 +99,38 @@ export class DashboardService {
             .setParameters({ incomeType: TypeTransaction.INCOME, expenseType: TypeTransaction.EXPENSE, reportingImpact: "REPORTABLE" })
             .getRawOne()
 
-        const categoriesPromise = this.transactionRepo
-            .createQueryBuilder("t")
-            .leftJoinAndSelect("t.category", "category")
-            .select("category.id", "id")
-            .addSelect("category.name", "name")
-            .addSelect("category.color", "color")
-            .addSelect("category.icon", "icon")
-            .addSelect("SUM(t.amount)", "amount")
-            .addSelect("COUNT(t.id)", "transactionCount")
-            .where("t.userId = :userId", { userId })
-            .andWhere("t.type = 'EXPENSE'")
-            .andWhere("t.reportingImpact = :reportingImpact", { reportingImpact: "REPORTABLE" })
-            .andWhere("t.date >= :start", { start: startOfMonth })
-            .andWhere("t.date <= :end", { end: endOfMonth })
-            .groupBy("category.id")
-            .addGroupBy("category.name")
-            .addGroupBy("category.color")
-            .addGroupBy("category.icon")
-            .getRawMany()
+        // Distribuye el gasto por categoría respetando las divisiones.
+        const categoriesPromise = this.transactionRepo.query(
+            `
+            SELECT category.id,
+                   category.name,
+                   category.color,
+                   category.icon,
+                   COALESCE(SUM(src.amount), 0) AS amount,
+                   COUNT(DISTINCT src.id)::text AS "transactionCount"
+            FROM (
+                SELECT t.id,
+                       COALESCE(split."categoryId", t."categoryId") AS "categoryId",
+                       COALESCE(split.amount, t.amount) AS amount
+                FROM "transactions" t
+                LEFT JOIN "transaction_splits" split ON split."transactionId" = t.id
+                WHERE t."userId" = $1
+                  AND t.type = 'EXPENSE'
+                  AND t."reportingImpact" = $2
+                  AND t.date >= $3
+                  AND t.date <= $4
+            ) src
+            LEFT JOIN "categories" category ON category.id = src."categoryId"
+            GROUP BY category.id, category.name, category.color, category.icon
+            `,
+            [userId, "REPORTABLE", startOfMonth, endOfMonth]
+        )
 
         const recentPromise = this.transactionRepo.find({
             where: {
                 user: { id: userId }
             },
-            relations: ["category", "account", "relatedAccount", "loan"],
+            relations: ["category", "account", "relatedAccount", "loan", "tags", "splits", "splits.category", "items"],
             order: {
                 createdAt: "DESC"
             },
@@ -215,7 +222,16 @@ export class DashboardService {
         /* EXPENSES BY CATEGORY */
         /* -------------------------------- */
 
-        const expensesByCategory = rawCategories.map(row => (
+        interface RawCategoryRow {
+            id: string | null
+            name: string | null
+            color: string | null
+            icon: string | null
+            amount: string
+            transactionCount: string
+        }
+
+        const expensesByCategory = (rawCategories as RawCategoryRow[]).map(row => (
            {
             category: {
                 id: row.id,
@@ -224,7 +240,7 @@ export class DashboardService {
                 icon: row.icon
             } as Category,
             amount: money(Number(row.amount)),
-            total: row.transactionCount
+            total: Number(row.transactionCount)
         }))
 
         /* -------------------------------- */
@@ -233,6 +249,17 @@ export class DashboardService {
 
         for (const t of recentTransactions) {
             t.amount = money(t.amount)
+            if (t.splits) {
+                for (const split of t.splits) {
+                    split.amount = money(split.amount)
+                }
+            }
+            if (t.items) {
+                for (const item of t.items) {
+                    item.unitPrice = money(item.unitPrice)
+                    item.total = money(item.total)
+                }
+            }
         }
 
         /* -------------------------------- */

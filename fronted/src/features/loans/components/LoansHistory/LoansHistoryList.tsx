@@ -63,11 +63,12 @@ export const LoanQuickHistory = ({
         <div className="lqh-wrapper">
             {/* Controles de ordenamiento */}
             <div className="lqh-controls">
-                <div className="tf-chips">
+                <div className="tf-chips" role="group" aria-label="Ordenar movimientos">
                     {ORDER_BY_OPTIONS.map((opt) => (
                         <button
                             key={opt.value}
                             type="button"
+                            aria-pressed={orderBy === opt.value}
                             className={`tf-chip ${orderBy === opt.value ? "active" : ""}`}
                             onClick={() => setOrderBy(opt.value)}
                         >

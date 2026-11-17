@@ -29,7 +29,15 @@ export const categorySchema = z.object({
     visible: z
         .boolean({ message: "El campo 'visible' debe ser un valor booleano" })
         .optional()
-        .nullable()
+        .nullable(),
+
+    /** Categoría padre opcional (solo un nivel de subcategorías). */
+    parentCategoryId: z
+        .preprocess(
+            (value) => (value === "" ? null : value),
+            z.uuid({ message: "parentCategoryId debe ser un UUID válido" }).nullable()
+        )
+        .optional(),
 });
 
 export type CategorySchema = z.infer<typeof categorySchema>;

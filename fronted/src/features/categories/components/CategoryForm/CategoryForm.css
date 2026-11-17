@@ -353,3 +353,9 @@
         gap: 8px;
     }
 }
+.category-parent-hint {
+    margin: -4px 0 0;
+    font-size: 0.72rem;
+    color: var(--text-tertiary);
+    line-height: 1.4;
+}

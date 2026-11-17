@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { getIcon } from "../../utils/GetIcon";
 
@@ -11,8 +11,6 @@ interface PasswordInputProps
     placeholder?: string;
 
     autoComplete?: string;
-
-    title?: string;
 
     icon?: string | null;
 
@@ -37,8 +35,6 @@ export const PasswordInput = ({
 
     autoComplete = "current-password",
 
-    title = "Contraseña",
-
     icon = "LockKeyhole",
 
     name,
@@ -47,9 +43,11 @@ export const PasswordInput = ({
     className,
 }: PasswordInputProps) => {
     const [show, setShow] = useState(false);
+    const generatedId = useId();
 
     const inputId =
         id ?? name ?? "password-input";
+    const errorId = `${generatedId}-error`;
 
     return (
         <div
@@ -85,7 +83,8 @@ export const PasswordInput = ({
                     required={required}
                     disabled={disabled}
                     autoComplete={autoComplete}
-                    title={title}
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? errorId : undefined}
                     onBlur={onBlur}
                     onChange={(e) =>
                         onChange(e.target.value)
@@ -117,7 +116,7 @@ export const PasswordInput = ({
             </div>
 
             {error && (
-                <span className="error-text">
+                <span id={errorId} className="error-text" role="alert">
                     {error}
                 </span>
             )}

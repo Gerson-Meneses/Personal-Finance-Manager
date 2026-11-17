@@ -32,7 +32,8 @@ app.use(
     allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   })
 )
-app.use(bodyLimit({ maxSize: 1024 * 1024 }))
+// 6 MB permite adjuntos de hasta 5 MB con el overhead de multipart.
+app.use(bodyLimit({ maxSize: 6 * 1024 * 1024 }))
 app.use(securityHeaders)
 app.use(logger())
 app.onError(errorHandler)

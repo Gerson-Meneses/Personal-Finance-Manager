@@ -21,7 +21,9 @@ const ResetPasswordPage = lazy(() =>
 );
 
 const DashboardPage = lazy(() => import("./pages/private/dashboard/dashboard"));
+const PlanningPage = lazy(() => import("./pages/private/planning/PlanningPage"));
 const ReportsPage = lazy(() => import("./pages/private/reports/ReportsPage"));
+const ReconciliationPage = lazy(() => import("./pages/private/reconciliation/ReconciliationPage"));
 const AccountPage = lazy(() =>
   import("./pages/private/accounts/accountPage").then((module) => ({ default: module.AccountPage }))
 );
@@ -32,6 +34,10 @@ const TransactionsPage = lazy(() =>
   import("./pages/private/transactions/transactionsPage").then((module) => ({ default: module.TransactionsPage }))
 );
 const CategoriesPage = lazy(() => import("./pages/private/categories/categories"));
+const TagsPage = lazy(() => import("./pages/private/tags/TagsPage"));
+const ProductsPage = lazy(() => import("./pages/private/products/ProductsPage"));
+const DebtsPage = lazy(() => import("./pages/private/debts/DebtsPage"));
+const ContactDebtPage = lazy(() => import("./pages/private/debts/ContactDebtPage"));
 const LoansPage = lazy(() =>
   import("./pages/private/loans/loans").then((module) => ({ default: module.LoansPage }))
 );
@@ -39,6 +45,7 @@ const LoansByLender = lazy(() =>
   import("./pages/private/loans/LoansByLender/LoansByLender").then((module) => ({ default: module.LoansByLender }))
 );
 const RecurringPaymentsPage = lazy(() => import("./pages/private/recurring/RecurringPaymentsPage"));
+const SubscriptionsPage = lazy(() => import("./pages/private/subscriptions/SubscriptionsPage"));
 const BudgetsPage = lazy(() => import("./pages/private/budgets/BudgetsPage"));
 const ContactsPage = lazy(() => import("./pages/private/contacts/ContactsPage"));
 const ProfilePage = lazy(() => import("./pages/private/profile/profilePage"));
@@ -57,13 +64,20 @@ export default function App() {
 
         <Route element={<PrivateLayout />}>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/planning" element={<PlanningPage />} />
           <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/reconciliation" element={<ReconciliationPage />} />
           <Route path="/accounts" element={<AccountPage />} />
           <Route path="/accounts/:id" element={<AccountDetail />} />
           <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/tags" element={<TagsPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/debts" element={<DebtsPage />} />
+          <Route path="/debts/:contactId" element={<ContactDebtPage />} />
           <Route path="/loans" element={<LoansPage />} />
           <Route path="/loans/:lender" element={<LoansByLender />} />
           <Route path="/recurring" element={<RecurringPaymentsPage />} />
+          <Route path="/subscriptions" element={<SubscriptionsPage />} />
           <Route path="/budgets" element={<BudgetsPage />} />
           <Route path="/contacts" element={<ContactsPage />} />
           <Route path="/transactions" element={<TransactionsPage />} />

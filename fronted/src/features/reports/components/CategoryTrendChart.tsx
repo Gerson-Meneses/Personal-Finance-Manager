@@ -48,7 +48,7 @@ export function CategoryTrendChart({ months, categories }: Props) {
         return row;
     });
 
-    const hasOther = months.some((month) => month.expense > 0);
+    const hasOther = data.some((row) => Number(row.other) > 0);
     const tickInterval = data.length > 18 ? 3 : data.length > 9 ? 1 : 0;
 
     return (

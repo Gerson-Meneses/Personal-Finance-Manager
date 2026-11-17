@@ -140,7 +140,12 @@ export const ResetPasswordPage = () => {
                     </p>
 
                     {/* OTP */}
-                    <div className="otp-inputs" onPaste={handlePaste}>
+                    <div
+                        className="otp-inputs"
+                        onPaste={handlePaste}
+                        role="group"
+                        aria-label="Código de verificación de 6 dígitos"
+                    >
                         {digits.map((digit, i) => (
                             <input
                                 key={i}
@@ -150,6 +155,8 @@ export const ResetPasswordPage = () => {
                                 inputMode="numeric"
                                 maxLength={1}
                                 value={digit}
+                                aria-label={`Dígito ${i + 1} de ${CODE_LENGTH}`}
+                                aria-invalid={confirm.isError || undefined}
                                 onChange={e => handleDigitChange(i, e.target.value)}
                                 onKeyDown={e => handleKeyDown(i, e)}
                                 onFocus={e => e.target.select()}
@@ -227,17 +234,25 @@ export const ResetPasswordPage = () => {
                         {confirm.isPending ? "Actualizando..." : "Actualizar contraseña"}
                     </button>
 
-                    <p className="button-message" onClick={() => {
-                        setStep(1)
-                        setDigits(Array(CODE_LENGTH).fill(""))
-                        confirm.reset()
-                    }}>
+                    <button
+                        type="button"
+                        className="button-message"
+                        onClick={() => {
+                            setStep(1)
+                            setDigits(Array(CODE_LENGTH).fill(""))
+                            confirm.reset()
+                        }}
+                    >
                         ← Cambiar email
-                    </p>
+                    </button>
 
-                    <p className="button-message" onClick={() => request.mutate({ email })}>
+                    <button
+                        type="button"
+                        className="button-message"
+                        onClick={() => request.mutate({ email })}
+                    >
                         ¿No llegó? <span>Reenviar código</span>
-                    </p>
+                    </button>
                 </form>
             )}
         </div>

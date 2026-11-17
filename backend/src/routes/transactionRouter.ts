@@ -4,7 +4,7 @@ import { authMiddleware } from "../middlewares/authMiddleware";
 import { zValidator } from "@hono/zod-validator";
 import { ZodError } from "zod";
 import { zodErrorResponse } from "../helpers/zodErrorResponse";
-import { createTransaction, deleteTransaction, getAllTransactionsByUser, getTransactionById, getTransactionsStats, transferTransaction, updateTransaction } from "../controllers/transactionController";
+import { createTransaction, deleteTransaction, exportTransactions, getAllTransactionsByUser, getTransactionById, getTransactionsStats, transferTransaction, updateTransaction } from "../controllers/transactionController";
 import { transactionSchema, updateTransactionSchema } from "../schemas/transaction.schema";
 import { transferSchema } from "../schemas/transfers.schema";
 import { TransactionQuerySchema, transactionQuerySchema } from "../schemas/querysTransaction.schema";
@@ -37,6 +37,17 @@ transactionRouter.get("/stats",
             ...parsed.data,
         };
         return await getTransactionsStats(c, userId, filters)
+    }
+)
+
+transactionRouter.get("/export",
+    async (c) => {
+        const userId = c.get('user').sub;
+        const parsed = transactionQuerySchema.safeParse(c.req.query());
+        if (!parsed.success) {
+            return zodErrorResponse(parsed.error, c)
+        }
+        return await exportTransactions(c, userId, parsed.data as TransactionQuerySchema)
     }
 )
 

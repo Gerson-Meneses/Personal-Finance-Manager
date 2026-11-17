@@ -1,5 +1,6 @@
 import { ZodError } from "zod"
 import { Context } from "hono"
+import { HTTPException } from "hono/http-exception"
 import { DomainError } from "./errors/domain.errors"
 
 const formatZodError = (error: ZodError) => {
@@ -20,6 +21,11 @@ const formatZodError = (error: ZodError) => {
 
 
 export const errorHandler = (err: unknown, c: Context) => {
+  // Hono (ej. bodyLimit excedido)
+  if (err instanceof HTTPException) {
+    return err.getResponse()
+  }
+
   // 🧩 ZOD
   if (err instanceof ZodError) {
     return c.json(

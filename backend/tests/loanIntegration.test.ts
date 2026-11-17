@@ -2,7 +2,9 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import dayjs from "dayjs";
 import { AppDataSourceProd } from "../src/database/dataBaseDev";
 import { Account } from "../src/entities/Account.entity";
+import { Budget } from "../src/entities/Budget.entity";
 import { Category } from "../src/entities/Category.entity";
+import { PaymentNotification } from "../src/entities/PaymentNotification.entity";
 import { Contact } from "../src/entities/Contact.entity";
 import { DebtInstallment } from "../src/entities/DebtInstallment.entity";
 import { Loan } from "../src/entities/Loan.entity";
@@ -11,8 +13,10 @@ import { LoanPlan } from "../src/entities/LoanPlan.entity";
 import { RecurringPayment } from "../src/entities/RecurringPayment.entity";
 import { RecurringPaymentOccurrence } from "../src/entities/RecurringPaymentOccurrence.entity";
 import { User } from "../src/entities/User.entity";
+import { AlertService } from "../src/services/alertService";
 import { ContactService } from "../src/services/contactService";
 import { LoanPlanService } from "../src/services/loanPlanService";
+import { SubscriptionService } from "../src/services/subscriptionService";
 import { LoansService } from "../src/services/loansService";
 import { RecurringPaymentService } from "../src/services/recurringPaymentService";
 import { TransactionService } from "../src/services/transactionService";
@@ -380,6 +384,135 @@ describeDb("integración del ledger de préstamos", () => {
         }
 
         expect(message).toMatch(/no encontrada/i);
+    }, 30000);
+
+    test("genera alertas de presupuesto y tarjeta", async () => {
+        const today = dayjs().format("YYYY-MM-DD");
+        const month = dayjs().format("YYYY-MM");
+        const category = await AppDataSourceProd.getRepository(Category).save(
+            AppDataSourceProd.getRepository(Category).create({
+                name: "Integration Budget Alert",
+                type: TypeTransaction.EXPENSE,
+                user: { id: userId } as User,
+            })
+        );
+        const budget = await AppDataSourceProd.getRepository(Budget).save(
+            AppDataSourceProd.getRepository(Budget).create({
+                userId,
+                categoryId: category.id,
+                month,
+                amount: 100_000,
+            })
+        );
+
+        await new TransactionService().createTransaction(
+            {
+                name: "Integration budget expense",
+                type: TypeTransaction.EXPENSE,
+                amount: 90_000,
+                date: today,
+                categoryId: category.id,
+                accountId,
+            } as any,
+            userId as any
+        );
+
+        await AppDataSourceProd.getRepository(Account).save(
+            AppDataSourceProd.getRepository(Account).create({
+                name: "Integration Credit Alert",
+                type: "CREDIT" as any,
+                balance: 10_000,
+                creditLimit: 100_000,
+                overdraft: 0,
+                color: "#ffffff",
+                icon: "credit-card",
+                billingCloseDay: 1,
+                paymentDueDay: dayjs().date(),
+                user: { id: userId } as User,
+            })
+        );
+
+        await new AlertService().refreshAlerts(userId as any);
+
+        const notificationRepo = AppDataSourceProd.getRepository(PaymentNotification);
+        const budgetAlert = await notificationRepo.findOneBy({
+            userId,
+            dedupeKey: `budget:${budget.id}:${month}:80`,
+        });
+        const utilizationAlert = await notificationRepo.findOneBy({
+            userId,
+            kind: "CARD_UTILIZATION",
+        });
+        const dueAlert = await notificationRepo.findOneBy({
+            userId,
+            kind: "CARD_DUE",
+        });
+
+        expect(budgetAlert?.kind).toBe("BUDGET");
+        expect(utilizationAlert).toBeTruthy();
+        expect(dueAlert).toBeTruthy();
+    }, 30000);
+
+    test("resume el hub de suscripciones", async () => {
+        const category = await AppDataSourceProd.getRepository(Category).save(
+            AppDataSourceProd.getRepository(Category).create({
+                name: "Integration Subscriptions",
+                type: TypeTransaction.EXPENSE,
+                user: { id: userId } as User,
+            })
+        );
+        const recurringService = new RecurringPaymentService();
+        const today = dayjs().format("YYYY-MM-DD");
+
+        const monthly = await recurringService.createPayment(userId as any, {
+            name: "Integration Subscription Monthly",
+            type: "EXPENSE",
+            amount: 100_000,
+            frequency: RecurrenceFrequency.MONTHLY,
+            intervalCount: 1,
+            startDate: today,
+            autoDebit: false,
+            accountId,
+            categoryId: category.id,
+            loanAction: "NONE",
+        } as any);
+        const yearly = await recurringService.createPayment(userId as any, {
+            name: "Integration Subscription Yearly",
+            type: "EXPENSE",
+            amount: 120_000,
+            frequency: RecurrenceFrequency.YEARLY,
+            intervalCount: 1,
+            startDate: today,
+            autoDebit: false,
+            accountId,
+            categoryId: category.id,
+            loanAction: "NONE",
+        } as any);
+        const paused = await recurringService.createPayment(userId as any, {
+            name: "Integration Subscription Paused",
+            type: "EXPENSE",
+            amount: 50_000,
+            frequency: RecurrenceFrequency.MONTHLY,
+            intervalCount: 1,
+            startDate: today,
+            autoDebit: false,
+            accountId,
+            categoryId: category.id,
+            loanAction: "NONE",
+        } as any);
+        await AppDataSourceProd.getRepository(RecurringPayment).update(paused.id, { isActive: false });
+
+        const hub = await new SubscriptionService().getHub(userId as any);
+        const monthlyItem = hub.subscriptions.find((item) => item.id === monthly.id);
+        const yearlyItem = hub.subscriptions.find((item) => item.id === yearly.id);
+        const pausedItem = hub.subscriptions.find((item) => item.id === paused.id);
+
+        expect(monthlyItem?.monthlyEquivalent).toBe(1_000);
+        expect(yearlyItem?.monthlyEquivalent).toBe(100);
+        expect(pausedItem?.isActive).toBe(false);
+        expect(hub.summary.activeCount).toBe(2);
+        expect(hub.summary.pausedCount).toBe(1);
+        expect(hub.summary.monthlyTotal).toBe(1_100);
     }, 30000);
 
     test("fusiona contactos y reasigna recurrentes", async () => {

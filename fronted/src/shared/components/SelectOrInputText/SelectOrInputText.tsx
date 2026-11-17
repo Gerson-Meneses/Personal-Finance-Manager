@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { getIcon } from "../../utils/GetIcon";
 
 import type { BaseInputProps } from "../types";
@@ -40,8 +40,10 @@ export const SelectOrInputText = ({
 
     className,
 }: SelectInputProps) => {
+    const generatedId = useId();
     const inputId =
         id ?? name ?? "select-input";
+    const errorId = `${generatedId}-error`;
 
     const [isCustomMode, setIsCustomMode] =
         useState(
@@ -124,6 +126,8 @@ export const SelectOrInputText = ({
                         disabled={disabled}
                         required={required}
                         placeholder={placeholder}
+                        aria-invalid={error ? true : undefined}
+                        aria-describedby={error ? errorId : undefined}
                         onChange={(e) =>
                             onChange(e.target.value)
                         }
@@ -145,7 +149,7 @@ export const SelectOrInputText = ({
             </div>
 
             {error && (
-                <span className="error-text">
+                <span id={errorId} className="error-text" role="alert">
                     {error}
                 </span>
             )}

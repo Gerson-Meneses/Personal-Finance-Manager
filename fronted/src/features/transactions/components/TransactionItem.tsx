@@ -3,7 +3,7 @@ import './styles.css'
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import { getIcon } from "../../../shared/utils/GetIcon";
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Download, Package, Paperclip, Pencil, Split, Store, Trash2 } from "lucide-react";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "./TransactionForm/TransactionForm";
 import InfoModal from "../../../shared/components/InfoModal/InfoModal";
@@ -13,8 +13,12 @@ import 'dayjs/locale/es'
 import { TruncateText } from "../../../shared/components/TruncateText/TruncateText";
 import { HighlightText } from "../../../shared/components/Highlighttext/Highlighttext";
 import { useToast } from "../../../shared/Hooks/useToast";
+import { downloadAttachment } from "../../attachments/services";
 
 dayjs.locale('es')
+
+/** La división de transacciones está implementada pero oculta en la UI. */
+const SPLITS_UI_ENABLED = false;
 
 interface Props {
     transaction: Transaction;
@@ -37,9 +41,12 @@ export default function TransactionItem({ transaction, currentAccountId, search 
     if (!transaction) return <>Error</>
 
     const {
-        name, amount, type, date, category, account, description, relatedAccount
+        name, amount, type, date, category, account, description, relatedAccount,
+        tags, splits, items, attachments,
+        merchantName, merchantAddress,
     } = transaction;
 
+    const displayCategory = category ?? splits?.[0]?.category
     const fromAccount = account
     const toAccount = relatedAccount
 
@@ -71,17 +78,17 @@ export default function TransactionItem({ transaction, currentAccountId, search 
         <>
             <div
                 className={`tx-item-card animate-fade-in ${type.toLowerCase()}`}
-                style={{ borderLeft: `3px solid ${category?.color}` }}
+                style={{ borderLeft: `3px solid ${displayCategory?.color ?? "transparent"}` }}
             >
                 <div className="tx-main-content">
                     <div
                         className="tx-icon-container"
                         style={{
-                            backgroundColor: `${category?.color}20`,
-                            color: category?.color
+                            backgroundColor: `${displayCategory?.color ?? "#64748b"}20`,
+                            color: displayCategory?.color ?? "#64748b"
                         }}
                     >
-                        {category?.icon && getIcon(category.icon)}
+                        {displayCategory?.icon && getIcon(displayCategory.icon)}
                     </div>
 
                     <div className="tx-details-wrapper">
@@ -123,11 +130,11 @@ export default function TransactionItem({ transaction, currentAccountId, search 
                                     </>
                                 )}
 
-                                {!hideFields?.category && category?.name && (
+                                {!hideFields?.category && displayCategory?.name && (
                                     <>
                                         <span className="tx-divider">•</span>
                                         <HighlightText
-                                            text={category.name}
+                                            text={displayCategory.name}
                                             term={search}
                                             className="tx-category-name tx-account-badge"
                                             // style no se puede pasar, lo dejamos en el wrapper
@@ -176,6 +183,111 @@ export default function TransactionItem({ transaction, currentAccountId, search 
                             search
                                 ? <HighlightText text={description} term={search} className="tx-description text-muted" />
                                 : <TruncateText text={description} maxLength={60} classname="tx-description text-muted" />
+                        )}
+
+                        {SPLITS_UI_ENABLED && !!splits?.length && (
+                            <div
+                                className="tx-splits-list tooltip-anchor tooltip-top"
+                                data-tooltip="Transacción dividida"
+                            >
+                                <span className="tx-splits-list__icon">
+                                    <Split size={12} />
+                                    Dividida
+                                </span>
+                                {splits.map((split) => (
+                                    <span
+                                        key={split.id}
+                                        className="tx-split-badge"
+                                        style={{ borderColor: split.category?.color || "#64748b" }}
+                                    >
+                                        {split.category?.name ?? "Sin categoría"}: {formatCurrency(split.amount)}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {(merchantName || merchantAddress) && (
+                            <div className="tx-merchant-info">
+                                {merchantName && (
+                                    <span className="tx-merchant-info__name">
+                                        <Store size={12} />
+                                        {merchantName}
+                                    </span>
+                                )}
+                                {merchantAddress && (
+                                    <span
+                                        className="tx-merchant-info__address tooltip-anchor tooltip-top tooltip-wide"
+                                        data-tooltip={merchantAddress}
+                                    >
+                                        {merchantAddress}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        {!!items?.length && (
+                            <div className="tx-purchased-list">
+                                <span className="tx-purchased-list__label">
+                                    <Package size={12} />
+                                    {items.length} producto{items.length === 1 ? "" : "s"}
+                                </span>
+                                {items.slice(0, 4).map((item) => (
+                                    <span key={item.id} className="tx-purchased-item">
+                                        {item.name} x{item.quantity} · {formatCurrency(item.total)}
+                                    </span>
+                                ))}
+                                {items.length > 4 && (
+                                    <span className="tx-purchased-item">+{items.length - 4} más</span>
+                                )}
+                            </div>
+                        )}
+
+                        {!!tags?.length && (
+                            <div className="tx-tags-list">
+                                {tags.map((tag) => (
+                                    <span
+                                        key={tag.id}
+                                        className="tag-chip tx-tag-chip"
+                                        style={{
+                                            borderColor: tag.color,
+                                            background: `${tag.color}1a`,
+                                            color: tag.color,
+                                        }}
+                                    >
+                                        {tag.name}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {!!attachments?.length && (
+                            <div className="tx-attachments-list">
+                                <span className="tx-attachments-list__label">
+                                    <Paperclip size={12} />
+                                    {attachments.length} adjunto{attachments.length === 1 ? "" : "s"}
+                                </span>
+                                {attachments.map((attachment) => (
+                                    <button
+                                        key={attachment.id}
+                                        type="button"
+                                        className="tx-attachment-link tooltip-anchor tooltip-top tooltip-wide"
+                                        onClick={() => {
+                                            void downloadAttachment(attachment).catch((downloadError) =>
+                                                toast.error(
+                                                    downloadError instanceof Error
+                                                        ? downloadError.message
+                                                        : "No se pudo descargar el adjunto"
+                                                )
+                                            );
+                                        }}
+                                        data-tooltip={`Descargar ${attachment.fileName}`}
+                                        aria-label={`Descargar ${attachment.fileName}`}
+                                    >
+                                        <Download size={11} />
+                                        {attachment.fileName}
+                                    </button>
+                                ))}
+                            </div>
                         )}
                     </div>
                 </div>

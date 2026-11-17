@@ -348,6 +348,10 @@ export class LoansService {
         qb.andWhere("loan.type = :type", { type: filters.type });
       }
 
+      if (filters.contactId) {
+        qb.andWhere("loan.contactId = :contactId", { contactId: filters.contactId });
+      }
+
       // Filtro por estado
       if (filters.status) {
         if (filters.status === StatusLoan.PENDING) {
@@ -551,6 +555,11 @@ export class LoansService {
       // Excluir pagados (sin deuda)
       if (filters?.excludePaidOff) {
         filtered = filtered.filter(item => item.payment.totalRemaining > 0);
+      }
+
+      // Filtro por contacto
+      if (filters?.contactId) {
+        filtered = filtered.filter(item => item.loan.contactId === filters.contactId);
       }
 
       // Filtro por acreedor

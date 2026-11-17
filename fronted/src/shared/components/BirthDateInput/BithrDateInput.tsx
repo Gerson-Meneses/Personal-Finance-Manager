@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { getIcon } from "../../utils/GetIcon";
 import { generateYears, getDaysInMonth, months } from "../../utils/dateUtils";
 import { SelectInput } from "../SelectInput/SelectInput";
@@ -25,6 +25,9 @@ export const BirthDateInput = ({
     disabled,
     required
 }: BirthDateInputProps) => {
+    const generatedId = useId();
+    const labelId = `${generatedId}-label`;
+    const errorId = `${generatedId}-error`;
     const { day, month, year } = value;
     const days = Array.from({ length: getDaysInMonth(month, year) }, (_, i) => i + 1);
     const years = generateYears();
@@ -44,11 +47,16 @@ export const BirthDateInput = ({
     return (
         <div className={`custom-form-group ${error ? 'has-error' : ''}`}>
 
-            <label className="input-label">
+            <label className="input-label" id={labelId}>
                 {getIcon("Cake")} Fecha de Nacimiento
             </label>
 
-            <div className="birthdate-selects">
+            <div
+                className="birthdate-selects"
+                role="group"
+                aria-labelledby={labelId}
+                aria-describedby={error ? errorId : undefined}
+            >
 
                 <SelectInput
                     label="Día"
@@ -94,7 +102,11 @@ export const BirthDateInput = ({
 
             </div>
 
-            {error && <span className="error-text">{error}</span>}
+            {error && (
+                <span id={errorId} className="error-text" role="alert">
+                    {error}
+                </span>
+            )}
         </div>
     );
 };

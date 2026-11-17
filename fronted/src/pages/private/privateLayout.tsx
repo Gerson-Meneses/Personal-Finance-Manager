@@ -3,7 +3,7 @@ import { useLogout } from "../../features/auth/useLogout";
 import { matchPath, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { ArrowLeft, ArrowLeftRight, CalendarClock, ChartNoAxesCombined, HandCoins, Home, Menu, PiggyBank, Plus, ShieldCheck, Sparkles, Tags, Users, Wallet, X } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, CalendarClock, ChartNoAxesCombined, HandCoins, Home, Menu, Plus, ShieldCheck, ShoppingBasket, Sparkles, Tags, Wallet, X } from "lucide-react";
 import ModalPortal from "../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "../../features/transactions/components/TransactionForm/TransactionForm";
 import { AddAnotherTransactionPrompt } from "../../features/transactions/components/AddAnotherTransactionPrompt";
@@ -35,11 +35,11 @@ const TRANSACTIONS_NAV: NavItem = {
   icon: ArrowLeftRight,
 };
 
-const RECURRING_NAV: NavItem = {
-  to: "/recurring",
-  label: "Futuros",
-  mobileLabel: "Pagos futuros",
-  shortLabel: "Futuros",
+const PLANNING_NAV: NavItem = {
+  to: "/planning",
+  label: "Planificación",
+  mobileLabel: "Planificación",
+  shortLabel: "Plan",
   icon: CalendarClock,
 };
 
@@ -47,16 +47,15 @@ const NAV_ITEMS: NavItem[] = [
   HOME_NAV,
   TRANSACTIONS_NAV,
   { to: "/accounts", label: "Cuentas", icon: Wallet },
-  { to: "/loans", label: "Préstamos", icon: HandCoins },
-  { to: "/contacts", label: "Contactos", icon: Users },
-  RECURRING_NAV,
-  { to: "/budgets", label: "Presupuestos", icon: PiggyBank },
+  { to: "/debts", label: "Deudas", icon: HandCoins },
+  PLANNING_NAV,
   { to: "/reports", label: "Reportes", icon: ChartNoAxesCombined },
+  { to: "/products", label: "Productos", icon: ShoppingBasket },
   { to: "/categories", label: "Categorías", icon: Tags },
   { to: "/admin", label: "Administración", icon: ShieldCheck, adminOnly: true },
 ];
 
-const BOTTOM_NAV_ROUTES = [HOME_NAV.to, TRANSACTIONS_NAV.to, RECURRING_NAV.to];
+const BOTTOM_NAV_ROUTES = [HOME_NAV.to, TRANSACTIONS_NAV.to, PLANNING_NAV.to];
 
 function isRouteActive(pathname: string, to: string) {
   return pathname === to || pathname.startsWith(`${to}/`);
@@ -79,6 +78,8 @@ export function PrivateLayout() {
   const isAdmin = useIsAdmin()
 
   const isHome = location.pathname === "/"
+  // Permite desactivar el tutorial en pruebas E2E sin tocar el flujo real
+  const onboardingDisabled = import.meta.env.VITE_DISABLE_ONBOARDING === "true"
   const menuOpen = menuPath === location.pathname
   const closeMenu = () => setMenuPath(null)
   const toggleMenu = () => setMenuPath(open => (open === location.pathname ? null : location.pathname))
@@ -153,7 +154,6 @@ export function PrivateLayout() {
               to={to}
               end={end}
               className="header-nav-link"
-              title={label}
               aria-label={label}
             >
               <Icon size={17} />
@@ -315,11 +315,11 @@ export function PrivateLayout() {
         </button>
 
         <NavLink
-          to={RECURRING_NAV.to}
+          to={PLANNING_NAV.to}
           className={({ isActive }) => `bottom-nav__item ${isActive ? "is-active" : ""}`}
         >
           <CalendarClock size={20} />
-          <span>{RECURRING_NAV.shortLabel}</span>
+          <span>{PLANNING_NAV.shortLabel}</span>
         </NavLink>
 
         <button
@@ -335,7 +335,7 @@ export function PrivateLayout() {
         </button>
       </nav>
 
-      <OnboardingTour userId={user.id} autoStart={isHome} />
+      <OnboardingTour userId={user.id} autoStart={isHome && !onboardingDisabled} />
 
       <footer className="app-footer">GEMA© 2026</footer>
     </>

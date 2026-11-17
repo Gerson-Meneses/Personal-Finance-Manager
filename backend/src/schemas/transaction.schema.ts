@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 import { TransactionReportingImpact, TypeTransaction } from "../utils/Enums";
 
 const amountSchema = z
@@ -8,6 +8,59 @@ const amountSchema = z
     .transform((num) => {
         return Math.round(num * 100);
     })
+
+export const transactionSplitSchema = z.object({
+    categoryId: z.uuid({ message: "Category ID de la división es requerido" }),
+
+    amount: amountSchema,
+
+    description: z
+        .string({ message: "La descripción de la división debe ser texto." })
+        .trim()
+        .max(255, { message: "La descripción no puede exceder los 255 caracteres" })
+        .optional(),
+
+    tagIds: z
+        .array(z.uuid({ message: "Tag ID inválido" }))
+        .max(20, { message: "Máximo 20 etiquetas por división" })
+        .optional(),
+});
+
+export type TransactionSplitSchema = z.infer<typeof transactionSplitSchema>;
+
+export const transactionItemSchema = z.object({
+    name: z
+        .string({ message: "El nombre del producto es requerido" })
+        .trim()
+        .min(2, { message: "El nombre del producto debe tener al menos 2 caracteres" })
+        .max(255, { message: "El nombre del producto no puede exceder los 255 caracteres" }),
+
+    quantity: z.coerce
+        .number({ message: "La cantidad debe ser numérica" })
+        .positive({ message: "La cantidad debe ser mayor a 0" })
+        .max(1_000_000, { message: "La cantidad es demasiado grande" })
+        .default(1),
+
+    unitPrice: z.coerce
+        .number({ message: "El precio unitario debe ser numérico" })
+        .nonnegative({ message: "El precio unitario no puede ser negativo" })
+        .transform((value) => Math.round(value * 100)),
+
+    total: z.coerce
+        .number({ message: "El total debe ser numérico" })
+        .nonnegative({ message: "El total no puede ser negativo" })
+        .transform((value) => Math.round(value * 100))
+        .optional(),
+});
+
+export type TransactionItemSchema = z.infer<typeof transactionItemSchema>;
+
+const merchantRucSchema = z.union([
+    z.literal(""),
+    z.string({ message: "El RUC debe ser texto" })
+        .trim()
+        .regex(/^\d{11}$/, { message: "El RUC debe tener 11 dígitos" }),
+]);
 
 export const baseTransaction = {
     name: z
@@ -36,11 +89,40 @@ export const baseTransaction = {
         .string({ message: "Description debe ser una cadena de texto." })
         .optional(),
 
-    categoryId: z.uuid({ message: "Category ID es requerido" }),
+    categoryId: z.uuid({ message: "Category ID es requerido" }).optional(),
 
     accountId: z.uuid({ message: "Account ID es requerido" }),
 
     reportingImpact: z.enum(TransactionReportingImpact).optional(),
+
+    tagIds: z
+        .array(z.uuid({ message: "Tag ID inválido" }))
+        .max(20, { message: "Máximo 20 etiquetas por transacción" })
+        .optional(),
+
+    splits: z
+        .array(transactionSplitSchema)
+        .max(20, { message: "Máximo 20 divisiones por transacción" })
+        .optional(),
+
+    merchantName: z
+        .string({ message: "El establecimiento debe ser texto" })
+        .trim()
+        .max(150, { message: "El establecimiento no puede exceder los 150 caracteres" })
+        .optional(),
+
+    merchantAddress: z
+        .string({ message: "La dirección debe ser texto" })
+        .trim()
+        .max(255, { message: "La dirección no puede exceder los 255 caracteres" })
+        .optional(),
+
+    merchantRuc: merchantRucSchema.optional(),
+
+    items: z
+        .array(transactionItemSchema)
+        .max(100, { message: "Máximo 100 productos por transacción" })
+        .optional(),
 };
 
 export const nonRecurrentTransaction = z.object({
@@ -106,7 +188,36 @@ export const updateTransactionSchema = z.object({
 
     relatedAccountId: z.string({ message: "Related Account ID debe ser una cadena de texto." })
         .uuid({ message: "Related Account ID debe ser un UUID válido" })
-        .optional()
+        .optional(),
+
+    tagIds: z
+        .array(z.uuid({ message: "Tag ID inválido" }))
+        .max(20, { message: "Máximo 20 etiquetas por transacción" })
+        .optional(),
+
+    splits: z
+        .array(transactionSplitSchema)
+        .max(20, { message: "Máximo 20 divisiones por transacción" })
+        .optional(),
+
+    merchantName: z
+        .string({ message: "El establecimiento debe ser texto" })
+        .trim()
+        .max(150, { message: "El establecimiento no puede exceder los 150 caracteres" })
+        .optional(),
+
+    merchantAddress: z
+        .string({ message: "La dirección debe ser texto" })
+        .trim()
+        .max(255, { message: "La dirección no puede exceder los 255 caracteres" })
+        .optional(),
+
+    merchantRuc: merchantRucSchema.optional(),
+
+    items: z
+        .array(transactionItemSchema)
+        .max(100, { message: "Máximo 100 productos por transacción" })
+        .optional(),
 })
 
 export type UpdateTransactionSchema = z.infer<typeof updateTransactionSchema>

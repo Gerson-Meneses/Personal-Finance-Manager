@@ -122,7 +122,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                 {/* ================= TIPO ================= */}
                 <div className="tf-group">
                     <span className="tf-group-label">Tipo de préstamo</span>
-                    <div className="tf-chips">
+                    <div className="tf-chips" role="group" aria-label="Tipo de préstamo">
                         {([
                             { value: undefined, label: "Todos" },
                             { value: "RECEIVED", label: "Recibí" },
@@ -131,6 +131,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                             <button
                                 key={opt.label}
                                 type="button"
+                                aria-pressed={query.type === opt.value}
                                 className={`tf-chip ${query.type === opt.value ? "active" : ""}`}
                                 onClick={() => set("type", opt.value)}
                             >
@@ -230,7 +231,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                 {/* ================= FILTROS DE PAGOS ================= */}
                 <div className="tf-group">
                     <span className="tf-group-label">Pagos realizados</span>
-                    <div className="tf-chips">
+                    <div className="tf-chips" role="group" aria-label="Pagos realizados">
                         {([
                             { value: undefined, label: "Todos" },
                             { value: true, label: "Con pagos" },
@@ -239,6 +240,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                             <button
                                 key={String(opt.value)}
                                 type="button"
+                                aria-pressed={query.hasPayments === opt.value}
                                 className={`tf-chip ${query.hasPayments === opt.value ? "active" : ""}`}
                                 onClick={() => set("hasPayments", opt.value)}
                             >

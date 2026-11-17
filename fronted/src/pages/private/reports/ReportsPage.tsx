@@ -6,6 +6,8 @@ import {
     ArrowDownLeft,
     ArrowUpRight,
     ChartNoAxesCombined,
+    FileSpreadsheet,
+    FileText,
     List,
     PiggyBank,
     RefreshCw,
@@ -15,7 +17,9 @@ import {
 } from "lucide-react";
 import LoadingScreen from "../../../shared/components/LoadingScreen/LoadingScreen";
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
+import { useToast } from "../../../shared/Hooks/useToast";
 import { useMonthlyReport } from "../../../features/reports/hooks";
+import { exportMonthlyReport } from "../../../features/reports/services";
 import { MonthlyTrendChart } from "../../../features/reports/components/MonthlyTrendChart";
 import { CategoryTrendChart } from "../../../features/reports/components/CategoryTrendChart";
 import { CategoryDonut } from "../../../features/reports/components/CategoryDonut";
@@ -31,7 +35,9 @@ const periodLabel = (from: string, to: string) =>
 
 export default function ReportsPage() {
     const [months, setMonths] = useState<number>(6);
+    const [exporting, setExporting] = useState<"csv" | "pdf" | null>(null);
     const navigate = useNavigate();
+    const toast = useToast();
     const { report, loading, fetching, error, refetch } = useMonthlyReport(months);
 
     if (loading && !report) {
@@ -73,6 +79,22 @@ export default function ReportsPage() {
         0
     );
 
+    const handleExport = async (format: "csv" | "pdf") => {
+        setExporting(format);
+        try {
+            const filename = await exportMonthlyReport(format, months);
+            toast.success(`Exportado: ${filename}`);
+        } catch (exportError) {
+            toast.error(
+                exportError instanceof Error
+                    ? exportError.message
+                    : "No se pudo exportar el reporte"
+            );
+        } finally {
+            setExporting(null);
+        }
+    };
+
     return (
         <div className="page-container reports-page">
             <header className="reports-header card">
@@ -97,6 +119,7 @@ export default function ReportsPage() {
                             <button
                                 key={option}
                                 type="button"
+                                aria-pressed={months === option}
                                 className={`reports-range__chip ${months === option ? "is-active" : ""}`}
                                 onClick={() => setMonths(option)}
                             >
@@ -116,6 +139,34 @@ export default function ReportsPage() {
                             className={fetching ? "is-spinning" : ""}
                         />
                         Actualizar
+                    </button>
+
+                    <button
+                        type="button"
+                        className="btn-secondary reports-export"
+                        onClick={() => handleExport("csv")}
+                        disabled={!!exporting || !hasData}
+                    >
+                        {exporting === "csv" ? (
+                            <RefreshCw size={15} className="is-spinning" />
+                        ) : (
+                            <FileSpreadsheet size={15} />
+                        )}
+                        CSV
+                    </button>
+
+                    <button
+                        type="button"
+                        className="btn-primary reports-export"
+                        onClick={() => handleExport("pdf")}
+                        disabled={!!exporting || !hasData}
+                    >
+                        {exporting === "pdf" ? (
+                            <RefreshCw size={15} className="is-spinning" />
+                        ) : (
+                            <FileText size={15} />
+                        )}
+                        PDF
                     </button>
                 </div>
             </header>

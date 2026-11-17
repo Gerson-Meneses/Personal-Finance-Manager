@@ -64,6 +64,7 @@ export const CodeInput = ({
                     maxLength={1}
                     value={digit}
                     aria-label={`Dígito ${i + 1}`}
+                    aria-invalid={error || undefined}
                     onChange={e => handleDigitChange(i, e.target.value)}
                     onKeyDown={e => handleKeyDown(i, e)}
                     onFocus={e => e.target.select()}
