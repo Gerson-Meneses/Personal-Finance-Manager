@@ -1,5 +1,8 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useAccounts } from "../../../../features/accounts/hooks";
+import type { UpdateAccountOutput } from "../../../../features/accounts/types";
+import CreditCardPanel from "../../../../features/creditCards/components/CreditCardPanel";
+import type { ContractExtraction } from "../../../../features/creditCards/contractParser";
 import { useTransactions } from "../../../../features/transactions/hooks";
 import LoadingScreen from "../../../../shared/components/LoadingScreen/LoadingScreen";
 import TransactionItem from "../../../../features/transactions/components/TransactionItem";
@@ -42,6 +45,14 @@ export function AccountDetail() {
     if (!account || error) return <NotFoundView></NotFoundView>;
 
     const isCredit = account.type === "CREDIT";
+
+    const applyContractFields = async (fields: ContractExtraction) => {
+        await saveAccount.mutateAsync({
+            ...fields,
+            accountId: account.id,
+            type: "CREDIT",
+        } as UpdateAccountOutput);
+    };
 
     const handleDeleteAccount = () => {
         deleteAccount.mutate(account.id, {
@@ -88,6 +99,12 @@ export function AccountDetail() {
                 </aside>
                 {/* COLUMNA DERECHA: Movimientos */}
                 <section className="detail-main">
+                    {isCredit && (
+                        <CreditCardPanel
+                            account={account}
+                            onApplyContract={applyContractFields}
+                        />
+                    )}
                     <div className="card">
                         <ListHistory<Transaction>
                             title="Últimos Movimientos"

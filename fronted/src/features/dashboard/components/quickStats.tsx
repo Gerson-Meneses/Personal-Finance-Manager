@@ -2,6 +2,7 @@ import { formatCurrency } from "../../../shared/utils/formatCurrency"
 import { useNavigate } from "react-router-dom"
 import dayjs from "dayjs"
 import "dayjs/locale/es"
+import type { DashboardWidgetView } from "../../../shared/types/dashboard"
 import type { CategoryExpense } from "../types"
 
 dayjs.locale("es")
@@ -13,6 +14,7 @@ interface Props {
     topCategory?: CategoryExpense
     totalAmtDue: number  // lo que te deben
     totalDebt: number    // lo que debes
+    view?: DashboardWidgetView
 }
 
 interface Stat {
@@ -24,7 +26,7 @@ interface Stat {
 }
 
 export default function QuickStats({
-    income, expense, net, topCategory, totalAmtDue, totalDebt
+    income, expense, net, topCategory, totalAmtDue, totalDebt, view = "full"
 }: Props) {
     const navigate = useNavigate()
     const savingsRate = income > 0 ? Math.round((net / income) * 100) : 0
@@ -75,8 +77,51 @@ export default function QuickStats({
         },
     ]
 
+    if (view === "minimal") {
+        return (
+            <div className="card quick-stats view-minimal">
+                <div className="card-head">
+                    <h3 className="card-head-title">Resumen de {dayjs().format("MMMM")}</h3>
+                </div>
+
+                <div className="qs-minimal">
+                    <button
+                        type="button"
+                        className="qs-minimal__item"
+                        onClick={() => navigate("/transactions?type=INCOME")}
+                    >
+                        <span>Ingresos</span>
+                        <strong className="amount-font text-success">
+                            {formatCurrency(income)}
+                        </strong>
+                    </button>
+                    <button
+                        type="button"
+                        className="qs-minimal__item"
+                        onClick={() => navigate("/transactions?type=EXPENSE")}
+                    >
+                        <span>Gastos</span>
+                        <strong className="amount-font text-danger">
+                            {formatCurrency(expense)}
+                        </strong>
+                    </button>
+                    <button
+                        type="button"
+                        className="qs-minimal__item"
+                        onClick={() => navigate("/transactions")}
+                    >
+                        <span>Balance</span>
+                        <strong className={`amount-font ${isPositive ? "text-success" : "text-danger"}`}>
+                            {formatCurrency(net)}
+                        </strong>
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
     return (
-        <div className="card">
+        <div className={`card quick-stats view-${view}`}>
             <div className="card-head">
                 <h3 className="card-head-title">Resumen de {dayjs().format("MMMM")}</h3>
             </div>

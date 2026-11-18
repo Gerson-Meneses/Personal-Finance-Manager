@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, UpdateDateColumn, OneToMany, OneToOne, JoinColumn, Index, ManyToMany, JoinTable } from "typeorm";
 import type { Account } from "./Account.entity";
 import type { Category } from "./Category.entity";
-import { TransactionReportingImpact, TypeTransaction } from "../utils/Enums";
+import { CreditTransactionStatus, TransactionReportingImpact, TypeTransaction } from "../utils/Enums";
 import type { User } from "./User.entity";
 import type { ReccurentTransaction } from "./ReccurentTransaction.entity";
 import type { Loan } from "./Loan.entity";
@@ -18,6 +18,8 @@ import type { TransactionAttachment } from "./TransactionAttachment.entity";
 @Index('IDX_transactions_account', ['account'])
 @Index('IDX_transactions_related_account', ['relatedAccount'])
 @Index('IDX_transactions_category', ['category'])
+@Index('IDX_transactions_credit_status', ['account', 'creditStatus'])
+@Index('IDX_transactions_installment_plan', ['installmentPlanId'])
 export class Transaction {
 
     @PrimaryGeneratedColumn('uuid')
@@ -41,6 +43,30 @@ export class Transaction {
     @Column({ type: "date", nullable: true })
     postedAt: Date;
 
+    /** Estado del movimiento cuando la cuenta es una tarjeta de crédito. */
+    @Column({
+        type: "enum",
+        enum: CreditTransactionStatus,
+        enumName: "credit_transaction_status_enum",
+        default: CreditTransactionStatus.POSTED,
+    })
+    creditStatus: CreditTransactionStatus;
+
+    /** Monto autorizado originalmente; el monto final puede variar al confirmar. */
+    @Column({
+        type: "integer",
+        nullable: true,
+        comment: "Monto autorizado original en centavos"
+    })
+    authorizedAmount?: number | null;
+
+    /** Momento estimado en que el comercio procesa el cargo. */
+    @Column({ type: "timestamp", nullable: true })
+    expectedPostAt?: Date | null;
+
+    @Column({ type: "timestamp", nullable: true })
+    confirmedAt?: Date | null;
+
     @Column({
         type: 'time',
         default: () => "'00:00:00'",
@@ -58,9 +84,6 @@ export class Transaction {
     /** Dirección del establecimiento. */
     @Column({ type: "varchar", length: 255, nullable: true })
     merchantAddress?: string | null;
-
-    @Column({ type: "varchar", length: 11, nullable: true })
-    merchantRuc?: string | null;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
@@ -100,6 +123,13 @@ export class Transaction {
     @OneToOne("loans", "transactions", { nullable: true })
     @JoinColumn()
     loan: Loan;
+
+    @ManyToOne("CreditInstallmentPlan", "sourceTransactions", { nullable: true, onDelete: "SET NULL" })
+    @JoinColumn({ name: "installmentPlanId" })
+    installmentPlan?: import("./CreditInstallmentPlan.entity").CreditInstallmentPlan | null;
+
+    @Column({ type: "uuid", nullable: true })
+    installmentPlanId?: string | null;
 
     @ManyToMany(() => Tag, (tag) => tag.transactions)
     @JoinTable({

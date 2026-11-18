@@ -85,7 +85,10 @@ export default function PlanningPage() {
         const occurrences = (projectionData?.occurrences ?? []).filter(isPendingOccurrence);
         const pendingExpenseOccurrences = occurrences.filter((item) => item.type === "EXPENSE");
         const pendingIncomeOccurrences = occurrences.filter((item) => item.type === "INCOME");
-        const pendingExpense = pendingExpenseOccurrences.reduce((sum, item) => sum + item.amount, 0);
+        const creditCardForecast = projectionData?.creditCardForecast ?? [];
+        const forecastExpense = creditCardForecast.reduce((sum, item) => sum + item.amount, 0);
+        const pendingExpense =
+            pendingExpenseOccurrences.reduce((sum, item) => sum + item.amount, 0) + forecastExpense;
         const pendingIncome = pendingIncomeOccurrences.reduce((sum, item) => sum + item.amount, 0);
 
         const subscriptionIds = new Set(
@@ -185,7 +188,17 @@ export default function PlanningPage() {
                 ? Math.round((budgetRemaining - pendingExpense) * 100) / 100
                 : null;
 
-        const upcoming = [...occurrences]
+        const forecastUpcoming = creditCardForecast.map((item) => ({
+            id: `credit-card-${item.id}`,
+            name: item.title,
+            dueDate: item.dueDate,
+            amount: item.amount,
+            type: "EXPENSE" as const,
+            category: undefined,
+            account: { id: item.accountId, name: item.accountName },
+        }));
+
+        const upcoming = [...occurrences, ...forecastUpcoming]
             .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
             .slice(0, 5);
 

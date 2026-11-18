@@ -23,6 +23,7 @@ export const useAccounts = (id?: string) => {
     queryClient.invalidateQueries({ queryKey: ["accounts"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard"] }); 
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    queryClient.invalidateQueries({ queryKey: ["creditCardSummary"] });
   };
   
   const createMutation = useMutation({

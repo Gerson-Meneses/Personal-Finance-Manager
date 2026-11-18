@@ -1,11 +1,7 @@
-import * as pdfjs from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type {
     PDFDocumentProxy,
     TextItem,
 } from "pdfjs-dist/types/src/display/api";
-
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 export interface PdfExtractionResult {
     text: string;
@@ -79,6 +75,13 @@ const renderFirstPageToJpeg = async (
 };
 
 export const extractPdfText = async (file: File): Promise<PdfExtractionResult> => {
+    const [pdfjs, workerModule] = await Promise.all([
+        import("pdfjs-dist"),
+        import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+    ]);
+
+    pdfjs.GlobalWorkerOptions.workerSrc = workerModule.default;
+
     const data = new Uint8Array(await file.arrayBuffer());
     const loadingTask = pdfjs.getDocument({
         data,

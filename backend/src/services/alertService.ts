@@ -2,8 +2,9 @@ import dayjs from "dayjs";
 import { AppDataSourceProd } from "../database/dataBaseDev";
 import { Account } from "../entities/Account.entity";
 import { PaymentNotification } from "../entities/PaymentNotification.entity";
+import { Transaction } from "../entities/Transaction.entity";
 import { UuidSchema } from "../schemas/uuid.schema";
-import { TypeAccount } from "../utils/Enums";
+import { CreditTransactionStatus, TypeAccount, TypeTransaction } from "../utils/Enums";
 import { getCreditCardDebt, getMaxBalance } from "../utils/getBalanceToCreditCard";
 import { money } from "../utils/normalizarMoney";
 import { BudgetService } from "./budgetService";
@@ -17,15 +18,17 @@ const currencyFormatter = new Intl.NumberFormat("es-PE", {
 const formatCurrency = (value: number) => currencyFormatter.format(value);
 
 interface AlertInput {
-    kind: "BUDGET" | "CARD_DUE" | "CARD_UTILIZATION";
+    kind: "BUDGET" | "CARD_DUE" | "CARD_UTILIZATION" | "CARD_PENDING";
     dedupeKey: string;
     title: string;
     message: string;
+    accountId?: string;
 }
 
 export class AlertService {
     private notificationRepo = AppDataSourceProd.getRepository(PaymentNotification);
     private accountRepo = AppDataSourceProd.getRepository(Account);
+    private transactionRepo = AppDataSourceProd.getRepository(Transaction);
     private budgetService = new BudgetService();
 
     async refreshAlerts(userId: UuidSchema): Promise<void> {
@@ -47,6 +50,7 @@ export class AlertService {
                 dedupeKey: alert.dedupeKey,
                 title: alert.title,
                 message: alert.message,
+                ...(alert.accountId ? { accountId: alert.accountId } : {}),
             })
             .orIgnore()
             .execute();
@@ -88,6 +92,49 @@ export class AlertService {
                 account.overdraft ?? 0,
                 account.balance
             );
+
+            const pendingRaw = await this.transactionRepo
+                .createQueryBuilder("t")
+                .select("COUNT(*)", "count")
+                .addSelect("COALESCE(SUM(t.amount), 0)", "amount")
+                .where("t.accountId = :accountId", { accountId: account.id })
+                .andWhere("t.userId = :userId", { userId })
+                .andWhere("t.type = :type", { type: TypeTransaction.EXPENSE })
+                .andWhere("t.creditStatus = :status", { status: CreditTransactionStatus.PENDING })
+                .getRawOne<{ count: string; amount: string }>();
+            const pendingCount = Number(pendingRaw?.count ?? 0);
+            const pendingKeyPrefix = `card_pending:${account.id}:`;
+
+            if (pendingCount > 0) {
+                await this.notificationRepo
+                    .createQueryBuilder()
+                    .update(PaymentNotification)
+                    .set({ readAt: new Date() })
+                    .where(
+                        "userId = :userId AND kind = :kind AND dedupeKey LIKE :prefix AND readAt IS NULL",
+                        { userId, kind: "CARD_PENDING", prefix: `${pendingKeyPrefix}%` }
+                    )
+                    .execute();
+
+                await this.ensureAlert(userId, {
+                    kind: "CARD_PENDING",
+                    dedupeKey: `${pendingKeyPrefix}${pendingCount}`,
+                    title: `Compras pendientes: ${account.name}`,
+                    accountId: account.id,
+                    message: `Tienes ${pendingCount} compra${pendingCount === 1 ? "" : "s"} por ${formatCurrency(money(Number(pendingRaw?.amount ?? 0)))} esperando confirmación.`,
+                });
+            } else {
+                await this.notificationRepo
+                    .createQueryBuilder()
+                    .update(PaymentNotification)
+                    .set({ readAt: new Date() })
+                    .where(
+                        "userId = :userId AND kind = :kind AND dedupeKey LIKE :prefix AND readAt IS NULL",
+                        { userId, kind: "CARD_PENDING", prefix: `${pendingKeyPrefix}%` }
+                    )
+                    .execute();
+            }
+
             if (debtCents <= 0) continue;
 
             if (account.paymentDueDay) {
@@ -99,6 +146,7 @@ export class AlertService {
                         kind: "CARD_DUE",
                         dedupeKey: `card_due:${account.id}:${dueDate.format("YYYY-MM-DD")}`,
                         title: `Pago de tarjeta próximo: ${account.name}`,
+                        accountId: account.id,
                         message: `Vence el ${dueDate.format("D MMM YYYY")} (${daysUntil === 0 ? "hoy" : `en ${daysUntil} día${daysUntil === 1 ? "" : "s"}`}). Deuda actual: ${formatCurrency(money(debtCents))}.`,
                     });
                 }
@@ -118,6 +166,7 @@ export class AlertService {
                     threshold >= 100
                         ? `Tarjeta al límite: ${account.name}`
                         : `Tarjeta al ${usage}%: ${account.name}`,
+                accountId: account.id,
                 message: `Deuda ${formatCurrency(money(debtCents))} de ${formatCurrency(money(maxBalance))} disponibles (${usage}%).`,
             });
         }

@@ -436,3 +436,219 @@ button.qs-item:focus-visible {
         font-size: 0.8rem;
     }
 }
+
+/* Vistas configurables del resumen */
+.quick-stats.view-compact .qs-flow,
+.quick-stats.view-compact .qs-bottom {
+    display: none;
+}
+
+.quick-stats.view-compact .qs-sub {
+    display: none;
+}
+
+.qs-minimal {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.qs-minimal__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-soft);
+    background: var(--surface-soft);
+    font-family: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.qs-minimal__item:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-strong);
+}
+
+.qs-minimal__item span {
+    font-size: 0.66rem;
+    color: var(--text-tertiary);
+}
+
+.qs-minimal__item strong {
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+@media (max-width: 420px) {
+    .qs-minimal {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .qs-minimal__item {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+
+/* Vistas configurables de cuentas */
+.accounts-minimal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-soft);
+    background: var(--surface-soft);
+}
+
+.accounts-minimal__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+.accounts-minimal > div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.accounts-minimal span {
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+}
+
+.accounts-minimal strong {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.accounts-compact-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.accounts-compact-list button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 9px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.accounts-compact-list button:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-soft);
+}
+
+.accounts-compact-list__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.accounts-compact-list__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+}
+
+.accounts-compact-list strong {
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+/* Vistas configurables de gastos por categoria */
+.expenses-by-cat.view-compact .cat-txcount,
+.expenses-by-cat.view-compact .cat-bar-track {
+    display: none;
+}
+
+.expenses-by-cat.view-minimal .cat-txcount,
+.expenses-by-cat.view-minimal .cat-bar-track,
+.expenses-by-cat.view-minimal .cat-pct {
+    display: none;
+}
+
+.expenses-by-cat.view-minimal .cat-row {
+    grid-template-rows: auto;
+}
+
+/* Layout configurable del dashboard */
+.dashboard-widgets {
+    display: grid;
+    gap: 16px;
+    align-items: start;
+}
+
+.dashboard-layout--grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-layout--grid .dash-widget--forecast,
+.dashboard-layout--grid .dash-widget--recent {
+    grid-column: 1 / -1;
+}
+
+.dashboard-layout--stack {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.dashboard-layout--stack .dash-widget {
+    grid-column: auto;
+}
+
+.dash-widget {
+    min-width: 0;
+}
+
+.dashboard-density--compact {
+    gap: 10px;
+}
+
+.dashboard-density--compact .card {
+    padding: 14px 16px;
+}
+
+.dashboard-density--compact .card-head {
+    margin-bottom: 10px;
+}
+
+@media (max-width: 900px) {
+    .dashboard-layout--grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dashboard-layout--grid .dash-widget {
+        grid-column: auto;
+    }
+}

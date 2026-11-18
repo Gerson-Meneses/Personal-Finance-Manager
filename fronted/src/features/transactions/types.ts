@@ -27,6 +27,7 @@ export interface TransactionAttachment {
 export interface PurchaseItem {
   id: string;
   name: string;
+  description?: string;
   quantity: number;
   unitPrice: number;
   total: number;
@@ -40,10 +41,14 @@ export interface Transaction {
   date: string;
   time?: string;
   postedAt?: Date;
+  creditStatus?: "PENDING" | "POSTED" | "REVERSED";
+  authorizedAmount?: number;
+  expectedPostAt?: string;
+  confirmedAt?: string;
+  installmentPlanId?: string;
   description?: string;
   merchantName?: string;
   merchantAddress?: string;
-  merchantRuc?: string;
   isRecurrent: boolean;
   account?: Account,
   relatedAccount?: Account,
@@ -61,6 +66,11 @@ export const TransactionItemFormSchema = z.object({
     .trim()
     .min(2, { message: "El nombre debe tener al menos 2 caracteres" })
     .max(255, { message: "El nombre no puede exceder los 255 caracteres" }),
+  description: z
+    .string()
+    .trim()
+    .max(500, { message: "El comentario no puede exceder los 500 caracteres" })
+    .optional(),
   quantity: z.coerce
     .number({ message: "La cantidad debe ser numérica" })
     .positive({ message: "La cantidad debe ser mayor a 0" }),
@@ -105,10 +115,8 @@ export const TransactionSchema = z.object({
   splits: z.array(TransactionSplitFormSchema).optional(),
   merchantName: z.string().trim().max(150).optional(),
   merchantAddress: z.string().trim().max(255).optional(),
-  merchantRuc: z
-    .union([z.literal(""), z.string().regex(/^\d{11}$/, "El RUC debe tener 11 dígitos")])
-    .optional(),
   items: z.array(TransactionItemFormSchema).optional(),
+  allowItemMismatch: z.boolean().optional(),
 })
 
 export type TransactionInput = z.input<typeof TransactionSchema>

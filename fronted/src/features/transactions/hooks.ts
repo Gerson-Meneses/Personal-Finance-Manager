@@ -40,6 +40,8 @@ export const useTransactions = (filters?: TransactionQuerySchemaOutput) => {
     queryClient.invalidateQueries({ queryKey: ["debtInstallments"] });
     queryClient.invalidateQueries({ queryKey: ["tags"] });
     queryClient.invalidateQueries({ queryKey: ["products"] });
+    queryClient.invalidateQueries({ queryKey: ["creditCardSummary"] });
+    queryClient.invalidateQueries({ queryKey: ["creditCardDocuments"] });
   };
 
   const createMutation = useMutation<Transaction, DataError<TransactionOutput>, TransactionOutput>({

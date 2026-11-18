@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { getIcon } from "../../utils/GetIcon";
+import "./RangeExactGroup.css";
 
 export type FilterMode = "exact" | "range";
 
@@ -18,27 +19,26 @@ export const RangeExactGroup = ({
     onModeChange,
     exactInput,
     rangeInputs,
-    icon
+    icon,
 }: RangeExactGroupProps) => {
     return (
-        <div className="flex flex-col gap-2 w-full">
-            {/* CABECERA UNI-ESTILO: Etiqueta formal y Selector de Modo */}
-            <div className="flex items-center justify-between w-full h-7">
-                <span className="text-[0.75rem] text-[#64748b] uppercase tracking-[0.06em] font-medium flex items-center gap-1.5">
-                    {icon && <span className="opacity-70">{getIcon(icon)}</span>}
+        <div className="range-exact">
+            <div className="range-exact__head">
+                <span className="range-exact__label">
+                    {icon && <span className="range-exact__icon">{getIcon(icon)}</span>}
                     {label}
                 </span>
 
-                <div className="flex bg-white/[0.03] p-0.5 rounded-lg border border-white/[0.08]">
+                <div
+                    className="range-exact__toggle"
+                    role="group"
+                    aria-label={`Modo de filtro para ${label}`}
+                >
                     <button
                         type="button"
                         aria-pressed={mode === "range"}
                         onClick={() => onModeChange("range")}
-                        className={`relative tooltip-left px-3 py-1 text-[0.75rem] font-medium rounded-md transition-all cursor-pointer ${
-                            mode === "range"
-                                ? "bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-[#38bdf8] shadow-sm"
-                                : "border border-transparent text-slate-400 hover:text-slate-200"
-                        }`}
+                        className={`range-exact__option tooltip-anchor tooltip-left ${mode === "range" ? "is-active" : ""}`}
                         data-tooltip={`Filtrar entre dos ${label.toLowerCase()}s`}
                     >
                         Rango
@@ -47,11 +47,7 @@ export const RangeExactGroup = ({
                         type="button"
                         aria-pressed={mode === "exact"}
                         onClick={() => onModeChange("exact")}
-                        className={`relative tooltip-left px-3 py-1 text-[0.75rem] font-medium rounded-md transition-all cursor-pointer ${
-                            mode === "exact"
-                                ? "bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-[#38bdf8] shadow-sm"
-                                : "border border-transparent text-slate-400 hover:text-slate-200"
-                        }`}
+                        className={`range-exact__option tooltip-anchor tooltip-left ${mode === "exact" ? "is-active" : ""}`}
                         data-tooltip="Filtrar un valor exacto"
                     >
                         Exacto
@@ -59,8 +55,7 @@ export const RangeExactGroup = ({
                 </div>
             </div>
 
-            {/* CONTENIDO CONDICIONAL */}
-            <div className="w-full transition-all duration-200">
+            <div className="range-exact__content">
                 {mode === "range" ? rangeInputs : exactInput}
             </div>
         </div>

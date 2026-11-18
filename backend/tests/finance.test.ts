@@ -13,6 +13,8 @@ import { categorySchema, updateCategorySchema } from "../src/schemas/category.sc
 import { buildCsv } from "../src/utils/csv";
 import { buildMonthlyReportCsv, buildMonthlyReportPdf } from "../src/services/reportExportService";
 import { monthlyEquivalent } from "../src/services/subscriptionService";
+import { buildBankLineFingerprint, computeSuggestionScore } from "../src/services/bankImportService";
+import { normalizeProductName } from "../src/utils/productName";
 import type { MonthlyReportResponse } from "../src/services/reportsService";
 import { buildMonthKeys } from "../src/services/reportsService";
 import {
@@ -652,7 +654,7 @@ describe("bank import", () => {
         expect(result?.reasons).toContain("Misma fecha");
     });
 
-    test("descarta montos distintos y fechas fuera de 7 d�as", () => {
+    test("descarta montos distintos y fechas fuera de 7 días", () => {
         expect(
             computeSuggestionScore(
                 {
@@ -721,5 +723,59 @@ describe("category subcategories schema", () => {
         });
 
         expect(parsed.parentCategoryId).toBeNull();
+    });
+});
+
+describe("conciliación bancaria", () => {
+    test("normaliza nombres de productos para agrupar compras", () => {
+        expect(normalizeProductName("  Leche  Entera  ")).toBe("LECHE ENTERA");
+        expect(normalizeProductName("Leche entera")).toBe("LECHE ENTERA");
+        expect(normalizeProductName("Cafe molido")).toBe("CAFE MOLIDO");
+    });
+
+    test("genera huellas estables y distintas para movimientos bancarios", () => {
+        const base = {
+            accountId: "account-1",
+            date: "2026-11-17",
+            amount: 10_050,
+            description: "Pago Luz",
+            reference: "REF-1",
+        };
+        expect(buildBankLineFingerprint(base)).toBe(buildBankLineFingerprint({ ...base }));
+        expect(buildBankLineFingerprint(base)).not.toBe(
+            buildBankLineFingerprint({ ...base, reference: "REF-2" })
+        );
+    });
+
+    test("puntúa coincidencias por monto, tipo, fecha y nombre", () => {
+        const line = {
+            date: "2026-11-17",
+            amount: 10_000,
+            type: TypeTransaction.EXPENSE,
+            description: "Pago luz",
+        };
+        const same = computeSuggestionScore(line, {
+            date: "2026-11-17",
+            amount: 10_000,
+            type: TypeTransaction.EXPENSE,
+            name: "Pago de luz",
+        });
+        const mismatchAmount = computeSuggestionScore(line, {
+            date: "2026-11-17",
+            amount: 9_000,
+            type: TypeTransaction.EXPENSE,
+            name: "Pago de luz",
+        });
+        const mismatchType = computeSuggestionScore(line, {
+            date: "2026-11-17",
+            amount: 10_000,
+            type: TypeTransaction.INCOME,
+            name: "Pago de luz",
+        });
+
+        expect(same).not.toBeNull();
+        expect(same?.score).toBeGreaterThanOrEqual(80);
+        expect(mismatchAmount).toBeNull();
+        expect(mismatchType).toBeNull();
     });
 });

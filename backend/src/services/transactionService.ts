@@ -16,7 +16,7 @@ import { PaymentCreditCardSchema } from "../schemas/paymentCreditCard.schema";
 import { TransactionSchema, TransactionSplitSchema, UpdateTransactionSchema } from "../schemas/transaction.schema";
 import { TransferSchema } from "../schemas/transfers.schema";
 import { UuidSchema } from "../schemas/uuid.schema";
-import { BankLineStatus, RecurringOccurrenceStatus, TypeAccount, TypeTransaction } from "../utils/Enums";
+import { BankLineStatus, CreditTransactionStatus, RecurringOccurrenceStatus, TypeAccount, TypeTransaction } from "../utils/Enums";
 import { PaginatedResult } from "../types";
 import { TransactionQuerySchema } from "../schemas/querysTransaction.schema";
 import { EntityManager, In, QueryRunner, SelectQueryBuilder } from "typeorm";
@@ -26,6 +26,12 @@ import { money } from "../utils/normalizarMoney";
 import { computeBalanceEffect } from "../utils/balance";
 import { getCreditCardDebt } from "../utils/getBalanceToCreditCard";
 import { normalizeProductName } from "../utils/productName";
+
+const computeItemsTotal = (items?: TransactionSchema["items"]) =>
+    items?.reduce(
+        (sum, item) => sum + (item.total ?? Math.round(item.quantity * item.unitPrice)),
+        0
+    ) ?? 0;
 
 const TRANSACTION_RELATIONS = [
     "account",
@@ -145,6 +151,7 @@ export class TransactionService {
             const entity = manager.create(TransactionItem, {
                 name,
                 normalizedName: normalizeProductName(name),
+                description: item.description?.trim() || null,
                 quantity: String(item.quantity),
                 unitPrice,
                 total,
@@ -500,6 +507,7 @@ export class TransactionService {
                 tagIds,
                 splits: splitPayload = [],
                 items: itemPayload = [],
+                allowItemMismatch,
                 ...transactionData
             } = transaction;
 
@@ -525,6 +533,20 @@ export class TransactionService {
                 transactionData.amount
             );
 
+            if (itemPayload.length > 0 && !allowItemMismatch) {
+                const itemsTotal = computeItemsTotal(itemPayload);
+                if (itemsTotal !== transactionData.amount) {
+                    throw new ConflictError(
+                        `El total de los productos (${money(itemsTotal).toFixed(2)}) no coincide con el monto de la transacción (${money(transactionData.amount).toFixed(2)}).`,
+                        {
+                            items: [
+                                "Confirma que deseas guardar aunque los montos no coincidan.",
+                            ],
+                        }
+                    );
+                }
+            }
+
             if (!category && resolvedSplits.length === 0) {
                 throw new BadRequestError(
                     "Selecciona una categoría o divide la transacción en categorías.",
@@ -548,7 +570,8 @@ export class TransactionService {
                 }
                 account.balance += transactionData.amount;
             } else if (transactionData.type === TypeTransaction.EXPENSE) {
-                if (!options?.allowNegativeBalance && account.balance < transactionData.amount) {
+                const isCredit = account.type === TypeAccount.CREDIT;
+                if (!isCredit && !options?.allowNegativeBalance && account.balance < transactionData.amount) {
                     throw new ConflictError("Saldo insuficiente en la cuenta.", {
                         amount: ["Monto no disponible en la cuenta."]
                     });
@@ -558,13 +581,26 @@ export class TransactionService {
 
             await manager.save(account);
 
+            const isPendingCreditExpense =
+                transactionData.type === TypeTransaction.EXPENSE &&
+                account.type === TypeAccount.CREDIT;
+
             const newTransaction = manager.create(Transaction, {
                 ...transactionData,
                 user,
                 account,
                 category: category ?? undefined,
                 tags,
-                isRecurrent: transactionData.isRecurrent ?? false
+                isRecurrent: transactionData.isRecurrent ?? false,
+                creditStatus: isPendingCreditExpense
+                    ? CreditTransactionStatus.PENDING
+                    : CreditTransactionStatus.POSTED,
+                ...(isPendingCreditExpense
+                    ? {
+                        authorizedAmount: transactionData.amount,
+                        expectedPostAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                    }
+                    : {}),
             });
 
             const savedTransaction = await manager.save(newTransaction);
@@ -791,6 +827,12 @@ export class TransactionService {
                 );
             }
 
+            if (transaction.installmentPlanId) {
+                throw new ConflictError(
+                    "Esta compra forma parte de un plan de cuotas. Cancela el plan antes de editarla."
+                );
+            }
+
             // 2) Estado actual (old*) y estado deseado (next*)
             const oldType = transaction.type;
             const oldAmount = transaction.amount;
@@ -869,6 +911,24 @@ export class TransactionService {
                 ? await this.resolveSplits(manager, updateData.splits, userId, nextType, nextAmount)
                 : undefined;
 
+            if (
+                updateData.items !== undefined &&
+                updateData.items.length > 0 &&
+                !updateData.allowItemMismatch
+            ) {
+                const itemsTotal = computeItemsTotal(updateData.items);
+                if (itemsTotal !== nextAmount) {
+                    throw new ConflictError(
+                        `El total de los productos (${money(itemsTotal).toFixed(2)}) no coincide con el monto de la transacción (${money(nextAmount).toFixed(2)}).`,
+                        {
+                            items: [
+                                "Confirma que deseas guardar aunque los montos no coincidan.",
+                            ],
+                        }
+                    );
+                }
+            }
+
             if (resolvedSplits === undefined && existingSplits.length > 0) {
                 const existingTotal = existingSplits.reduce((sum, split) => sum + split.amount, 0);
                 if (existingTotal !== nextAmount) {
@@ -922,9 +982,11 @@ export class TransactionService {
                 }
             }
 
-            // Ninguna cuenta puede quedar con saldo negativo tras el cambio
+            // Ninguna cuenta liquida puede quedar con saldo negativo tras el cambio.
+            // Las tarjetas de credito si pueden quedar por encima de su linea.
             for (const [accountId, delta] of newEffect) {
                 const account = requireAccount(accountId);
+                if (account.type === TypeAccount.CREDIT) continue;
                 const base = account.balance - (oldEffect.get(accountId) ?? 0);
                 if (base + delta < 0) {
                     throw new ConflictError("Saldo insuficiente en la cuenta.", {
@@ -959,7 +1021,21 @@ export class TransactionService {
             if (updateData.time) transaction.time = updateData.time;
             if (updateData.merchantName !== undefined) transaction.merchantName = updateData.merchantName;
             if (updateData.merchantAddress !== undefined) transaction.merchantAddress = updateData.merchantAddress;
-            if (updateData.merchantRuc !== undefined) transaction.merchantRuc = updateData.merchantRuc;
+
+            if (nextType === TypeTransaction.EXPENSE && nextAccount.type === TypeAccount.CREDIT) {
+                if (oldAccount.type !== TypeAccount.CREDIT) {
+                    transaction.creditStatus = CreditTransactionStatus.PENDING;
+                    transaction.authorizedAmount = nextAmount;
+                    transaction.expectedPostAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                    transaction.confirmedAt = null;
+                    transaction.postedAt = null as unknown as Date;
+                }
+            } else {
+                transaction.creditStatus = CreditTransactionStatus.POSTED;
+                transaction.authorizedAmount = null;
+                transaction.expectedPostAt = null;
+                transaction.confirmedAt = null;
+            }
 
             for (const account of accountsToSave) {
                 await manager.save(account);
@@ -1026,6 +1102,12 @@ export class TransactionService {
             if (linkedMovement || transaction.loan) {
                 throw new ConflictError(
                     "Esta transacción está vinculada a un préstamo. Reversa el pago desde Préstamos antes de eliminarla."
+                );
+            }
+
+            if (transaction.installmentPlanId) {
+                throw new ConflictError(
+                    "Esta compra forma parte de un plan de cuotas. Cancela el plan antes de eliminarla."
                 );
             }
 

@@ -13,6 +13,15 @@ export interface AccountResponse {
     overdraft?: number;
     billingCloseDay?: number;
     paymentDueDay?: number;
+    tea?: number;
+    tcea?: number;
+    desgravamenRate?: number;
+    desgravamenMaxAmount?: number;
+    currency?: string;
+    issuer?: string;
+    brand?: string;
+    last4?: string;
+    holderName?: string;
     transactions?: Transaction[]
     reccurentTransactions?: ReccurentTransaction[];
 }

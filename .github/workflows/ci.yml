@@ -44,7 +44,7 @@ jobs:
       - name: Unit tests
         env:
           NODE_ENV: test
-        run: bun test tests/finance.test.ts
+        run: bun run test
       - name: Run migrations on test database
         env:
           NODE_ENV: test
@@ -52,7 +52,7 @@ jobs:
       - name: Integration tests
         env:
           NODE_ENV: test
-        run: bun test tests/loanIntegration.test.ts
+        run: bun run test:integration
 
   e2e:
     name: E2E
@@ -126,5 +126,7 @@ jobs:
         run: npm ci
       - name: Lint
         run: npm run lint
+      - name: Unit tests
+        run: npm test
       - name: Build
         run: npm run build

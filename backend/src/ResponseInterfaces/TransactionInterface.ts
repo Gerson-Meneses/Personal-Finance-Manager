@@ -1,4 +1,4 @@
-import { TypeTransaction } from "../utils/Enums";
+import { CreditTransactionStatus, TypeTransaction } from "../utils/Enums";
 import { AccountResponse } from "./AccountResponse";
 import { CategoryResponse } from "./CategoryResponse";
 import { LoanPaymentResponse, LoanResponse } from "./LoansResponse";
@@ -23,6 +23,7 @@ export interface TransactionAttachmentResponse {
 export interface TransactionItemResponse {
     id: string;
     name: string;
+    description?: string;
     quantity: number;
     unitPrice: number;
     total: number;
@@ -36,10 +37,14 @@ export interface TransactionResponse {
     date: string;
     time?: string;
     postedAt?: Date; 
+    creditStatus?: CreditTransactionStatus;
+    authorizedAmount?: number;
+    expectedPostAt?: Date;
+    confirmedAt?: Date;
+    installmentPlanId?: string;
     description?: string;
     merchantName?: string;
     merchantAddress?: string;
-    merchantRuc?: string;
     isRecurrent: boolean;
     account?: AccountResponse;
     relatedAccount?: AccountResponse;

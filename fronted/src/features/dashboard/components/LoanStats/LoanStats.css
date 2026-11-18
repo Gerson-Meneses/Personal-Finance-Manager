@@ -133,3 +133,48 @@
     align-self: auto;
   }
 }
+
+/* Vistas compactas de prestamos */
+.loan-simple {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.loan-simple > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-soft);
+    background: var(--surface-soft);
+    min-width: 0;
+}
+
+.loan-simple span {
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+}
+
+.loan-simple strong {
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.loan-simple small {
+    grid-column: 1 / -1;
+    font-size: 0.66rem;
+    color: var(--text-tertiary);
+}
+
+.loan-stats-minimal .loan-simple {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.loan-stats-minimal .loan-simple > div {
+    padding: 6px 8px;
+}

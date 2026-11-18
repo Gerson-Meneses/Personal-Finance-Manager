@@ -11,7 +11,6 @@ export interface ParsedReceipt {
     date: string | null;
     merchantName: string | null;
     merchantAddress: string | null;
-    merchantRuc: string | null;
     items: ParsedReceiptItem[];
 }
 
@@ -378,14 +377,6 @@ export const extractReceiptAddress = (lines: string[]): string | null => {
     return null;
 };
 
-export const extractReceiptRuc = (text: string): string | null => {
-    const labelled = text.match(/\bRUC\b[^\d]{0,12}(\d{11})\b/i);
-    if (labelled) return labelled[1];
-
-    const inline = text.match(/\b(?:10|15|17|20)\d{9}\b/);
-    return inline?.[0] ?? null;
-};
-
 const ITEM_NUMBERS =
     /(?<qty>\d{1,4}(?:[.,]\d{1,3})?)\s*[xX×*]\s*(?:S\/\.?)?\s*(?<unit>\d{1,7}(?:[.,]\d{1,2})?)\s+(?:total\s*)?(?:S\/\.?)?\s*[=:]?\s*(?<total>\d{1,9}(?:[.,]\d{1,2})?)/;
 
@@ -497,7 +488,6 @@ export const parseReceiptText = (text: string): ParsedReceipt => {
         date: extractReceiptDate(lines),
         merchantName: extractReceiptMerchantName(lines),
         merchantAddress: extractReceiptAddress(lines),
-        merchantRuc: extractReceiptRuc(text),
         items: extractReceiptItems(lines),
     };
 };

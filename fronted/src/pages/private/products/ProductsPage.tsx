@@ -31,7 +31,7 @@ function ProductDetailModal({ product, onClose }: DetailProps) {
     const { data, isLoading, isError } = useProductDetail(product.normalizedName);
 
     return (
-        <ModalPortal isOpen onClose={onClose}>
+        <ModalPortal isOpen onClose={onClose} contentClassName="modal-content--wide">
             <div className="product-detail">
                 <div className="product-detail__head">
                     <div>
@@ -83,6 +83,7 @@ function ProductDetailModal({ product, onClose }: DetailProps) {
                             <thead>
                                 <tr>
                                     <th>Establecimiento</th>
+                                    <th>Comentario</th>
                                     <th>Fecha</th>
                                     <th>Cant.</th>
                                     <th>Precio unit.</th>
@@ -99,6 +100,9 @@ function ProductDetailModal({ product, onClose }: DetailProps) {
                                                     <span>{price.merchantAddress}</span>
                                                 )}
                                             </div>
+                                        </td>
+                                        <td className="product-detail__description">
+                                            {price.description ?? "—"}
                                         </td>
                                         <td>{formatDate(price.date)}</td>
                                         <td>{price.quantity}</td>

@@ -53,8 +53,8 @@ import "./RecurringPaymentsPage.css";
 
 dayjs.locale("es");
 
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => {
-    const month = dayjs().subtract(index, "month");
+const MONTH_OPTIONS = Array.from({ length: 24 }, (_, index) => {
+    const month = dayjs().subtract(12, "month").add(index, "month");
     return { value: month.format("YYYY-MM"), label: month.format("MMMM YYYY") };
 });
 
@@ -78,7 +78,7 @@ type TimelineFilter = "ALL" | "PENDING" | "OVERDUE" | "PAID";
 
 interface TimelineItem {
     id: string;
-    source: "RECURRING" | "INSTALLMENT";
+    source: "RECURRING" | "INSTALLMENT" | "CREDIT_CARD";
     title: string;
     subtitle: string;
     amount: number;
@@ -92,6 +92,9 @@ interface TimelineItem {
     installment?: DebtInstallmentItem;
     loanAction?: RecurringOccurrence["loanAction"];
     autoDebit?: boolean;
+    fixed?: boolean;
+    estimated?: boolean;
+    recurring?: boolean;
 }
 
 const OCCURRENCE_TONE: Record<RecurringOccurrence["status"], TimelineItem["tone"]> = {
@@ -302,10 +305,27 @@ export default function RecurringPaymentsPage() {
             installment,
         }));
 
-        return [...occurrences, ...installments].sort((a, b) =>
+        const creditCardItems: TimelineItem[] = (projection?.creditCardForecast ?? []).map((item) => ({
+            id: `credit-card-${item.id}`,
+            source: "CREDIT_CARD",
+            title: item.title,
+            subtitle: item.subtitle,
+            amount: item.amount,
+            type: "EXPENSE",
+            dueDate: item.dueDate,
+            status: "PENDING",
+            statusLabel: item.estimated ? "Estimado" : "Programado",
+            tone: "info",
+            isDone: false,
+            fixed: item.fixed,
+            estimated: item.estimated,
+            recurring: item.recurring,
+        }));
+
+        return [...occurrences, ...installments, ...creditCardItems].sort((a, b) =>
             a.dueDate.localeCompare(b.dueDate)
         );
-    }, [sortedOccurrences, debtInstallments]);
+    }, [sortedOccurrences, debtInstallments, projection]);
 
     const visibleTimeline = useMemo(
         () =>
@@ -844,7 +864,7 @@ export default function RecurringPaymentsPage() {
                         <div>
                             <h2><CalendarClock size={17} /> Línea de tiempo de {dayjs(`${month}-01`).format("MMMM")}</h2>
                             <p className="text-muted">
-                                Recurrentes y cuotas de préstamo en una sola vista.
+                                Recurrentes, cuotas de préstamo y cobros fijos de tarjeta en una sola vista.
                             </p>
                         </div>
                         <div className="cashflow-summary">
@@ -902,8 +922,18 @@ export default function RecurringPaymentsPage() {
                                                 <strong>{item.title}</strong>
                                                 <span className={`cashflow-status is-${item.tone}`}>{item.statusLabel}</span>
                                                 <span className="cashflow-source">
-                                                    {item.source === "INSTALLMENT" ? "Préstamo" : "Recurrente"}
+                                                    {item.source === "INSTALLMENT"
+                                                        ? "Préstamo"
+                                                        : item.source === "CREDIT_CARD"
+                                                            ? "Tarjeta"
+                                                            : "Recurrente"}
                                                 </span>
+                                                {item.fixed && (
+                                                    <span className="recurring-auto"><Repeat size={11} /> Fijo</span>
+                                                )}
+                                                {item.estimated && (
+                                                    <span className="recurring-loan-badge">Estimado</span>
+                                                )}
                                                 {item.autoDebit && (
                                                     <span className="recurring-auto"><Repeat size={11} /> Auto</span>
                                                 )}

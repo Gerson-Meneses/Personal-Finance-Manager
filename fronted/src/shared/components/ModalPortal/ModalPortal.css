@@ -101,3 +101,8 @@
     animation: none;
   }
 }
+
+/* Modales anchos (filtros, personalizacion, etc.) */
+.modal-content.modal-content--wide {
+  max-width: 640px;
+}

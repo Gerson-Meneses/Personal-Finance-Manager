@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { formatCurrency } from "../../../../shared/utils/formatCurrency";
+import type { DashboardWidgetView } from "../../../../shared/types/dashboard";
 import type { Loan } from "../../types";
 import "./LoanStats.css"
 
@@ -12,6 +13,7 @@ interface Props {
         given: Loan[]
         received: Loan[]
     };
+    view?: DashboardWidgetView;
 }
 
 const groupByLender = (list: Loan[]) =>
@@ -22,7 +24,7 @@ const groupByLender = (list: Loan[]) =>
         }, {} as Record<string, number>)
     );
 
-export default function LoanStats({ loans }: Props) {
+export default function LoanStats({ loans, view = "full" }: Props) {
     const [isGivenOpen, setIsGivenOpen] = useState(false);
     const [isReceivedOpen, setIsReceivedOpen] = useState(false);
 
@@ -30,6 +32,41 @@ export default function LoanStats({ loans }: Props) {
 
     const givenList = groupByLender(loans.given);
     const receivedList = groupByLender(loans.received);
+
+    if (view !== "full") {
+        return (
+            <div className={`card loan-card-container loan-stats-${view}`}>
+                <div className="card-head">
+                    <h3 className="card-head-title">Préstamos</h3>
+                    <button onClick={() => navigate("/debts")} className="btn-ghost">
+                        Gestionar <ArrowRight size={14} />
+                    </button>
+                </div>
+
+                <div className="loan-simple">
+                    <div>
+                        <span>Me deben</span>
+                        <strong className="text-success amount-font">
+                            {formatCurrency(loans.totalAmtDue)}
+                        </strong>
+                    </div>
+                    <div>
+                        <span>Yo debo</span>
+                        <strong className="text-danger amount-font">
+                            {formatCurrency(loans.totalDebt)}
+                        </strong>
+                    </div>
+                    {view === "compact" && (
+                        <small>
+                            {loans.given.length + loans.received.length} préstamo
+                            {loans.given.length + loans.received.length === 1 ? "" : "s"} activo
+                            {loans.given.length + loans.received.length === 1 ? "" : "s"}
+                        </small>
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     const headerProps = (open: boolean, toggle: () => void) => ({
         role: "button" as const,

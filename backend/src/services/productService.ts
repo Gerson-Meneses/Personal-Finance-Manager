@@ -33,6 +33,7 @@ interface ProductPriceRow {
     unitPrice: string | number;
     quantity: string | number;
     total: string | number;
+    description: string | null;
     merchantName: string | null;
     merchantAddress: string | null;
 }
@@ -161,6 +162,7 @@ export class ProductService {
                    i."unitPrice",
                    i.quantity,
                    i.total,
+                   i.description,
                    t.id AS "transactionId",
                    t.date::text AS date,
                    t."merchantName",
@@ -183,6 +185,7 @@ export class ProductService {
             unitPrice: money(Number(row.unitPrice ?? 0)),
             quantity: Number(row.quantity ?? 0),
             total: money(Number(row.total ?? 0)),
+            ...(row.description ? { description: row.description } : {}),
             ...(row.merchantName ? { merchantName: row.merchantName } : {}),
             ...(row.merchantAddress ? { merchantAddress: row.merchantAddress } : {}),
         }));

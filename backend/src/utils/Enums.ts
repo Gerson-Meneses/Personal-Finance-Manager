@@ -36,6 +36,43 @@ export enum TransactionReportingImpact {
     REPORTABLE = "REPORTABLE",
     CASHFLOW_ONLY = "CASHFLOW_ONLY"
 }
+
+export enum CreditTransactionStatus {
+    PENDING = "PENDING",
+    POSTED = "POSTED",
+    REVERSED = "REVERSED"
+}
+
+export enum CreditChargeType {
+    INSURANCE = "INSURANCE",
+    INTEREST = "INTEREST",
+    FEE = "FEE",
+    OTHER = "OTHER"
+}
+
+export enum CreditChargeSource {
+    AUTO = "AUTO",
+    MANUAL = "MANUAL"
+}
+
+export enum CreditInstallmentPlanStatus {
+    ACTIVE = "ACTIVE",
+    COMPLETED = "COMPLETED",
+    CANCELLED = "CANCELLED"
+}
+
+export enum CreditInstallmentStatus {
+    PENDING = "PENDING",
+    PAID = "PAID",
+    OVERDUE = "OVERDUE",
+    CANCELLED = "CANCELLED"
+}
+
+export enum CreditDocumentType {
+    CONTRACT = "CONTRACT",
+    STATEMENT = "STATEMENT",
+    OTHER = "OTHER"
+}
 export enum ExtraPaymentStrategy { REDUCE_TERM = 'REDUCE_TERM', REDUCE_INSTALLMENT = 'REDUCE_INSTALLMENT' }
 
 export enum TypeCode {

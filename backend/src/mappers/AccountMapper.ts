@@ -25,6 +25,17 @@ export const toAccountResponse = (account: Account): AccountResponse => {
             creditLimit: round(account.creditLimit / 100),
             overdraft: account.overdraft ?? 0,
             paymentDueDay: account.paymentDueDay ?? undefined,
+            currency: account.currency ?? "PEN",
+            ...(account.tea != null ? { tea: account.tea } : {}),
+            ...(account.tcea != null ? { tcea: account.tcea } : {}),
+            ...(account.desgravamenRate != null ? { desgravamenRate: account.desgravamenRate } : {}),
+            ...(account.desgravamenMaxAmount != null
+                ? { desgravamenMaxAmount: round(account.desgravamenMaxAmount / 100) }
+                : {}),
+            ...(account.issuer ? { issuer: account.issuer } : {}),
+            ...(account.brand ? { brand: account.brand } : {}),
+            ...(account.last4 ? { last4: account.last4 } : {}),
+            ...(account.holderName ? { holderName: account.holderName } : {}),
         }
     }
 

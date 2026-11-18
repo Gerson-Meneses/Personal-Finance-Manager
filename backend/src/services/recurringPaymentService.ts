@@ -24,6 +24,8 @@ import {
 } from "../utils/Enums";
 import { money } from "../utils/normalizarMoney";
 import { TransactionService } from "./transactionService";
+import { CreditCardService } from "./creditCardService";
+import type { CreditCardForecastItemResponse } from "../ResponseInterfaces/CreditCardResponse";
 import { Contact } from "../entities/Contact.entity";
 import { LoansService } from "./loansService";
 import type { TransactionSchema } from "../schemas/transaction.schema";
@@ -91,6 +93,7 @@ export interface RecurringMonthProjection {
     pendingExpense: number;
     dueCount: number;
     occurrences: RecurringOccurrenceResponse[];
+    creditCardForecast: CreditCardForecastItemResponse[];
 }
 
 export interface PaymentNotificationResponse {
@@ -100,6 +103,7 @@ export interface PaymentNotificationResponse {
     message: string;
     readAt?: Date | null;
     createdAt: Date;
+    accountId?: string | null;
     occurrence?: {
         id: string;
         dueDate: string;
@@ -218,6 +222,7 @@ export class RecurringPaymentService {
     private notificationRepo = AppDataSourceProd.getRepository(PaymentNotification);
     private transactionService = new TransactionService();
     private loansService = new LoansService();
+    private creditCardService = new CreditCardService();
 
     private mapPayment(payment: RecurringPayment): RecurringPaymentResponse {
         const nextDates = payment.isActive
@@ -849,20 +854,32 @@ export class RecurringPaymentService {
         const income = active.filter((occ) => occ.type === RecurringEntryType.INCOME);
         const expense = active.filter((occ) => occ.type === RecurringEntryType.EXPENSE);
         const paid = active.filter((occ) => occ.status === RecurringOccurrenceStatus.PAID);
+        const creditCardForecast = await this.creditCardService.getForecast(userId, from, to);
+        const today = dayjs().format("YYYY-MM-DD");
+        const forecastExpenseCents = creditCardForecast.reduce(
+            (total, item) => total + Math.round(item.amount * 100),
+            0
+        );
 
         return {
             month: targetMonth,
             from,
             to,
             expectedIncome: money(sumCents(income)),
-            expectedExpense: money(sumCents(expense)),
-            projectedNet: money(sumCents(income) - sumCents(expense)),
+            expectedExpense: money(sumCents(expense) + forecastExpenseCents),
+            projectedNet: money(sumCents(income) - sumCents(expense) - forecastExpenseCents),
             paidIncome: money(sumCents(paid.filter((occ) => occ.type === RecurringEntryType.INCOME))),
             paidExpense: money(sumCents(paid.filter((occ) => occ.type === RecurringEntryType.EXPENSE))),
             pendingIncome: money(sumCents(income.filter((occ) => occ.status !== RecurringOccurrenceStatus.PAID))),
-            pendingExpense: money(sumCents(expense.filter((occ) => occ.status !== RecurringOccurrenceStatus.PAID))),
-            dueCount: monthOccurrences.filter((occ) => occ.status === RecurringOccurrenceStatus.DUE).length,
+            pendingExpense: money(
+                sumCents(expense.filter((occ) => occ.status !== RecurringOccurrenceStatus.PAID)) +
+                forecastExpenseCents
+            ),
+            dueCount:
+                monthOccurrences.filter((occ) => occ.status === RecurringOccurrenceStatus.DUE).length +
+                creditCardForecast.filter((item) => item.dueDate === today).length,
             occurrences: monthOccurrences.map((occ) => this.mapOccurrence(occ)),
+            creditCardForecast,
         };
     }
 
@@ -884,6 +901,7 @@ export class RecurringPaymentService {
             message: notification.message,
             readAt: notification.readAt,
             createdAt: notification.createdAt,
+            accountId: notification.accountId ?? null,
             occurrence: notification.occurrence
                 ? {
                     id: notification.occurrence.id,

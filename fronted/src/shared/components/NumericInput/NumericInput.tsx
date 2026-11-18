@@ -8,6 +8,7 @@ interface NumericInputProps extends BaseInputProps<string> {
   placeholder?: string;
   symbol?: string;
   icon?: string | null;
+  hideLabel?: boolean;
   min?: number;
   max?: number;
   step?: number;
@@ -22,6 +23,7 @@ export const NumericInput = ({
   placeholder = "0.00",
   symbol,
   icon = "Hash",
+  hideLabel = false,
   min,
   max,
   step = 0.01,
@@ -54,7 +56,7 @@ export const NumericInput = ({
       style={{ width: "100%" }}
     >
       {label && (
-        <label htmlFor={inputId} className="input-label">
+        <label htmlFor={inputId} className={`input-label ${hideLabel ? "sr-only" : ""}`}>
           {icon && getIcon(icon)}
           {label}
         </label>

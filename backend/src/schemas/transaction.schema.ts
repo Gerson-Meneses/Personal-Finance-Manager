@@ -35,6 +35,12 @@ export const transactionItemSchema = z.object({
         .min(2, { message: "El nombre del producto debe tener al menos 2 caracteres" })
         .max(255, { message: "El nombre del producto no puede exceder los 255 caracteres" }),
 
+    description: z
+        .string({ message: "El comentario debe ser texto" })
+        .trim()
+        .max(500, { message: "El comentario no puede exceder los 500 caracteres" })
+        .optional(),
+
     quantity: z.coerce
         .number({ message: "La cantidad debe ser numérica" })
         .positive({ message: "La cantidad debe ser mayor a 0" })
@@ -54,13 +60,6 @@ export const transactionItemSchema = z.object({
 });
 
 export type TransactionItemSchema = z.infer<typeof transactionItemSchema>;
-
-const merchantRucSchema = z.union([
-    z.literal(""),
-    z.string({ message: "El RUC debe ser texto" })
-        .trim()
-        .regex(/^\d{11}$/, { message: "El RUC debe tener 11 dígitos" }),
-]);
 
 export const baseTransaction = {
     name: z
@@ -117,12 +116,13 @@ export const baseTransaction = {
         .max(255, { message: "La dirección no puede exceder los 255 caracteres" })
         .optional(),
 
-    merchantRuc: merchantRucSchema.optional(),
-
     items: z
         .array(transactionItemSchema)
         .max(100, { message: "Máximo 100 productos por transacción" })
         .optional(),
+
+    /** Permite guardar aunque la suma de productos no coincida con el monto. */
+    allowItemMismatch: z.boolean().optional(),
 };
 
 export const nonRecurrentTransaction = z.object({
@@ -212,12 +212,13 @@ export const updateTransactionSchema = z.object({
         .max(255, { message: "La dirección no puede exceder los 255 caracteres" })
         .optional(),
 
-    merchantRuc: merchantRucSchema.optional(),
-
     items: z
         .array(transactionItemSchema)
         .max(100, { message: "Máximo 100 productos por transacción" })
         .optional(),
+
+    /** Permite guardar aunque la suma de productos no coincida con el monto. */
+    allowItemMismatch: z.boolean().optional(),
 })
 
 export type UpdateTransactionSchema = z.infer<typeof updateTransactionSchema>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Plus, Tag as TagIcon, X } from "lucide-react";
 import { useTags } from "../hooks";
 import type { Tag } from "../types";
@@ -32,6 +32,7 @@ export function TagSelector({
 }: Props) {
     const { tags, loading, createTag } = useTags();
     const toast = useToast();
+    const rootRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
 
@@ -50,6 +51,19 @@ export function TagSelector({
     const exactExists = tags.some(
         (tag) => tag.name.toLowerCase() === search.trim().toLowerCase()
     );
+
+    useEffect(() => {
+        if (!open) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+                setOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [open]);
 
     const toggle = (id: string) => {
         onChange(
@@ -79,7 +93,10 @@ export function TagSelector({
     };
 
     return (
-        <div className={`tag-selector ${error ? "has-error" : ""} ${disabled ? "disabled" : ""}`}>
+        <div
+            ref={rootRef}
+            className={`tag-selector ${error ? "has-error" : ""} ${disabled ? "disabled" : ""}`}
+        >
             <div className="tag-selector__head">
                 <span className="input-label">
                     <TagIcon size={14} />
@@ -90,6 +107,7 @@ export function TagSelector({
                     className="tag-selector__add"
                     onClick={() => setOpen((prev) => !prev)}
                     disabled={disabled}
+                    aria-expanded={open}
                 >
                     <Plus size={13} />
                     Agregar
@@ -104,8 +122,16 @@ export function TagSelector({
                     <span
                         key={tag.id}
                         className="tag-chip"
-                        style={{ borderColor: tag.color, background: `${tag.color}1a`, color: tag.color }}
+                        style={{
+                            borderColor: tag.color,
+                            background: `${tag.color}1a`,
+                        }}
                     >
+                        <span
+                            className="tag-chip__dot"
+                            style={{ background: tag.color }}
+                            aria-hidden="true"
+                        />
                         {tag.name}
                         <button
                             type="button"
@@ -135,7 +161,10 @@ export function TagSelector({
                                 else if (search.trim() && !exactExists) void handleCreate();
                                 else if (filtered[0]) toggle(filtered[0].id);
                             }
-                            if (event.key === "Escape") setOpen(false);
+                            if (event.key === "Escape") {
+                                event.stopPropagation();
+                                setOpen(false);
+                            }
                         }}
                     />
 

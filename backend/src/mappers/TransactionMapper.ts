@@ -26,6 +26,11 @@ export const toTransactionResponse = (transaction: Transaction, { moneyAmount = 
         time,
         description,
         postedAt,
+        creditStatus,
+        authorizedAmount,
+        expectedPostAt,
+        confirmedAt,
+        installmentPlanId,
         isRecurrent,
         relatedAccount,
         category,
@@ -36,7 +41,6 @@ export const toTransactionResponse = (transaction: Transaction, { moneyAmount = 
         attachments,
         merchantName,
         merchantAddress,
-        merchantRuc,
     } = transaction
 
     let transactionResponse: TransactionResponse = {
@@ -51,9 +55,15 @@ export const toTransactionResponse = (transaction: Transaction, { moneyAmount = 
     if (time) transactionResponse.time = time
     if (description) transactionResponse.description = description
     if (postedAt) transactionResponse.postedAt = postedAt
+    if (creditStatus) transactionResponse.creditStatus = creditStatus
+    if (authorizedAmount != null) {
+        transactionResponse.authorizedAmount = moneyAmount ? money(authorizedAmount) : authorizedAmount
+    }
+    if (expectedPostAt) transactionResponse.expectedPostAt = expectedPostAt
+    if (confirmedAt) transactionResponse.confirmedAt = confirmedAt
+    if (installmentPlanId) transactionResponse.installmentPlanId = installmentPlanId
     if (merchantName) transactionResponse.merchantName = merchantName
     if (merchantAddress) transactionResponse.merchantAddress = merchantAddress
-    if (merchantRuc) transactionResponse.merchantRuc = merchantRuc
 
 
     if (account) transactionResponse.account = toAccountResponse(account)
@@ -86,6 +96,7 @@ export const toTransactionResponse = (transaction: Transaction, { moneyAmount = 
             (item): TransactionItemResponse => ({
                 id: item.id,
                 name: item.name,
+                ...(item.description ? { description: item.description } : {}),
                 quantity: Number(item.quantity),
                 unitPrice: moneyAmount ? money(item.unitPrice) : item.unitPrice,
                 total: moneyAmount ? money(item.total) : item.total,

@@ -76,6 +76,21 @@ export interface RecurringOccurrence {
     executedAt?: string | null;
 }
 
+export interface CreditCardForecastItem {
+    id: string;
+    accountId: string;
+    accountName: string;
+    title: string;
+    subtitle: string;
+    amount: number;
+    dueDate: string;
+    type: "EXPENSE";
+    source: "INSURANCE" | "INSTALLMENT" | "CHARGE";
+    recurring: boolean;
+    fixed: boolean;
+    estimated: boolean;
+}
+
 export interface RecurringMonthProjection {
     month: string;
     from: string;
@@ -89,6 +104,7 @@ export interface RecurringMonthProjection {
     pendingExpense: number;
     dueCount: number;
     occurrences: RecurringOccurrence[];
+    creditCardForecast: CreditCardForecastItem[];
 }
 
 export type RecurringSuggestionKind = "TRANSACTION" | "LOAN";
@@ -134,6 +150,7 @@ export interface PaymentNotification {
     message: string;
     readAt?: string | null;
     createdAt: string;
+    accountId?: string | null;
     occurrence?: {
         id: string;
         dueDate: string;

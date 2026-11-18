@@ -1,4 +1,4 @@
-import { createWorker, OEM, PSM, type Worker } from "tesseract.js";
+import type { LoggerMessage, Worker } from "tesseract.js";
 import type { ReceiptScanProgress } from "./types";
 
 let workerPromise: Promise<Worker> | null = null;
@@ -7,31 +7,34 @@ let progressHandler: ((progress: ReceiptScanProgress) => void) | null = null;
 
 const getWorker = (): Promise<Worker> => {
     if (!workerPromise) {
-        workerPromise = createWorker("spa", OEM.LSTM_ONLY, {
-            logger: (message) => {
-                if (message.status === "recognizing text") {
-                    progressHandler?.({
-                        status: "Reconociendo texto",
-                        progress: Math.round(message.progress * 100),
-                    });
-                } else if (message.status.includes("loading language")) {
-                    progressHandler?.({
-                        status: "Cargando idioma",
-                        progress: Math.round(message.progress * 100),
-                    });
-                }
-            },
-        })
-            .then(async (worker) => {
-                await worker.setParameters({
-                    tessedit_pageseg_mode: PSM.AUTO,
-                });
-                return worker;
-            })
-            .catch((error) => {
-                workerPromise = null;
-                throw error;
+        workerPromise = (async () => {
+            const { createWorker, OEM, PSM } = await import("tesseract.js");
+
+            const worker = await createWorker("spa", OEM.LSTM_ONLY, {
+                logger: (message: LoggerMessage) => {
+                    if (message.status === "recognizing text") {
+                        progressHandler?.({
+                            status: "Reconociendo texto",
+                            progress: Math.round(message.progress * 100),
+                        });
+                    } else if (message.status.includes("loading language")) {
+                        progressHandler?.({
+                            status: "Cargando idioma",
+                            progress: Math.round(message.progress * 100),
+                        });
+                    }
+                },
             });
+
+            await worker.setParameters({
+                tessedit_pageseg_mode: PSM.AUTO,
+            });
+
+            return worker;
+        })().catch((error) => {
+            workerPromise = null;
+            throw error;
+        });
     }
 
     return workerPromise;

@@ -1,22 +1,25 @@
 import { formatCurrency } from "../../../shared/utils/formatCurrency"
 import { getIcon } from "../../../shared/utils/GetIcon"
 import { useNavigate } from "react-router-dom"
+import type { DashboardWidgetView } from "../../../shared/types/dashboard"
 import type { CategoryExpense } from "../types"
 
 interface Props {
     expenses: CategoryExpense[]
     totalExpense: number
+    view?: DashboardWidgetView
 }
 
-export default function ExpensesByCategory({ expenses, totalExpense }: Props) {
+export default function ExpensesByCategory({ expenses, totalExpense, view = "full" }: Props) {
     const navigate = useNavigate()
+    const limit = view === "minimal" ? 1 : view === "compact" ? 3 : 6
 
     const sorted = [...expenses]
         .sort((a, b) => b.amount - a.amount)
-        .slice(0, 6)
+        .slice(0, limit)
 
     return (
-        <div className="card expenses-by-cat">
+        <div className={`card expenses-by-cat view-${view}`}>
             <div className="card-head">
                 <h3 className="card-head-title">Gastos por categoría</h3>
                 <button

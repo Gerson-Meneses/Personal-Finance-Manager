@@ -42,6 +42,14 @@ interface Fields {
     billingCloseDay?: boolean;
     paymentDueDay?: boolean;
     overdraft?: boolean;
+    tea?: boolean;
+    tcea?: boolean;
+    desgravamenRate?: boolean;
+    desgravamenMaxAmount?: boolean;
+    issuer?: boolean;
+    brand?: boolean;
+    last4?: boolean;
+    holderName?: boolean;
     all?: boolean;
     delete?: boolean;
 }
@@ -122,6 +130,14 @@ export default function AccountForm({
             overdraft: credit ? account.overdraft : undefined,
             paymentDueDay: credit ? account.paymentDueDay : undefined,
             billingCloseDay: credit ? account.billingCloseDay : undefined,
+            tea: credit ? account.tea : undefined,
+            tcea: credit ? account.tcea : undefined,
+            desgravamenRate: credit ? account.desgravamenRate : undefined,
+            desgravamenMaxAmount: credit ? account.desgravamenMaxAmount : undefined,
+            issuer: credit ? account.issuer : undefined,
+            brand: credit ? account.brand : undefined,
+            last4: credit ? account.last4 : undefined,
+            holderName: credit ? account.holderName : undefined,
         });
         mutation.reset();
     }, [isEdit, account, reset]);
@@ -134,6 +150,9 @@ export default function AccountForm({
             setValue("overdraft", 0);
             setValue("paymentDueDay", 0);
             setValue("billingCloseDay", 0);
+            setValue("tea", 0);
+            setValue("tcea", 0);
+            setValue("desgravamenRate", 0);
         } else {
             reset(defaultDebitValues, { keepValues: true });
         }
@@ -349,6 +368,162 @@ export default function AccountForm({
                                             onChange={field.onChange}
                                             error={fieldState.error?.message}
                                             disabled={isPending || fieldsDisabled?.paymentDueDay || fieldsDisabled?.all}
+                                        />
+                                    )}
+                                />
+                            )}
+                        </div>
+
+                        {/* TEA + TCEA */}
+                        <div className="form-default-grid-2col">
+                            {!fieldsHidden?.tea && (
+                                <Controller
+                                    control={control}
+                                    name="tea"
+                                    render={({ field, fieldState }) => (
+                                        <NumericInput
+                                            label="TEA (opcional)"
+                                            placeholder="Ej. 45.50"
+                                            value={field.value as string | undefined}
+                                            icon="percent"
+                                            symbol="%"
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.tea || fieldsDisabled?.all}
+                                        />
+                                    )}
+                                />
+                            )}
+
+                            {!fieldsHidden?.tcea && (
+                                <Controller
+                                    control={control}
+                                    name="tcea"
+                                    render={({ field, fieldState }) => (
+                                        <NumericInput
+                                            label="TCEA (opcional)"
+                                            placeholder="Ej. 58.20"
+                                            value={field.value as string | undefined}
+                                            icon="percent"
+                                            symbol="%"
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.tcea || fieldsDisabled?.all}
+                                        />
+                                    )}
+                                />
+                            )}
+                        </div>
+
+                        {/* Seguro de desgravamen + tope */}
+                        <div className="form-default-grid-2col">
+                            {!fieldsHidden?.desgravamenRate && (
+                                <Controller
+                                    control={control}
+                                    name="desgravamenRate"
+                                    render={({ field, fieldState }) => (
+                                        <NumericInput
+                                            label="Seguro desgravamen recurrente (opcional)"
+                                            placeholder="% de gastos del ciclo"
+                                            value={field.value as string | undefined}
+                                            icon="shield"
+                                            symbol="%"
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.desgravamenRate || fieldsDisabled?.all}
+                                        />
+                                    )}
+                                />
+                            )}
+
+                            {!fieldsHidden?.desgravamenMaxAmount && (
+                                <Controller
+                                    control={control}
+                                    name="desgravamenMaxAmount"
+                                    render={({ field, fieldState }) => (
+                                        <NumericInput
+                                            label="Tope del seguro (opcional)"
+                                            value={field.value as string | undefined}
+                                            icon="shieldCheck"
+                                            symbol="S/"
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.desgravamenMaxAmount || fieldsDisabled?.all}
+                                        />
+                                    )}
+                                />
+                            )}
+                        </div>
+
+                        {/* Emisor + marca */}
+                        <div className="form-default-grid-2col">
+                            {!fieldsHidden?.issuer && (
+                                <Controller
+                                    control={control}
+                                    name="issuer"
+                                    render={({ field, fieldState }) => (
+                                        <TextInput
+                                            label="Banco emisor (opcional)"
+                                            value={String(field.value ?? "")}
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.issuer || fieldsDisabled?.all}
+                                            icon="building-2"
+                                        />
+                                    )}
+                                />
+                            )}
+
+                            {!fieldsHidden?.brand && (
+                                <Controller
+                                    control={control}
+                                    name="brand"
+                                    render={({ field, fieldState }) => (
+                                        <TextInput
+                                            label="Marca (opcional)"
+                                            placeholder="Visa, Mastercard..."
+                                            value={String(field.value ?? "")}
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.brand || fieldsDisabled?.all}
+                                            icon="credit-card"
+                                        />
+                                    )}
+                                />
+                            )}
+                        </div>
+
+                        {/* Últimos 4 + titular */}
+                        <div className="form-default-grid-2col">
+                            {!fieldsHidden?.last4 && (
+                                <Controller
+                                    control={control}
+                                    name="last4"
+                                    render={({ field, fieldState }) => (
+                                        <TextInput
+                                            label="Últimos 4 dígitos (opcional)"
+                                            value={String(field.value ?? "")}
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.last4 || fieldsDisabled?.all}
+                                            icon="hash"
+                                        />
+                                    )}
+                                />
+                            )}
+
+                            {!fieldsHidden?.holderName && (
+                                <Controller
+                                    control={control}
+                                    name="holderName"
+                                    render={({ field, fieldState }) => (
+                                        <TextInput
+                                            label="Titular (opcional)"
+                                            value={String(field.value ?? "")}
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            disabled={isPending || fieldsDisabled?.holderName || fieldsDisabled?.all}
+                                            icon="user"
                                         />
                                     )}
                                 />

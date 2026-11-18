@@ -105,4 +105,94 @@ test("registro por API, login por UI y dashboard", async ({ page, request }) => 
     await expect(page.getByRole("heading", { name: /^presupuestos$/i })).toBeVisible();
     await page.getByRole("tab", { name: /previstos/i }).click();
     await expect(page.getByRole("heading", { name: /pagos futuros/i })).toBeVisible();
+
+    await page.goto("/tags");
+    await expect(page.getByRole("heading", { name: /^etiquetas$/i })).toBeVisible();
+    await page.goto("/products");
+    await expect(page.getByRole("heading", { name: /^productos$/i })).toBeVisible();
+    await page.goto("/reconciliation");
+    await expect(page.getByRole("heading", { name: /conciliación bancaria/i })).toBeVisible();
+
+    const cardName = `Tarjeta E2E ${suffix}`;
+    const createdCard = await request.post(`${API_URL}/accounts`, {
+        headers,
+        data: {
+            name: cardName,
+            type: "CREDIT",
+            creditLimit: 1000,
+            billingCloseDay: 15,
+            paymentDueDay: 5,
+            overdraft: 0,
+            tea: 24,
+            desgravamenRate: 1,
+            desgravamenMaxAmount: 10,
+        },
+    });
+    expect(createdCard.ok()).toBeTruthy();
+    const card = (await createdCard.json()) as { id: string };
+
+    await page.goto(`/accounts/${card.id}`);
+    await expect(page).toHaveURL(/\/accounts\/[0-9a-f-]+$/);
+    await expect(page.locator(".cc-panel")).toBeVisible();
+    await expect(page.locator(".cc-metrics")).toContainText("Deuda total");
+    await expect(page.getByText("Compras pendientes de confirmar")).toBeHidden();
+
+    const categoriesResponse = await request.get(`${API_URL}/category?type=EXPENSE&limit=50`, { headers });
+    expect(categoriesResponse.ok()).toBeTruthy();
+    const categories = (await categoriesResponse.json()) as { data: { id: string }[] };
+    const categoryId = categories.data[0]?.id;
+    expect(categoryId).toBeTruthy();
+
+    const pendingName = `Compra pendiente ${suffix}`;
+    const pendingTransaction = await request.post(`${API_URL}/transaction`, {
+        headers,
+        data: {
+            name: pendingName,
+            type: "EXPENSE",
+            amount: 25,
+            date: today,
+            accountId: card.id,
+            categoryId,
+            isRecurrent: false,
+        },
+    });
+    expect(pendingTransaction.ok()).toBeTruthy();
+    const pending = (await pendingTransaction.json()) as { id: string };
+
+    const notifications = await request.get(`${API_URL}/notifications`, { headers });
+    expect(notifications.ok()).toBeTruthy();
+
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: /hola,/i })).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: "Notificaciones" }).click();
+    await page.getByRole("button", { name: /compras pendientes:/i }).click();
+
+    await expect(page).toHaveURL(new RegExp(`/accounts/${card.id}#compras-pendientes$`));
+    await expect(page.getByText("Compras pendientes de confirmar")).toBeVisible();
+
+    const confirmed = await request.post(
+        `${API_URL}/credit-card/${card.id}/pending/${pending.id}/confirm`,
+        { headers, data: { amount: 25 } }
+    );
+    expect(confirmed.ok()).toBeTruthy();
+
+    await page.goto(`/accounts/${card.id}`);
+    await expect(page.locator(".cc-panel")).toBeVisible();
+    const purchaseOption = page.locator(".cc-purchase-option").filter({ hasText: pendingName });
+    await expect(purchaseOption).toBeVisible();
+    await purchaseOption.locator('input[type="checkbox"]').check();
+    await page.getByRole("button", { name: /vista previa/i }).click();
+
+    const previewDialog = page.getByRole("dialog", { name: /vista previa del plan/i });
+    await expect(previewDialog).toBeVisible();
+    await expect(previewDialog).toContainText("Cronograma");
+    await previewDialog.getByRole("button", { name: /confirmar plan/i }).click();
+    await expect(page.getByText(/a 6 cuotas/i)).toBeVisible({ timeout: 15_000 });
+
+    await page.getByTitle("Revertir plan").click();
+    const revertDialog = page.getByRole("dialog", { name: "Revertir plan de cuotas" });
+    await expect(revertDialog).toBeVisible();
+    await expect(revertDialog).toContainText("Solo se puede revertir");
+    await revertDialog.getByRole("button", { name: "Revertir plan" }).click();
+    await expect(page.getByText("Plan cancelado")).toBeVisible({ timeout: 15_000 });
 });

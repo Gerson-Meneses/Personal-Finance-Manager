@@ -26,6 +26,10 @@ import { Tag } from '../entities/Tag.entity'
 import { TransactionSplit } from '../entities/TransactionSplit.entity'
 import { TransactionAttachment } from '../entities/TransactionAttachment.entity'
 import { TransactionItem } from '../entities/TransactionItem.entity'
+import { CreditInstallmentPlan } from '../entities/CreditInstallmentPlan.entity'
+import { CreditInstallment } from '../entities/CreditInstallment.entity'
+import { CreditCardCharge } from '../entities/CreditCardCharge.entity'
+import { CreditCardDocument } from '../entities/CreditCardDocument.entity'
 
 const entities = [
     Account,
@@ -52,6 +56,10 @@ const entities = [
     TransactionSplit,
     TransactionAttachment,
     TransactionItem,
+    CreditInstallmentPlan,
+    CreditInstallment,
+    CreditCardCharge,
+    CreditCardDocument,
 ]
 
 // En desarrollo (bun desde src) carga *.ts; en producción (dist) carga *.js
@@ -66,17 +74,27 @@ const commonOptions = {
     entities,
     migrations,
     migrationsTableName: 'migrations',
+    // Cada migración en su propia transacción: PostgreSQL exige commitear un
+    // nuevo valor de enum antes de usarlo en una migración posterior.
+    migrationsTransactionMode: 'each' as const,
 }
 
 function buildDataSourceOptions(): DataSourceOptions {
     const sslEnv = process.env.DB_SSL // 'true' | 'false'
+    const isTest = process.env.NODE_ENV === "test"
+    const isProduction = process.env.NODE_ENV === "production"
     // TEST_DATABASE_URL solo se usa en tests para aislar integración de la base real.
-    const testDatabaseUrl = process.env.NODE_ENV === "test" ? process.env.TEST_DATABASE_URL : undefined
+    const testDatabaseUrl = isTest ? process.env.TEST_DATABASE_URL : undefined
     const databaseUrl = testDatabaseUrl || process.env.DATABASE_URL
+    // En desarrollo local, DB_HOST tiene prioridad para no depender de la base remota.
+    const useLocalHost =
+        Boolean(process.env.DB_HOST) &&
+        !isTest &&
+        !isProduction &&
+        (isLocalHost(process.env.DB_HOST as string) || process.env.NODE_ENV === "development")
 
-    // 1) Parámetros individuales (DB_HOST) → configuración local/ explícita
-    // DATABASE_URL tiene prioridad si ambas variables existen (Render).
-    if (process.env.DB_HOST && !databaseUrl) {
+    // 1) Parámetros individuales (DB_HOST) → configuración local/explícita
+    if (useLocalHost || (process.env.DB_HOST && !databaseUrl)) {
         return {
             ...commonOptions,
             type: 'postgres',

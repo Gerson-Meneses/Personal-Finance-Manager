@@ -26,8 +26,10 @@ import { NumericInput } from "../../../../shared/components/NumericInput/Numeric
 import { TextInput } from "../../../../shared/components/TextInput/TextInput";
 import { TypeToggle } from "../../../../shared/components/TypeToggle/TypeToggle";
 import { FormContainer } from "../../../../shared/components/FormContainer/FormContainer";
+import InfoModal from "../../../../shared/components/InfoModal/InfoModal";
 import { useToast } from "../../../../shared/Hooks/useToast";
 import { TagSelector } from "../../../tags/components/TagSelector";
+import { ProductAutocomplete } from "../../../products/components/ProductAutocomplete";
 import { useTransactionAttachments } from "../../../attachments/hooks";
 import * as attachmentService from "../../../attachments/services";
 import { scanReceiptFile } from "../../../receipts/scan";
@@ -96,6 +98,19 @@ const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024;
  */
 const SPLITS_UI_ENABLED = false;
 
+const computeItemTotalCents = (quantity: unknown, unitPrice: unknown) => {
+  const unitPriceCents = Math.round(Number(unitPrice || 0) * 100);
+  return Math.round(Number(quantity || 0) * unitPriceCents);
+};
+
+const computeItemsTotalCents = (
+  items: Array<{ quantity?: unknown; unitPrice?: unknown }> | undefined
+) =>
+  (items ?? []).reduce(
+    (sum, item) => sum + computeItemTotalCents(item.quantity, item.unitPrice),
+    0
+  );
+
 const createDefaultValues = (): TransactionInput => ({
   name: "",
   type: "EXPENSE",
@@ -109,14 +124,13 @@ const createDefaultValues = (): TransactionInput => ({
   splits: [],
   merchantName: "",
   merchantAddress: "",
-  merchantRuc: "",
   items: [],
 });
 
 /** Campos reales del form — sirve para mapear error.details del backend */
 const FORM_FIELDS = new Set<string>([
   "name", "type", "categoryId", "accountId", "amount", "date", "time", "description",
-  "tagIds", "splits", "merchantName", "merchantAddress", "merchantRuc", "items",
+  "tagIds", "splits", "merchantName", "merchantAddress", "items",
 ]);
 
 /* ------------------------------------------------------------------ */
@@ -246,6 +260,11 @@ export default function TransactionForm({
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState<ReceiptScanProgress | null>(null);
   const [scanResult, setScanResult] = useState<ReceiptScanResult | null>(null);
+  const [pendingMismatch, setPendingMismatch] = useState<{
+    data: TransactionOutput;
+    itemsTotal: number;
+    amountTotal: number;
+  } | null>(null);
   const attachmentsApi = useTransactionAttachments(isEdit ? transaction?.id : undefined);
   const {
     fields: splitFields,
@@ -264,6 +283,11 @@ export default function TransactionForm({
   const amountValue = useWatch({ control, name: "amount" });
   const splitsValue = useWatch({ control, name: "splits" }) ?? [];
   const itemsValue = useWatch({ control, name: "items" }) ?? [];
+
+  const itemsTotalCents = computeItemsTotalCents(itemsValue);
+  const amountCents = Math.round(Number(amountValue || 0) * 100);
+  const itemsMismatch = itemFields.length > 0 && itemsTotalCents !== amountCents;
+  const itemsDifferenceCents = Math.abs(itemsTotalCents - amountCents);
   const selectedDate = useWatch({ control, name: "date" });
   const transactionName = useWatch({ control, name: "name" }) ?? "";
 
@@ -350,7 +374,6 @@ export default function TransactionForm({
         replaceItems([]);
         setValue("merchantName", "");
         setValue("merchantAddress", "");
-        setValue("merchantRuc", "");
       }
     }
   };
@@ -481,13 +504,6 @@ export default function TransactionForm({
         });
       }
 
-      if (result.merchantRuc) {
-        setValue("merchantRuc", result.merchantRuc, {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-      }
-
       if (result.amount !== null && !String(getValues("amount") ?? "").trim()) {
         setValue("amount", result.amount, { shouldDirty: true, shouldValidate: true });
         filled += 1;
@@ -502,6 +518,7 @@ export default function TransactionForm({
         replaceItems(
           result.items.map((item) => ({
             name: item.name,
+            description: "",
             quantity: String(item.quantity),
             unitPrice: String(item.unitPrice),
           }))
@@ -585,9 +602,9 @@ export default function TransactionForm({
       })) ?? [],
       merchantName: transaction.merchantName || "",
       merchantAddress: transaction.merchantAddress || "",
-      merchantRuc: transaction.merchantRuc || "",
       items: transaction.items?.map((item) => ({
         name: item.name,
+        description: item.description ?? "",
         quantity: String(item.quantity),
         unitPrice: String(item.unitPrice),
       })) ?? [],
@@ -603,7 +620,7 @@ export default function TransactionForm({
   }, [isEdit, transaction, reset, trigger]);
 
   /* ---------- submit ---------- */
-  const onSubmit = (data: TransactionOutput) => {
+  const submitTransaction = (data: TransactionOutput, allowItemMismatch = false) => {
     // handleSubmit ya validó: cualquier error que quede es "server" stale
     // de un intento anterior. Lo limpiamos antes del nuevo intento.
     clearErrors();
@@ -635,6 +652,7 @@ export default function TransactionForm({
     const items = data.items?.length
       ? data.items.map((item) => ({
           name: item.name.trim(),
+          description: item.description?.trim() || undefined,
           quantity: Number(item.quantity),
           unitPrice: Number(item.unitPrice),
         }))
@@ -642,7 +660,6 @@ export default function TransactionForm({
 
     const merchantName = data.merchantName?.trim() || undefined;
     const merchantAddress = data.merchantAddress?.trim() || undefined;
-    const merchantRuc = data.merchantRuc?.trim() || undefined;
 
     const basePayload = {
       ...data,
@@ -651,8 +668,8 @@ export default function TransactionForm({
       splits,
       merchantName,
       merchantAddress,
-      merchantRuc,
       items,
+      allowItemMismatch: allowItemMismatch || undefined,
     };
 
     if (isEdit && transaction) {
@@ -664,7 +681,6 @@ export default function TransactionForm({
         splits: splits ?? [],
         merchantName: data.merchantName?.trim() ?? "",
         merchantAddress: data.merchantAddress?.trim() ?? "",
-        merchantRuc: data.merchantRuc?.trim() ?? "",
         items: items ?? [],
       };
       mutate(updateData, {
@@ -702,6 +718,26 @@ export default function TransactionForm({
         onSuccess?.(created);
       },
     });
+  };
+
+  const onSubmit = (data: TransactionOutput) => {
+    const items = data.items ?? [];
+
+    if (items.length > 0) {
+      const itemsTotalCents = computeItemsTotalCents(items);
+      const transactionAmountCents = Math.round(Number(data.amount) * 100);
+
+      if (itemsTotalCents !== transactionAmountCents) {
+        setPendingMismatch({
+          data,
+          itemsTotal: itemsTotalCents / 100,
+          amountTotal: transactionAmountCents / 100,
+        });
+        return;
+      }
+    }
+
+    submitTransaction(data);
   };
 
   return (
@@ -862,7 +898,7 @@ export default function TransactionForm({
                   <TextInput
                     label="Establecimiento"
                     icon="Store"
-                    value={field.value ?? ""}
+                    value={String(field.value ?? "")}
                     onChange={field.onChange}
                     error={fieldState.error?.message}
                     placeholder="Ej. Promart, Metro…"
@@ -873,36 +909,20 @@ export default function TransactionForm({
 
               <Controller
                 control={control}
-                name="merchantRuc"
+                name="merchantAddress"
                 render={({ field, fieldState }) => (
                   <TextInput
-                    label="RUC"
-                    icon="Hash"
-                    value={field.value ?? ""}
+                    label="Dirección"
+                    icon="MapPin"
+                    value={String(field.value ?? "")}
                     onChange={field.onChange}
                     error={fieldState.error?.message}
-                    placeholder="11 dígitos"
+                    placeholder="Av. Aviación 2405, San Borja…"
                     disabled={isPending}
                   />
                 )}
               />
             </div>
-
-            <Controller
-              control={control}
-              name="merchantAddress"
-              render={({ field, fieldState }) => (
-                <TextInput
-                  label="Dirección"
-                  icon="MapPin"
-                  value={field.value ?? ""}
-                  onChange={field.onChange}
-                  error={fieldState.error?.message}
-                  placeholder="Av. Aviación 2405, San Borja…"
-                  disabled={isPending}
-                />
-              )}
-            />
 
             <div className="tx-purchase__items-head">
               <span className="tx-purchase__subtitle">
@@ -929,71 +949,96 @@ export default function TransactionForm({
 
                   return (
                     <div key={field.id} className="tx-purchase__item">
+                      <div className="tx-purchase__item-main">
+                        <Controller
+                          control={control}
+                          name={`items.${index}.name` as Path<TransactionInput>}
+                          render={({ field: nameField, fieldState }) => (
+                            <ProductAutocomplete
+                              value={String(nameField.value ?? "")}
+                              onChange={(name, product) => {
+                                nameField.onChange(name);
+                                if (product) {
+                                  setValue(
+                                    `items.${index}.unitPrice` as Path<TransactionInput>,
+                                    String(product.lastPrice),
+                                    { shouldDirty: true, shouldValidate: true }
+                                  );
+                                }
+                              }}
+                              error={fieldState.error?.message}
+                              placeholder="Ej. Abrigo con capucha"
+                              disabled={isPending}
+                            />
+                          )}
+                        />
+
+                        <Controller
+                          control={control}
+                          name={`items.${index}.quantity` as Path<TransactionInput>}
+                          render={({ field: quantityField, fieldState }) => (
+                            <NumericInput
+                              label="Cant."
+                              icon="Hash"
+                              value={String(quantityField.value ?? "")}
+                              onChange={quantityField.onChange}
+                              error={fieldState.error?.message}
+                              disabled={isPending}
+                              min={0}
+                            />
+                          )}
+                        />
+
+                        <Controller
+                          control={control}
+                          name={`items.${index}.unitPrice` as Path<TransactionInput>}
+                          render={({ field: priceField, fieldState }) => (
+                            <NumericInput
+                              label="Precio unit."
+                              symbol="S/"
+                              icon={null}
+                              value={String(priceField.value ?? "")}
+                              onChange={priceField.onChange}
+                              error={fieldState.error?.message}
+                              disabled={isPending}
+                              min={0}
+                            />
+                          )}
+                        />
+
+                        <span
+                          className="tx-purchase__total tooltip-anchor tooltip-top"
+                          data-tooltip="Total de la línea"
+                        >
+                          {formatCurrency(lineTotal)}
+                        </span>
+
+                        <button
+                          type="button"
+                          className="tx-purchase__remove"
+                          onClick={() => removeItem(index)}
+                          disabled={isPending}
+                          aria-label="Quitar producto"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+
                       <Controller
                         control={control}
-                        name={`items.${index}.name` as Path<TransactionInput>}
-                        render={({ field: nameField, fieldState }) => (
+                        name={`items.${index}.description` as Path<TransactionInput>}
+                        render={({ field: descriptionField, fieldState }) => (
                           <TextInput
-                            label="Producto"
-                            icon="Package"
-                            value={String(nameField.value ?? "")}
-                            onChange={nameField.onChange}
+                            label="Comentario (opcional)"
+                            icon="AlignLeft"
+                            value={String(descriptionField.value ?? "")}
+                            onChange={descriptionField.onChange}
                             error={fieldState.error?.message}
-                            placeholder="Ej. Abrigo con capucha"
+                            placeholder="Ej. talla M, color negro, promoción…"
                             disabled={isPending}
                           />
                         )}
                       />
-
-                      <Controller
-                        control={control}
-                        name={`items.${index}.quantity` as Path<TransactionInput>}
-                        render={({ field: quantityField, fieldState }) => (
-                          <NumericInput
-                            label="Cant."
-                            icon="Hash"
-                            value={String(quantityField.value ?? "")}
-                            onChange={quantityField.onChange}
-                            error={fieldState.error?.message}
-                            disabled={isPending}
-                            min={0}
-                          />
-                        )}
-                      />
-
-                      <Controller
-                        control={control}
-                        name={`items.${index}.unitPrice` as Path<TransactionInput>}
-                        render={({ field: priceField, fieldState }) => (
-                          <NumericInput
-                            label="Precio unit."
-                            symbol="S/"
-                            icon={null}
-                            value={String(priceField.value ?? "")}
-                            onChange={priceField.onChange}
-                            error={fieldState.error?.message}
-                            disabled={isPending}
-                            min={0}
-                          />
-                        )}
-                      />
-
-                      <span
-                  className="tx-purchase__total tooltip-anchor tooltip-top"
-                  data-tooltip="Total de la línea"
-                >
-                        {formatCurrency(lineTotal)}
-                      </span>
-
-                      <button
-                        type="button"
-                        className="tx-purchase__remove"
-                        onClick={() => removeItem(index)}
-                        disabled={isPending}
-                        aria-label="Quitar producto"
-                      >
-                        <Trash2 size={14} />
-                      </button>
                     </div>
                   );
                 })}
@@ -1002,6 +1047,24 @@ export default function TransactionForm({
               <p className="tx-purchase__empty">
                 Agrega productos para llevar un historial de precios por establecimiento.
               </p>
+            )}
+
+            {itemFields.length > 0 && (
+              <div
+                className={`tx-purchase__summary ${itemsMismatch ? "is-mismatch" : "is-ok"}`}
+              >
+                <span>
+                  Productos: <strong>{formatCurrency(itemsTotalCents / 100)}</strong>
+                </span>
+                <span>
+                  Monto: <strong>{formatCurrency(amountCents / 100)}</strong>
+                </span>
+                {itemsMismatch && (
+                  <span className="tx-purchase__diff">
+                    Diferencia: {formatCurrency(itemsDifferenceCents / 100)}
+                  </span>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -1330,6 +1393,28 @@ export default function TransactionForm({
 
       </form>
       </FormContainer>
+
+      <InfoModal
+        isOpen={!!pendingMismatch}
+        onClose={() => setPendingMismatch(null)}
+        onConfirm={() => {
+          if (!pendingMismatch) return;
+          const { data } = pendingMismatch;
+          setPendingMismatch(null);
+          submitTransaction(data, true);
+        }}
+        type="info"
+        icon="AlertTriangle"
+        customColor="#f59e0b"
+        title="El total no coincide"
+        message={`El total de los productos (${formatCurrency(
+          pendingMismatch?.itemsTotal ?? 0
+        )}) no coincide con el monto de la transacción (${formatCurrency(
+          pendingMismatch?.amountTotal ?? 0
+        )}). ¿Deseas guardarlo igual?`}
+        confirmText="Guardar igual"
+        cancelText="Revisar"
+      />
     </>
   );
 }

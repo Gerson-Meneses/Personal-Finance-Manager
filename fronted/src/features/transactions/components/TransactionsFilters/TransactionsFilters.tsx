@@ -75,22 +75,56 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
     const { accounts } = useAccounts();
     const { tags } = useTags();
     const [open, setOpen] = useState(false);
+    const [draft, setDraft] = useState<TransactionQuerySchemaOutput>(query);
 
     const [dateMode, setDateMode] = useState<DateMode>(query.date ? "exact" : "range");
     const [amountMode, setAmountMode] = useState<AmountMode>(query.amount ? "exact" : "range");
+
+    const openFilters = () => {
+        setDraft(query);
+        setDateMode(query.date ? "exact" : "range");
+        setAmountMode(query.amount ? "exact" : "range");
+        setOpen(true);
+    };
+
+    const closeFilters = () => setOpen(false);
+
+    const toggleFilters = () => {
+        if (open) closeFilters();
+        else openFilters();
+    };
+
+    const applyFilters = () => {
+        onChange({ ...draft, page: 1 });
+        closeFilters();
+    };
+
+    const clearDraft = () => {
+        setDraft({
+            order: query.order,
+            orderBy: query.orderBy,
+            limit: query.limit ?? 20,
+            page: 1,
+        });
+        setDateMode("range");
+        setAmountMode("range");
+    };
 
     // `value || undefined` rompía filtros con 0/false; solo vaciamos strings vacíos.
     const set = <K extends keyof TransactionQuerySchemaOutput>(
         key: K,
         value: TransactionQuerySchemaOutput[K]
     ) => {
-        onChange({ ...query, [key]: value === "" ? undefined : value });
+        setDraft((current) => ({
+            ...current,
+            [key]: value === "" ? undefined : value,
+        }));
     };
 
     const period = useMemo<Period>(() => {
         const today = dayjs().format("YYYY-MM-DD");
-        const from = query.from;
-        const to = query.to;
+        const from = draft.from;
+        const to = draft.to;
         if (!from && !to) return "all";
         if (from === today && to === today) return "today";
         if (from === dayjs().subtract(6, "day").format("YYYY-MM-DD") && to === today) return "7d";
@@ -107,7 +141,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
             to === dayjs().subtract(1, "month").endOf("month").format("YYYY-MM-DD")
         ) return "lastMonth";
         return "all";
-    }, [query.from, query.to]);
+    }, [draft.from, draft.to]);
 
     const monthOptions = useMemo(
         () => Array.from({ length: 12 }, (_, index) => {
@@ -134,9 +168,9 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
     );
 
     const selectedMonth = useMemo(() => {
-        if (!query.from || !query.to) return "";
-        const from = dayjs(query.from);
-        const to = dayjs(query.to);
+        if (!draft.from || !draft.to) return "";
+        const from = dayjs(draft.from);
+        const to = dayjs(draft.to);
         const isFullMonth =
             from.isSame(from.startOf("month"), "day") &&
             to.isSame(to.endOf("month"), "day");
@@ -144,51 +178,63 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
             from.isSame(from.startOf("month"), "day") &&
             to.isSame(dayjs().startOf("day"), "day");
         return isFullMonth || isCurrentMonthToToday ? from.format("YYYY-MM") : "";
-    }, [query.from, query.to]);
+    }, [draft.from, draft.to]);
 
     const selectedWeek = useMemo(() => {
-        if (!query.from || !query.to) return "";
-        const from = dayjs(query.from);
-        const to = dayjs(query.to);
+        if (!draft.from || !draft.to) return "";
+        const from = dayjs(draft.from);
+        const to = dayjs(draft.to);
         return from.isSame(from.startOf("week"), "day") &&
             to.isSame(to.endOf("week"), "day")
             ? from.format("YYYY-MM-DD")
             : "";
-    }, [query.from, query.to]);
+    }, [draft.from, draft.to]);
 
     const applyMonth = (value: string) => {
         if (!value) {
-            onChange({ ...query, from: undefined, to: undefined, date: undefined, page: 1 });
+            setDraft((current) => ({
+                ...current,
+                from: undefined,
+                to: undefined,
+                date: undefined,
+                page: 1,
+            }));
             return;
         }
         const month = dayjs(`${value}-01`);
-        onChange({
-            ...query,
+        setDraft((current) => ({
+            ...current,
             date: undefined,
             from: month.startOf("month").format("YYYY-MM-DD"),
             to: month.endOf("month").format("YYYY-MM-DD"),
             page: 1,
-        });
+        }));
     };
 
     const applyWeek = (value: string) => {
         if (!value) {
-            onChange({ ...query, from: undefined, to: undefined, date: undefined, page: 1 });
+            setDraft((current) => ({
+                ...current,
+                from: undefined,
+                to: undefined,
+                date: undefined,
+                page: 1,
+            }));
             return;
         }
         const week = dayjs(value);
-        onChange({
-            ...query,
+        setDraft((current) => ({
+            ...current,
             date: undefined,
             from: week.startOf("week").format("YYYY-MM-DD"),
             to: week.endOf("week").format("YYYY-MM-DD"),
             page: 1,
-        });
+        }));
     };
 
     const applyPeriod = (value: Period) => {
         const today = dayjs();
-        const next = { ...query, date: undefined };
+        const next = { ...draft, date: undefined };
 
         if (value === "all") {
             next.from = undefined;
@@ -212,7 +258,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
             next.to = previous.endOf("month").format("YYYY-MM-DD");
         }
 
-        onChange({ ...next, page: 1 });
+        setDraft({ ...next, page: 1 });
     };
 
     const orderValue = `${query.orderBy ?? "date"}-${query.order ?? "DESC"}`;
@@ -273,7 +319,9 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
     return (
         <FilterWrapper<TransactionQuerySchemaOutput>
             isOpen={open}
-            onToggleOpen={() => setOpen((p) => !p)}
+            onToggleOpen={toggleFilters}
+            onApply={applyFilters}
+            onClearDraft={clearDraft}
             activeCount={activeCount}
             activeFilters={activeFilter}
             onReset={onReset}
@@ -354,8 +402,8 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                             <button
                                 key={opt.label}
                                 type="button"
-                                aria-pressed={query.type === opt.value}
-                                className={`tf-chip ${query.type === opt.value ? "active" : ""}`}
+                                aria-pressed={draft.type === opt.value}
+                                className={`tf-chip ${draft.type === opt.value ? "active" : ""}`}
                                 onClick={() => set("type", opt.value)}
                             >
                                 {opt.label}
@@ -374,17 +422,18 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                         mode={dateMode}
                         onModeChange={(mode) => {
                             setDateMode(mode);
-                            onChange(mode === "exact"
-                                ? { ...query, from: undefined, to: undefined }
-                                : { ...query, date: undefined }
+                            setDraft((current) =>
+                                mode === "exact"
+                                    ? { ...current, from: undefined, to: undefined }
+                                    : { ...current, date: undefined }
                             );
                         }}
                         exactInput={
                             <DatePicker
                                 icon=""
                                 label="Fecha exacta"
-                                value={query.date}
-                                onChange={(val) => onChange({ ...query, date: val })}
+                                value={draft.date}
+                                onChange={(val) => set("date", val)}
                             />
                         }
                         rangeInputs={
@@ -393,16 +442,16 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                                     <DatePicker
                                         icon=""
                                         label="Desde"
-                                        value={query.from}
-                                        onChange={(val) => onChange({ ...query, from: val })}
+                                        value={draft.from}
+                                        onChange={(val) => set("from", val)}
                                     />
                                 </div>
                                 <div className="flex-1">
                                     <DatePicker
                                         icon=""
                                         label="Hasta"
-                                        value={query.to}
-                                        onChange={(val) => onChange({ ...query, to: val })}
+                                        value={draft.to}
+                                        onChange={(val) => set("to", val)}
                                     />
                                 </div>
                             </div>
@@ -415,16 +464,17 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                         mode={amountMode}
                         onModeChange={(mode) => {
                             setAmountMode(mode);
-                            onChange(mode === "exact"
-                                ? { ...query, minAmount: undefined, maxAmount: undefined }
-                                : { ...query, amount: undefined }
+                            setDraft((current) =>
+                                mode === "exact"
+                                    ? { ...current, minAmount: undefined, maxAmount: undefined }
+                                    : { ...current, amount: undefined }
                             );
                         }}
                         exactInput={
                             <NumericInput
                                 label="Monto exacto"
-                                value={query.amount?.toString() ?? ""}
-                                onChange={(val) => onChange({ ...query, amount: val ? Number(val) : undefined })}
+                                value={draft.amount?.toString() ?? ""}
+                                onChange={(val) => set("amount", val ? Number(val) : undefined)}
                                 symbol="S/"
                                 icon={""}
                                 autoResize={false}
@@ -436,8 +486,8 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                                     <NumericInput
                                         icon={""}
                                         label="Mínimo"
-                                        value={query.minAmount?.toString() ?? ""}
-                                        onChange={(val) => onChange({ ...query, minAmount: val ? Number(val) : undefined })}
+                                        value={draft.minAmount?.toString() ?? ""}
+                                        onChange={(val) => set("minAmount", val ? Number(val) : undefined)}
                                         symbol="S/"
                                         autoResize={false}
                                     />
@@ -446,8 +496,8 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                                     <NumericInput
                                         icon={""}
                                         label="Máximo"
-                                        value={query.maxAmount?.toString() ?? ""}
-                                        onChange={(val) => onChange({ ...query, maxAmount: val ? Number(val) : undefined })}
+                                        value={draft.maxAmount?.toString() ?? ""}
+                                        onChange={(val) => set("maxAmount", val ? Number(val) : undefined)}
                                         symbol="S/"
                                         autoResize={false}
                                     />
@@ -466,7 +516,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                         <SelectInput
                             label="Categoría"
                             hideLabel
-                            value={query.categoryId ?? ""}
+                            value={draft.categoryId ?? ""}
                             onChange={(v) => set("categoryId", v)}
                             placeholder="Todas"
                             options={categories.map((cat) => ({
@@ -483,7 +533,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                         <SelectInput
                             label="Cuenta"
                             hideLabel
-                            value={query.accountId ?? ""}
+                            value={draft.accountId ?? ""}
                             onChange={(v) => set("accountId", v)}
                             placeholder="Todas"
                             options={accounts.map((acc) => ({
@@ -499,7 +549,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                         <SelectInput
                             label="Cuenta relacionada"
                             hideLabel
-                            value={query.relatedAccountId ?? ""}
+                            value={draft.relatedAccountId ?? ""}
                             onChange={(v) => set("relatedAccountId", v)}
                             placeholder="Todas"
                             options={accounts.map((acc) => ({
@@ -517,7 +567,7 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                         <SelectInput
                             label="Etiqueta"
                             hideLabel
-                            value={query.tagId ?? ""}
+                            value={draft.tagId ?? ""}
                             onChange={(v) => set("tagId", v)}
                             placeholder="Todas"
                             options={tags.map((tag) => ({
@@ -541,8 +591,8 @@ export default function TransactionFilters({ query, onChange, onReset, search, o
                                 <button
                                     key={n}
                                     type="button"
-                                    aria-pressed={(query.limit ?? 20) === n}
-                                    className={`tf-chip ${(query.limit ?? 20) === n ? "active" : ""}`}
+                                    aria-pressed={(draft.limit ?? 20) === n}
+                                    className={`tf-chip ${(draft.limit ?? 20) === n ? "active" : ""}`}
                                     onClick={() => set("limit", n)}
                                 >
                                     {n}

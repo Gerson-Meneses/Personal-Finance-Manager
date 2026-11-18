@@ -7,6 +7,8 @@ import type { User } from "../../../features/auth/types"
 import { CodeFlowModal } from "./CodeFlowModal"
 import { ProfileDataCard } from "./ProfileDataCard"
 import { ProfileSecurityCard } from "./ProfileSecurityCard"
+import { DashboardSettings } from "../../../features/dashboard/components/DashboardSettings"
+import { useDashboardPreferences } from "../../../features/dashboard/useDashboardPreferences"
 import { Sparkles } from "lucide-react"
 import "./profilePage.css"
 
@@ -18,6 +20,8 @@ export default function ProfilePage() {
     const { user, setUser } = useAuthContext()
     const verify = useVerifyEmail()
     const toast = useToast()
+    const { preferences, updatePreferences, resetPreferences } =
+        useDashboardPreferences(user?.id)
 
     const [verifyOpen, setVerifyOpen] = useState(false)
 
@@ -56,7 +60,7 @@ export default function ProfilePage() {
             <header className="page-header card">
                 <div>
                     <h1>Mi perfil</h1>
-                    <p className="text-muted">Datos de tu cuenta</p>
+                    <p className="text-muted">Datos, seguridad y configuración de tu cuenta</p>
                 </div>
                 <button
                     type="button"
@@ -97,6 +101,14 @@ export default function ProfilePage() {
                 showToast={showToast}
                 onUserUpdated={() => void refreshUser()}
             />
+
+            <section className="card dashboard-settings-card">
+                <DashboardSettings
+                    preferences={preferences}
+                    onChange={updatePreferences}
+                    onReset={resetPreferences}
+                />
+            </section>
 
             {verifyOpen && (
                 <CodeFlowModal

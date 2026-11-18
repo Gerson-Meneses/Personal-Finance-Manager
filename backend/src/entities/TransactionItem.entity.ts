@@ -24,6 +24,10 @@ export class TransactionItem {
     @Column({ type: "varchar", length: 255, nullable: false })
     normalizedName: string;
 
+    /** Comentario o descripción opcional de esta compra. */
+    @Column({ type: "varchar", length: 500, nullable: true })
+    description?: string | null;
+
     /** Cantidad comprada (admite decimales, ej. 0.750 kg). */
     @Column({ type: "numeric", precision: 10, scale: 3, default: 1 })
     quantity: string;

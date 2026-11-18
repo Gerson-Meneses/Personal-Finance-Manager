@@ -3,7 +3,7 @@ import './styles.css'
 import { formatCurrency } from "../../../shared/utils/formatCurrency";
 import { getIcon } from "../../../shared/utils/GetIcon";
 import { useState } from "react";
-import { Download, Package, Paperclip, Pencil, Split, Store, Trash2 } from "lucide-react";
+import { Clock3, Download, Package, Paperclip, Pencil, Split, Store, Trash2 } from "lucide-react";
 import ModalPortal from "../../../shared/components/ModalPortal/ModalPortal";
 import TransactionForm from "./TransactionForm/TransactionForm";
 import InfoModal from "../../../shared/components/InfoModal/InfoModal";
@@ -103,6 +103,15 @@ export default function TransactionItem({ transaction, currentAccountId, search 
                                     <span className={`tx-direction-badge ${isIncomingTransfer ? 'in' : 'out'}`}>
                                         {isIncomingTransfer ? 'Recibido' : 'Enviado'}
                                     </span>
+                                )}
+                                {transaction.creditStatus === "PENDING" && (
+                                    <span className="tx-pending-badge" title="Pendiente de confirmar">
+                                        <Clock3 size={11} />
+                                        Pendiente
+                                    </span>
+                                )}
+                                {transaction.installmentPlanId && (
+                                    <span className="tx-pending-badge is-plan">Cuotas</span>
                                 )}
                             </div>
 
@@ -232,7 +241,11 @@ export default function TransactionItem({ transaction, currentAccountId, search 
                                     {items.length} producto{items.length === 1 ? "" : "s"}
                                 </span>
                                 {items.slice(0, 4).map((item) => (
-                                    <span key={item.id} className="tx-purchased-item">
+                                    <span
+                                        key={item.id}
+                                        className="tx-purchased-item"
+                                        title={item.description || undefined}
+                                    >
                                         {item.name} x{item.quantity} · {formatCurrency(item.total)}
                                     </span>
                                 ))}

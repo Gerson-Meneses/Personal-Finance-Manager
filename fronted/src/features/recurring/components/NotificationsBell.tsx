@@ -73,13 +73,22 @@ export function NotificationsBell() {
                                     onClick={() => {
                                         if (!notification.readAt) markRead.mutate(notification.id);
                                         setOpen(false);
-                                        navigate(
-                                            notification.kind === "BUDGET"
-                                                ? "/planning?tab=budgets"
-                                                : notification.kind.startsWith("CARD")
-                                                    ? "/accounts"
-                                                    : "/planning?tab=recurring"
-                                        );
+                                        if (notification.kind.startsWith("CARD") && notification.accountId) {
+                                            const target = `/accounts/${notification.accountId}`;
+                                            navigate(
+                                                notification.kind === "CARD_PENDING"
+                                                    ? `${target}#compras-pendientes`
+                                                    : target
+                                            );
+                                        } else {
+                                            navigate(
+                                                notification.kind === "BUDGET"
+                                                    ? "/planning?tab=budgets"
+                                                    : notification.kind.startsWith("CARD")
+                                                        ? "/accounts"
+                                                        : "/planning?tab=recurring"
+                                            );
+                                        }
                                     }}
                                 >
                                     <span className="notif-item__dot" />
@@ -100,7 +109,7 @@ export function NotificationsBell() {
                             navigate("/planning?tab=recurring");
                         }}
                     >
-                        Ver planificación
+                        Ver planificaciÃ³n
                         <ChevronRight size={14} />
                     </button>
                 </div>

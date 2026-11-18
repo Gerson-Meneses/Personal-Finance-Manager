@@ -7,6 +7,7 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
 } from "typeorm";
+import type { Account } from "./Account.entity";
 import type { RecurringPaymentOccurrence } from "./RecurringPaymentOccurrence.entity";
 import type { User } from "./User.entity";
 import type { DebtInstallment } from "./DebtInstallment.entity";
@@ -38,6 +39,13 @@ export class PaymentNotification {
 
     @Column({ type: "uuid", unique: true, nullable: true })
     installmentId?: string | null;
+
+    @ManyToOne("Account", { nullable: true, onDelete: "CASCADE" })
+    @JoinColumn({ name: "accountId" })
+    account?: Account | null;
+
+    @Column({ type: "uuid", nullable: true })
+    accountId?: string | null;
 
     @Column({ type: "varchar", length: 30, default: "PAYMENT" })
     kind: string;

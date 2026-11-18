@@ -49,6 +49,7 @@ test("la navegación principal abre cada sección y marca el enlace activo", asy
         ["Deudas", "/debts"],
         ["Planificación", "/planning"],
         ["Reportes", "/reports"],
+        ["Productos", "/products"],
         ["Categorías", "/categories"],
     ];
 

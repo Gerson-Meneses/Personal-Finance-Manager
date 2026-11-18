@@ -3,11 +3,12 @@ import * as service from "./services";
 import type { ProductDetail, ProductQuery, ProductSummary } from "./types";
 import type { Data } from "../../shared/dataApiInterface";
 
-export const useProducts = (query: ProductQuery) => {
+export const useProducts = (query: ProductQuery, enabled = true) => {
     const productsQuery = useQuery<Data<ProductSummary>>({
         queryKey: ["products", query],
         queryFn: () => service.getProducts(query),
         placeholderData: (previous) => previous,
+        enabled,
     });
 
     return {

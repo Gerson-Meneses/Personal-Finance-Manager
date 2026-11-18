@@ -14,6 +14,8 @@ interface TextInputProps
 
   icon?: string | null;
 
+  hideLabel?: boolean;
+
   autoResize?: boolean;
 
   autoSelect?: boolean;
@@ -37,6 +39,8 @@ export const TextInput = ({
   textarea = false,
 
   icon = "Type",
+
+  hideLabel = false,
 
   autoResize = false,
 
@@ -91,7 +95,7 @@ export const TextInput = ({
       {label && (
         <label
           htmlFor={inputId}
-          className="input-label"
+          className={`input-label ${hideLabel ? "sr-only" : ""}`}
         >
           {icon && getIcon(icon)}
           {label}

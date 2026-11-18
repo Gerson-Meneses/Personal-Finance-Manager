@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, ArrowRight, Wallet, CreditCard, TrendingDown } from "lucide-react";
 import { formatCurrency } from "../../../../shared/utils/formatCurrency";
+import type { DashboardWidgetView } from "../../../../shared/types/dashboard";
 import "./balanceCard.css"
 
 interface Props {
@@ -11,15 +12,16 @@ interface Props {
   credit: {
     debt: number;
   };
+  view?: DashboardWidgetView;
 }
 
-export default function BalanceHero({ balances, credit }: Props) {
+export default function BalanceHero({ balances, credit, view = "full" }: Props) {
   const navigate = useNavigate();
   const netWorth = balances.debit - credit.debt;
   const isNegative = netWorth < 0;
 
   return (
-    <article className={`balance-card dash-hero ${isNegative ? "is-negative" : ""}`}>
+    <article className={`balance-card dash-hero view-${view} ${isNegative ? "is-negative" : ""}`}>
       <div className="hero-top">
         <div className="hero-top-label">
           <p className="card-label">Patrimonio neto</p>

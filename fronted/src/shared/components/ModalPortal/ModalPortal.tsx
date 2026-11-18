@@ -8,6 +8,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   color?: string;
+  contentClassName?: string;
 }
 
 let bodyScrollLocks = 0;
@@ -27,7 +28,7 @@ function unlockBodyScroll() {
   }
 }
 
-export default function ModalPortal({ children, isOpen, onClose }: Props) {
+export default function ModalPortal({ children, isOpen, onClose, contentClassName }: Props) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -93,7 +94,7 @@ export default function ModalPortal({ children, isOpen, onClose }: Props) {
   return ReactDOM.createPortal(
     <div className="modal-overlay" ref={overlayRef} onClick={onClose}>
       <div
-        className="modal-content"
+        className={`modal-content ${contentClassName ?? ""}`}
         ref={contentRef}
         role="dialog"
         aria-modal="true"

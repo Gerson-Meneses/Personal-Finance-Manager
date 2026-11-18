@@ -20,15 +20,15 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius-md);
     padding: 0.55rem 0.75rem;
     transition: border-color 0.2s, background 0.2s;
 }
 .tf-search-wrap:focus-within {
     border-color: var(--info);
-    background: rgba(56, 189, 248, 0.05);
+    background: var(--info-soft);
 }
 
 .tf-search-icon {
@@ -62,9 +62,9 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
     padding: 0.5rem 0.9rem;
     color: var(--text-secondary);
     font-size: 0.82rem;
@@ -73,16 +73,16 @@
     transition: all 0.2s;
     position: relative;
 }
-.tf-filter-toggle:hover { border-color: rgba(255,255,255,0.25); color: var(--text-primary); }
+.tf-filter-toggle:hover { border-color: var(--border-strong); color: var(--text-primary); }
 .tf-filter-toggle.active {
     border-color: var(--info);
     color: var(--info);
-    background: rgba(56, 189, 248, 0.08);
+    background: var(--info-soft);
 }
 
 .tf-active-count {
     background: var(--info);
-    color: #000000;
+    color: var(--bg-canvas);
     font-size: 0.65rem;
     font-weight: 700;
     border-radius: 50%;
@@ -98,9 +98,9 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    background: rgba(239, 68, 68, 0.08);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    border-radius: 10px;
+    background: var(--danger-soft);
+    border: 1px solid color-mix(in srgb, var(--danger) 24%, transparent);
+    border-radius: var(--radius-md);
     padding: 0.5rem 0.75rem;
     color: var(--danger);
     font-size: 0.8rem;
@@ -108,13 +108,13 @@
     cursor: pointer;
     transition: all 0.2s;
 }
-.tf-reset-btn:hover { background: rgba(239, 68, 68, 0.15); border-color: var(--danger); }
+.tf-reset-btn:hover { background: color-mix(in srgb, var(--danger) 16%, transparent); border-color: var(--danger); }
 
 /* ─── Panel ───────────────────────────────────────────── */
 .tf-panel {
     background: var(--bg-surface);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 14px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -123,7 +123,7 @@
 
 .tf-divider {
     height: 0.5px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--border-soft);
 }
 
 /* ─── Grupos ──────────────────────────────────────────── */
@@ -170,9 +170,9 @@
 }
 
 .tf-field input {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius-sm);
     padding: 0.5rem 0.75rem;
     color: var(--text-primary);
     font-size: 0.85rem;
@@ -185,7 +185,7 @@
 .tf-field input:hover,
 .tf-field input:focus {
     border-color: var(--info);
-    background: rgba(56, 189, 248, 0.04);
+    background: var(--info-soft);
 }
 
 .tf-field-select.custom-form-group {
@@ -201,9 +201,9 @@
 /* ─── Mode toggle (Rango / Exacto) ───────────────────── */
 .tf-mode-toggle {
     display: flex;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
     overflow: hidden;
 }
 .tf-mode-toggle button {
@@ -218,7 +218,7 @@
     transition: all 0.2s;
 }
 .tf-mode-toggle button.active {
-    background: rgba(56, 189, 248, 0.15);
+    background: var(--info-soft);
     color: var(--info);
 }
 
@@ -230,9 +230,9 @@
 }
 
 .tf-chip {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
     padding: 4px 12px;
     color: var(--text-tertiary);
     font-size: 0.78rem;
@@ -240,9 +240,9 @@
     cursor: pointer;
     transition: all 0.2s;
 }
-.tf-chip:hover { border-color: rgba(255,255,255,0.2); color: var(--text-primary); }
+.tf-chip:hover { border-color: var(--border-strong); color: var(--text-primary); }
 .tf-chip.active {
-    background: rgba(56, 189, 248, 0.12);
+    background: var(--info-soft);
     border-color: var(--info);
     color: var(--info);
 }

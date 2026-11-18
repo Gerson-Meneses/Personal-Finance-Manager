@@ -18,12 +18,42 @@ interface LoanFiterProps {
 
 export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }: LoanFiterProps) => {
     const [open, setOpen] = useState(false);
+    const [draft, setDraft] = useState<LoanQueryFilters>(query);
+
+    const openFilters = () => {
+        setDraft(query);
+        setOpen(true);
+    };
+
+    const closeFilters = () => setOpen(false);
+
+    const toggleFilters = () => {
+        if (open) closeFilters();
+        else openFilters();
+    };
+
+    const applyFilters = () => {
+        onChange({ ...draft, page: 1 });
+        closeFilters();
+    };
+
+    const clearDraft = () => {
+        setDraft({
+            order: query.order,
+            orderBy: query.orderBy,
+            limit: query.limit,
+            page: 1,
+        });
+    };
 
     const set = <K extends keyof LoanQueryFilters>(
         key: K,
         value: LoanQueryFilters[K]
     ) => {
-        onChange({ ...query, [key]: value === "" ? undefined : value });
+        setDraft((current) => ({
+            ...current,
+            [key]: value === "" ? undefined : value,
+        }));
     };
 
     const activeCount = Object.entries(query).filter(([key, value]) => {
@@ -88,7 +118,9 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
     return (
         <FilterWrapper<LoanQueryFilters>
             isOpen={open}
-            onToggleOpen={() => setOpen((p) => !p)}
+            onToggleOpen={toggleFilters}
+            onApply={applyFilters}
+            onClearDraft={clearDraft}
 
             activeCount={activeCount}
             activeFilters={activeFilter}
@@ -108,7 +140,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                     label="Ordenar por"
                     hideLabel
                     value={query.order ?? "DESC"}
-                    onChange={(v) => set("order", v as "ASC" | "DESC")}
+                    onChange={(v) => onChange({ ...query, order: v as "ASC" | "DESC" })}
                     options={[
                         { value: "DESC", label: "Más recientes" },
                         { value: "ASC", label: "Más antiguos" },
@@ -131,8 +163,8 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                             <button
                                 key={opt.label}
                                 type="button"
-                                aria-pressed={query.type === opt.value}
-                                className={`tf-chip ${query.type === opt.value ? "active" : ""}`}
+                                aria-pressed={draft.type === opt.value}
+                                className={`tf-chip ${draft.type === opt.value ? "active" : ""}`}
                                 onClick={() => set("type", opt.value)}
                             >
                                 {opt.label}
@@ -147,7 +179,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                 <div className="tf-group">
                     <SelectInput
                         label="Estado del préstamo"
-                        value={query.status ?? ""}
+                        value={draft.status ?? ""}
                         onChange={(value) => set("status", value as LoanQueryFilters["status"])}
                         options={[
                             { value: "PENDING", label: "Activos / pendientes" },
@@ -169,7 +201,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                         <input
                             type="text"
                             placeholder="Nombre del acreedor"
-                            value={query.lender ?? ""}
+                            value={draft.lender ?? ""}
                             onChange={(e) => set("lender", e.target.value)}
                             className="tf-input"
                         />
@@ -184,13 +216,13 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                     <div className="grid grid-cols-2 gap-3">
                         <DatePicker
                             label="Desde"
-                            value={query.from ?? ""}
+                            value={draft.from ?? ""}
                             onChange={(value) => set("from", value)}
                             disableFuture={true}
                         />
                         <DatePicker
                             label="Hasta"
-                            value={query.to ?? ""}
+                            value={draft.to ?? ""}
                             onChange={(value) => set("to", value)}
                             disableFuture={true}
                         />
@@ -205,7 +237,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                     <div className="grid grid-cols-2 gap-3">
                         <NumericInput
                             label="Mínimo"
-                            value={query.minAmount ? String(query.minAmount) : ""}
+                            value={draft.minAmount ? String(draft.minAmount) : ""}
                             onChange={(value) =>
                                 set("minAmount", value ? Number(value) : undefined)
                             }
@@ -215,7 +247,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                         />
                         <NumericInput
                             label="Máximo"
-                            value={query.maxAmount ? String(query.maxAmount) : ""}
+                            value={draft.maxAmount ? String(draft.maxAmount) : ""}
                             onChange={(value) =>
                                 set("maxAmount", value ? Number(value) : undefined)
                             }
@@ -240,8 +272,8 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                             <button
                                 key={String(opt.value)}
                                 type="button"
-                                aria-pressed={query.hasPayments === opt.value}
-                                className={`tf-chip ${query.hasPayments === opt.value ? "active" : ""}`}
+                                aria-pressed={draft.hasPayments === opt.value}
+                                className={`tf-chip ${draft.hasPayments === opt.value ? "active" : ""}`}
                                 onClick={() => set("hasPayments", opt.value)}
                             >
                                 {opt.label}
@@ -258,7 +290,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                     <div className="grid grid-cols-2 gap-3">
                         <NumericInput
                             label="Mínimo"
-                            value={query.minPaymentAmount ? String(query.minPaymentAmount) : ""}
+                            value={draft.minPaymentAmount ? String(draft.minPaymentAmount) : ""}
                             onChange={(value) =>
                                 set("minPaymentAmount", value ? Number(value) : undefined)
                             }
@@ -268,7 +300,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                         />
                         <NumericInput
                             label="Máximo"
-                            value={query.maxPaymentAmount ? String(query.maxPaymentAmount) : ""}
+                            value={draft.maxPaymentAmount ? String(draft.maxPaymentAmount) : ""}
                             onChange={(value) =>
                                 set("maxPaymentAmount", value ? Number(value) : undefined)
                             }
@@ -287,13 +319,13 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                     <div className="grid grid-cols-2 gap-3">
                         <DatePicker
                             label="Desde"
-                            value={query.paymentDateFrom ?? ""}
+                            value={draft.paymentDateFrom ?? ""}
                             onChange={(value) => set("paymentDateFrom", value)}
                             disableFuture={true}
                         />
                         <DatePicker
                             label="Hasta"
-                            value={query.paymentDateTo ?? ""}
+                            value={draft.paymentDateTo ?? ""}
                             onChange={(value) => set("paymentDateTo", value)}
                             disableFuture={true}
                         />
@@ -306,7 +338,7 @@ export const LoansFilter = ({ query, onChange, onReset, search, onSearchChange }
                 <div className="tf-group">
                     <SelectInput
                         label="Ordenar por"
-                        value={query.orderBy ?? ""}
+                        value={draft.orderBy ?? ""}
                         onChange={(value) => set("orderBy", value as "startDate" | "createdAt" | "principalAmount")}
                         options={[
                             { value: "startDate", label: "Fecha de inicio" },

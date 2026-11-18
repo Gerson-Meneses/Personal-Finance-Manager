@@ -16,18 +16,27 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 3px 8px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.04);
+    padding: 4px 9px;
+    border-radius: var(--radius-md, 10px);
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-soft);
     color: var(--text-secondary);
+    font-family: inherit;
     font-size: 0.72rem;
+    font-weight: 500;
     cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .tag-selector__add:hover:not(:disabled) {
+    background: var(--surface-soft-strong);
+    border-color: var(--info);
     color: var(--text-primary);
-    border-color: rgba(56, 189, 248, 0.4);
+}
+
+.tag-selector__add:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .tag-selector__chips {
@@ -49,13 +58,21 @@
 .tag-chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     padding: 3px 8px;
     border: 1px solid;
     border-radius: 999px;
     font-size: 0.72rem;
     font-weight: 600;
     line-height: 1.2;
+    color: var(--text-primary);
+}
+
+.tag-chip__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
 .tag-chip button {
@@ -66,7 +83,7 @@
     color: inherit;
     cursor: pointer;
     padding: 0;
-    opacity: 0.75;
+    opacity: 0.7;
 }
 
 .tag-chip button:hover {
@@ -75,25 +92,37 @@
 
 .tag-selector__panel {
     position: absolute;
-    z-index: 40;
+    z-index: 100;
     top: calc(100% + 6px);
     left: 0;
     right: 0;
-    background: var(--bg-secondary, #1e293b);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md, 12px);
     padding: 8px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--shadow-md);
 }
 
 .tag-selector__search {
     width: 100%;
-    padding: 7px 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(255, 255, 255, 0.04);
+    padding: 8px 10px;
+    border-radius: var(--radius-md, 10px);
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
     color: var(--text-primary);
+    font-family: inherit;
     font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tag-selector__search::placeholder {
+    color: var(--text-tertiary);
+}
+
+.tag-selector__search:focus {
+    border-color: var(--info);
+    box-shadow: 0 0 0 3px var(--info-soft);
 }
 
 .tag-selector__list {
@@ -111,22 +140,25 @@
     gap: 8px;
     padding: 7px 8px;
     border: none;
-    border-radius: 7px;
+    border-radius: 8px;
     background: transparent;
     color: var(--text-secondary);
+    font-family: inherit;
     font-size: 0.8rem;
     text-align: left;
     cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
 .tag-selector__option:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--surface-soft-strong);
     color: var(--text-primary);
 }
 
 .tag-selector__option.is-create {
-    color: var(--accent);
-    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    color: var(--info);
+    border-top: 1px dashed var(--border-soft);
+    border-radius: 0 0 8px 8px;
     margin-top: 4px;
     padding-top: 9px;
 }
@@ -140,6 +172,10 @@
 
 .tag-selector__spinner {
     animation: tagSpin 0.8s linear infinite;
+}
+
+.tag-selector.disabled {
+    opacity: 0.6;
 }
 
 @keyframes tagSpin {

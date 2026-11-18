@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test": "bun test tests",
     "test:e2e": "playwright test",
     "test:receipts": "bun test tests/receiptParser.test.ts"
   },

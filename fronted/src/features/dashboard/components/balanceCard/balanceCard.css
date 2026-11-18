@@ -213,3 +213,31 @@
     flex-wrap: wrap;
     min-width: 0;
 }
+
+/* Vistas configurables del patrimonio */
+.balance-card.view-compact .hero-amount {
+    font-size: 1.9rem;
+    margin: 8px 0 10px;
+}
+
+.balance-card.view-compact .hero-stats {
+    gap: 6px;
+}
+
+.balance-card.view-compact .hero-stat {
+    padding: 6px 8px;
+}
+
+.balance-card.view-minimal {
+    padding: 14px 16px;
+}
+
+.balance-card.view-minimal .hero-amount {
+    font-size: 1.55rem;
+    margin: 6px 0 0;
+}
+
+.balance-card.view-minimal .hero-stats,
+.balance-card.view-minimal .hero-negative-note {
+    display: none;
+}

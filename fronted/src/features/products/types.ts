@@ -18,6 +18,7 @@ export interface ProductPrice {
     unitPrice: number;
     quantity: number;
     total: number;
+    description?: string;
     merchantName?: string;
     merchantAddress?: string;
 }

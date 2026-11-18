@@ -20,9 +20,9 @@
 .input-wrapper-num {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius-sm);
     padding: 0.5rem 0.75rem;
     width: 100%;
     box-sizing: border-box;
@@ -53,7 +53,7 @@
 .input-wrapper-num:focus-within,
 .input-wrapper-num:hover {
     border-color: var(--info);
-    background: rgba(56, 189, 248, 0.04);
+    background: var(--info-soft);
 }
 
 .numeric-input::-webkit-inner-spin-button,
@@ -69,6 +69,6 @@
 
 .disabled .input-wrapper-num:focus-within,
 .disabled .input-wrapper-num:hover {
-    border-color: rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--input-border);
+    background: var(--input-bg);
 }

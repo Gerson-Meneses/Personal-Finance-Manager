@@ -83,3 +83,72 @@
     font-size: 0.72rem;
     color: var(--accent);
 }
+
+/* Estado vacio: siempre visible para invitar a registrar previsiones */
+.recurring-forecast.is-empty {
+    gap: 12px;
+}
+
+.recurring-forecast__empty {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--border-subtle);
+    background: var(--surface-soft);
+}
+
+.recurring-forecast__empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    background: var(--info-soft);
+    color: var(--info);
+}
+
+.recurring-forecast__empty strong {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+}
+
+.recurring-forecast__empty p {
+    margin: 2px 0 0;
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: var(--text-tertiary);
+}
+
+.recurring-forecast__empty-cta {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    font-size: 0.78rem;
+    padding: 8px 12px;
+}
+
+.recurring-forecast.view-compact .recurring-forecast__legend {
+    display: none;
+}
+
+.recurring-forecast.view-minimal .recurring-forecast__legend,
+.recurring-forecast.view-minimal .recurring-forecast__bar,
+.recurring-forecast.view-minimal .recurring-forecast__due,
+.recurring-forecast.view-minimal .recurring-forecast__empty p {
+    display: none;
+}
+
+.recurring-forecast.view-minimal .recurring-forecast__net strong {
+    font-size: 1.1rem;
+}
+
+.recurring-forecast.view-minimal .recurring-forecast__empty {
+    padding: 8px 10px;
+}

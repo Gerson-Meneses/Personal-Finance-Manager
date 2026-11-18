@@ -56,7 +56,20 @@ export class AccountService {
         if (accountExist) throw new ConflictError("El usuario ya tiene una cuenta con este nombre y tipo.", { name: ["El usuario ya tiene una cuenta con este nombre y tipo."] })
 
         if (type === TypeAccount.CREDIT) {
-            const { billingCloseDay, paymentDueDay, overdraft } = account
+            const {
+                billingCloseDay,
+                paymentDueDay,
+                overdraft,
+                tea,
+                tcea,
+                desgravamenRate,
+                desgravamenMaxAmount,
+                currency,
+                issuer,
+                brand,
+                last4,
+                holderName,
+            } = account
             let { creditLimit } = account
             creditLimit
             if (!creditLimit || !billingCloseDay || !paymentDueDay) {
@@ -72,6 +85,15 @@ export class AccountService {
                 billingCloseDay,
                 paymentDueDay,
                 overdraft,
+                tea,
+                tcea,
+                desgravamenRate,
+                desgravamenMaxAmount,
+                currency: currency ?? "PEN",
+                issuer,
+                brand,
+                last4,
+                holderName,
                 user
             })
 
@@ -121,6 +143,16 @@ export class AccountService {
                 account.overdraft = updateData.overdraft
                 account.balance = getMaxBalance(account.creditLimit, account.overdraft) - currentDebt
                 if (account.balance < 0) throw new BadRequestError("No se puede aumentar el porcentaje de sobregiro por debajo de la deuda actual.")
+            }
+
+            // Al activar el seguro por primera vez, empieza a correr desde ahora
+            // para no generar cargos retroactivos de ciclos anteriores.
+            if (
+                updateData.desgravamenRate != null &&
+                updateData.desgravamenRate > 0 &&
+                (account.desgravamenRate ?? 0) <= 0
+            ) {
+                account.creditTrackingStartedAt = new Date();
             }
         }
 

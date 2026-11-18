@@ -35,14 +35,13 @@ Nota de Venta : 211019786944
 `;
 
 describe("parser de boletas", () => {
-    test("extrae total, fecha, establecimiento, dirección y RUC", () => {
+    test("extrae total, fecha, establecimiento y dirección", () => {
         const parsed = parseReceiptText(RECEIPT_TEXT);
 
         expect(parsed.amount).toBe(119.6);
         expect(parsed.date).toBe("2026-10-20");
         expect(parsed.merchantName).toBe("PROMART - Homecenters Peruanos S.A.");
         expect(parsed.merchantAddress).toBe("AV.AVIACION 2405 LIMA LIMA SAN BORJA");
-        expect(parsed.merchantRuc).toBe("20536557858");
     });
 
     test("extrae los productos comprados con cantidad y precios", () => {

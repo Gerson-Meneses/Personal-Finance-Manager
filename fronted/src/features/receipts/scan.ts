@@ -93,7 +93,6 @@ export const scanReceiptFile = async (
                 date: result.date ?? retryResult.date,
                 merchantName: result.merchantName ?? retryResult.merchantName,
                 merchantAddress: result.merchantAddress ?? retryResult.merchantAddress,
-                merchantRuc: result.merchantRuc ?? retryResult.merchantRuc,
                 items: result.items.length > 0 ? result.items : retryResult.items,
                 confidence: Math.max(result.confidence, retryResult.confidence),
             };

@@ -4,7 +4,7 @@
     appearance: none;
     padding: .6rem;
     outline: none;
-    color: #f8fafcdb;
+    color: var(--text-primary);
     text-align: left;
     min-width: 0;
     width: 100%;
@@ -27,7 +27,7 @@
     padding: .6rem;
     min-height: 50px;
     outline: none;
-    color: #f8fafcdb;
+    color: var(--text-primary);
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
